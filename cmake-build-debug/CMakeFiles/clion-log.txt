@@ -1,0 +1,6 @@
+/home/cyoung/下载/clion/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/cyoung/CLionProjects/implement_llvm
+-- Found LLVM 8.0.0svn
+-- Using LLVMConfig.cmake in: /media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/cyoung/CLionProjects/implement_llvm/cmake-build-debug
