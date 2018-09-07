@@ -45,6 +45,89 @@ wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
 sudo apt-get install clang-6.0 lldb-6.0 lld-6.0
 ```
 
+如果想将以上编译结果直接安装到系统中,很简单,但是不建议,因为消耗的系统空间太大
+
+```shell
+#不建议!!!
+# build 目录下:
+sudo make install
+```
+
+于是乎,想将源码安装在指定目录,为这一步,一个小白倒腾了整整一天,最后还是在[官网](http://llvm.org/docs/CMake.html)找到了答案:
+
+现在假设安装在llvm root目录下的build_install下:
+
+```shell
+cd llvmRootPath/
+#创建安装目录
+mkdir build_install
+cd build
+#安装到指定目录
+cmake -DCMAKE_INSTALL_PREFIX=/llvmRootPath/build_install -P cmake_install.cmake
+```
+
+此时已经将llvm安装到build_install下
+
+## 3.创建第一个llvm项目
+
+打开clion,新建项目,项目名: implement_llvm
+
+如何在CMakeList.txt中引用项目,答案还是在[官网](http://llvm.org/docs/CMake.html#embedding-llvm-in-your-project)
+
+```cmake
+cmake_minimum_required(VERSION 3.4.3)
+project(SimpleProject)
+
+find_package(LLVM REQUIRED CONFIG)
+
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
+# Set your project compile flags.
+# E.g. if using the C++ header files
+# you will need to enable C++11 support
+# for your compiler.
+
+include_directories(${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
+
+# Now build our tools
+add_executable(simple-tool tool.cpp)
+
+# Find the libraries that correspond to the LLVM components
+# that we wish to use
+llvm_map_components_to_libnames(llvm_libs support core irreader)
+
+# Link against LLVM libraries
+target_link_libraries(simple-tool ${llvm_libs})
+
+```
+
+但是,重点来了,由于之前系统安装了llvm6.0,cmake会优先在系统中找到llvm6.0,如何调用以上源码安装库,一个小白又倒腾了半天
+
+官网一句话:The `find_package(...)` directive when used in CONFIG mode (as in the above example) will look for the `LLVMConfig.cmake` file in various locations (see cmake manual for details),It creates a `LLVM_DIR` cache entry to save the directory where `LLVMConfig.cmake` is found 
+
+大意是说:find_package采用config模式,会根据LLVM_DIR缓存条目(cache entry)来寻找`LLVMConfig.cmake` ,这个缓存条目是个什么玩意儿???懵逼
+
+将环境变量中加入`export LLVM_DIR=/llvmRootPath/build_install`,等等一系列措施,最后找到了方法
+
+在CMakeList.txt里加上一句话
+
+```cmake
+cmake_minimum_required(VERSION 3.4.3)
+project(SimpleProject)
+
+#加上一句,这是config模式来寻找LLVMConfig.cmake的路径,添加即可
+set(LLVM_DIR /llvmRootPath/build_install/lib/cmake/llvm)
+
+find_package(LLVM REQUIRED CONFIG)
+#-----后面省略-----
+```
+
+于是乎,cmake就可以快乐的找到llvm8.0.0了,第一个项目创建完成
+
+踩坑到此为止,后面利用此项目来学习llvm.欢迎交流.
+
 
 
 
