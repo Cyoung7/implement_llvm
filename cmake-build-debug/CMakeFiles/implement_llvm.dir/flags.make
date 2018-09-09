@@ -6,5 +6,5 @@ CXX_FLAGS = -g   -D_GNU_SOURCE -D_DEBUG -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/cyoung/llvm/build_install/include 
+CXX_INCLUDES = -I/media/cyoung/000E88CC0009670E/llvm/build_install/include 
 

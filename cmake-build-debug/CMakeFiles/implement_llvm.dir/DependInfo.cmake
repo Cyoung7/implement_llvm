@@ -10,7 +10,7 @@ set(CMAKE_CXX_COMPILER_ID "GNU")
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "/home/cyoung/llvm/build_install/include"
+  "/media/cyoung/000E88CC0009670E/llvm/build_install/include"
   )
 
 # Targets to which this target links.

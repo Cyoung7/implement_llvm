@@ -11,11 +11,6 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/3.10.3/CMakeCCompiler.cmake"
   "CMakeFiles/3.10.3/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.10.3/CMakeSystem.cmake"
-  "/home/cyoung/llvm/build_install/lib/cmake/llvm/LLVM-Config.cmake"
-  "/home/cyoung/llvm/build_install/lib/cmake/llvm/LLVMConfig.cmake"
-  "/home/cyoung/llvm/build_install/lib/cmake/llvm/LLVMConfigVersion.cmake"
-  "/home/cyoung/llvm/build_install/lib/cmake/llvm/LLVMExports-debug.cmake"
-  "/home/cyoung/llvm/build_install/lib/cmake/llvm/LLVMExports.cmake"
   "/home/cyoung/下载/clion/bin/cmake/share/cmake-3.10/Modules/CMakeCInformation.cmake"
   "/home/cyoung/下载/clion/bin/cmake/share/cmake-3.10/Modules/CMakeCXXInformation.cmake"
   "/home/cyoung/下载/clion/bin/cmake/share/cmake-3.10/Modules/CMakeCommonLanguageInclude.cmake"
@@ -35,6 +30,11 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/cyoung/下载/clion/bin/cmake/share/cmake-3.10/Modules/Platform/Linux.cmake"
   "/home/cyoung/下载/clion/bin/cmake/share/cmake-3.10/Modules/Platform/UnixPaths.cmake"
   "/home/cyoung/下载/clion/bin/cmake/share/cmake-3.10/Modules/ProcessorCount.cmake"
+  "/media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVM-Config.cmake"
+  "/media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVMConfig.cmake"
+  "/media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVMConfigVersion.cmake"
+  "/media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVMExports-debug.cmake"
+  "/media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVMExports.cmake"
   )
 
 # The corresponding makefile is:

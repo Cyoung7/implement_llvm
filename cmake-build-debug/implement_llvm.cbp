@@ -5,7 +5,7 @@
 		<Option title="implement_llvm"/>
 		<Option makefile_is_custom="1"/>
 		<Option compiler="gcc"/>
-		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\llvm\;CMake Files\..\..\llvm\build_install\;CMake Files\..\..\llvm\build_install\lib\;CMake Files\..\..\llvm\build_install\lib\cmake\;CMake Files\..\..\llvm\build_install\lib\cmake\llvm\;"/>
+		<Option virtualFolders="CMake Files\;CMake Files\..\;CMake Files\..\..\;CMake Files\..\..\..\;CMake Files\..\..\..\..\;CMake Files\..\..\..\..\media\;CMake Files\..\..\..\..\media\cyoung\;CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\;CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\;CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\;CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\lib\;CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\lib\cmake\;CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\lib\cmake\llvm\;"/>
 		<Build>
 			<Target title="all">
 				<Option working_dir="/home/cyoung/CLionProjects/implement_llvm/cmake-build-debug"/>
@@ -34,7 +34,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/cyoung/llvm/build_install/include"/>
+					<Add directory="/media/cyoung/000E88CC0009670E/llvm/build_install/include"/>
 					<Add directory="/usr/include/c++/6"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
 					<Add directory="/usr/include/c++/6/backward"/>
@@ -58,7 +58,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/cyoung/llvm/build_install/include"/>
+					<Add directory="/media/cyoung/000E88CC0009670E/llvm/build_install/include"/>
 					<Add directory="/usr/include/c++/6"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/6"/>
 					<Add directory="/usr/include/c++/6/backward"/>
@@ -102,20 +102,20 @@
 		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/CMakeLists.txt">
 			<Option virtualFolder="CMake Files\"/>
 		</Unit>
-		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../llvm/build_install/lib/cmake/llvm/LLVM-Config.cmake">
-			<Option virtualFolder="CMake Files\..\..\llvm\build_install\lib\cmake\llvm\"/>
+		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../../../media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVM-Config.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\lib\cmake\llvm\"/>
 		</Unit>
-		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../llvm/build_install/lib/cmake/llvm/LLVMConfig.cmake">
-			<Option virtualFolder="CMake Files\..\..\llvm\build_install\lib\cmake\llvm\"/>
+		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../../../media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVMConfig.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\lib\cmake\llvm\"/>
 		</Unit>
-		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../llvm/build_install/lib/cmake/llvm/LLVMConfigVersion.cmake">
-			<Option virtualFolder="CMake Files\..\..\llvm\build_install\lib\cmake\llvm\"/>
+		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../../../media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVMConfigVersion.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\lib\cmake\llvm\"/>
 		</Unit>
-		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../llvm/build_install/lib/cmake/llvm/LLVMExports-debug.cmake">
-			<Option virtualFolder="CMake Files\..\..\llvm\build_install\lib\cmake\llvm\"/>
+		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../../../media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVMExports-debug.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\lib\cmake\llvm\"/>
 		</Unit>
-		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../llvm/build_install/lib/cmake/llvm/LLVMExports.cmake">
-			<Option virtualFolder="CMake Files\..\..\llvm\build_install\lib\cmake\llvm\"/>
+		<Unit filename="/home/cyoung/CLionProjects/implement_llvm/../../../../media/cyoung/000E88CC0009670E/llvm/build_install/lib/cmake/llvm/LLVMExports.cmake">
+			<Option virtualFolder="CMake Files\..\..\..\..\media\cyoung\000E88CC0009670E\llvm\build_install\lib\cmake\llvm\"/>
 		</Unit>
 	</Project>
 </CodeBlocks_project_file>
