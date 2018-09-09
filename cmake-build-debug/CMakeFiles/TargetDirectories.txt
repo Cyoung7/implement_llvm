@@ -1,4 +1,0 @@
-/home/cyoung/CLionProjects/implement_llvm/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/cyoung/CLionProjects/implement_llvm/cmake-build-debug/CMakeFiles/implement_llvm.dir
-/home/cyoung/CLionProjects/implement_llvm/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/cyoung/CLionProjects/implement_llvm/cmake-build-debug/CMakeFiles/intrinsics_gen.dir
