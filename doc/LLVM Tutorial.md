@@ -408,3 +408,272 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
 现在处理了基本表达式，我们需要处理二进制表达式。 它们有点复杂。
 
 ### 2.5 二元表达式解析(Binary Expression Parsing)
+
+二元表达式很难解析，因为它们通常是模糊的。 例如，当给定字符串`x + y * z`时，解析器可以选择将其解析为`（x + y）* z`或`x +（y * z）`。 对于数学中的常见定义，我们期望后面的解析，因为`*`（乘法）具有比`+`（加法）更高的优先级。
+
+有很多方法可以解决这个问题，但优雅而有效的方法是使用[Operator-Precedence Parsing](http://en.wikipedia.org/wiki/Operator-precedence_parser)。 此解析技术使用二元运算符的优先级来指导递归。 首先，我们需要一个优先级表：
+
+```c++
+/// BinopPrecedence - This holds the precedence for each binary operator that is
+/// defined.
+static std::map<char, int> BinopPrecedence;
+
+/// GetTokPrecedence - Get the precedence of the pending binary operator token.
+static int GetTokPrecedence() {
+  if (!isascii(CurTok))
+    return -1;
+
+  // Make sure it's a declared binop.
+  int TokPrec = BinopPrecedence[CurTok];
+  if (TokPrec <= 0) return -1;
+  return TokPrec;
+}
+
+int main() {
+  // Install standard binary operators.
+  // 1 is lowest precedence.
+  BinopPrecedence['<'] = 10;
+  BinopPrecedence['+'] = 20;
+  BinopPrecedence['-'] = 20;
+  BinopPrecedence['*'] = 40;  // highest.
+  ...
+}
+```
+
+对于Kaleidoscope的基本形式，我们只支持4个二元运算符（这显然可以由你，我们的读者大胆的扩展）。 GetTokPrecedence函数返回当前标记的优先级，如果标记不是二元运算符，则返回-1。使用映射可以轻松添加新运算符，并清楚地表明算法不依赖于所涉及的特定运算符，但是很容易消除映射并在GetTokPrecedence函数中进行比较。 （或者只使用固定大小的数组）。
+
+通过上面定义的辅助程序，我们现在可以开始解析二元表达式。运算符优先级解析的基本思想是将具有可能不明确的二元运算符的表达式分解为多个部分。例如，考虑表达式`a + b +（c + d）* e * f + g`。运算符优先级解析将此视为由二元运算符分隔的主表达式流。因此，它将首先解析主要的主要表达式“a”，然后它将看到对\[ +，b \]\[+，（c + d）\]\[\*，e\]\[\*，f\]和[+，g]。请注意，因为括号是主表达式，所以二元表达式解析器根本不需要担心嵌套的子表达式，如（c + d）。
+
+```c++
+/// expression
+///   ::= primary binoprhs
+///
+static std::unique_ptr<ExprAST> ParseExpression() {
+  auto LHS = ParsePrimary();
+  if (!LHS)
+    return nullptr;
+
+  return ParseBinOpRHS(0, std::move(LHS));
+}
+```
+
+`ParseBinOpRHS`是为我们解析对序列的函数。 它需要一个优先级和一个指向目前已解析的部分的表达式的指针。 请注意，“x”是一个完全有效的表达式：因此，“binoprhs”被允许为空，在这种情况下，它返回传递给它的表达式。 在上面的示例中，代码将“a”的表达式传递给ParseBinOpRHS，当前标记为“+”。
+
+传递给`ParseBinOpRHS`的优先级值表示允许该函数吃进的最小运算符优先级。 例如，如果当前对流是[+，x]并且`ParseBinOpRHS`以优先级40传递，则它不会消耗任何符号（因为'+'的优先级仅为20）。 考虑到这一点，`ParseBinOpRHS`以：
+
+```c++
+/// binoprhs
+///   ::= ('+' primary)*
+static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
+                                              std::unique_ptr<ExprAST> LHS) {
+  // If this is a binop, find its precedence.
+  while (1) {
+    int TokPrec = GetTokPrecedence();
+
+    // If this is a binop that binds at least as tightly as the current binop,
+    // consume it, otherwise we are done.
+    if (TokPrec < ExprPrec)
+      return LHS;
+```
+
+此代码获取当前符号的优先级，并检查是否过低。 因为我们将无效标记优先级定义为-1，所以此检查隐式地知道当标记流用完二元运算符时，对流(pair-stream)结束。 如果此检查成功，我们知道该符号是二元运算符，并且它将包含在此表达式中：
+
+```c++
+// Okay, we know this is a binop.
+int BinOp = CurTok;
+getNextToken();  // eat binop
+
+// Parse the primary expression after the binary operator.
+auto RHS = ParsePrimary();
+if (!RHS)
+  return nullptr;
+```
+
+因此，此代码吃掉（并记住）二元运算符，然后解析后面的主表达式。 这就构建了整个对，第一个是运行示例的[+，b]。
+
+现在我们解析了表达式的左侧和一对RHS序列，我们必须决定表达式关联的方式。 特别是，我们可以有`（a + b）binop(二元符) unparsed(未解析的符号)`或`a +（b binop unparsed）`。 为了确定这一点，我们展望“binop”以确定其优先级，并将其与BinOp的优先级（在当前情况下为“+”）进行比较：
+
+```c++
+// If BinOp binds less tightly with RHS than the operator after RHS, let
+// the pending operator take RHS as its LHS.
+int NextPrec = GetTokPrecedence();
+if (TokPrec < NextPrec) {
+```
+
+如果`binop`在“RHS”右边的优先级低于或等于我们当前运算符的优先级，那么我们知道括号关联为“（a + b）binop ...”。 在我们的示例中，当前运算符为“+”，下一个运算符为“+”，我们知道它们具有相同的优先级。 在这种情况下，我们将为“a + b”创建AST节点，然后继续解析：
+
+```c++
+      ... if body omitted ...
+    }
+
+    // Merge LHS/RHS.
+    LHS = llvm::make_unique<BinaryExprAST>(BinOp, std::move(LHS),
+                                           std::move(RHS));
+  }  // loop around to the top of the while loop.
+}
+```
+
+在上面的例子中，这将把`a + b +`变成`（a + b）`并执行循环的下一次迭代，其中`+`作为当前符号。 上面的代码将吃掉，记住并解析“（c + d）”作为主表达式，这使得当前对等于[+，（c + d）]。 然后它将使用`*`作为主要右侧的binop来评估上面的“if”条件。 在这种情况下，`*`的优先级高于`+`的优先级，因此将输入if条件。
+
+这里留下的关键问题是`if条件如何完全解析右边表达式?`特别是，要为我们的示例正确构建AST，它需要将所有“（c + d）* e * f”作为RHS表达式变量。 执行此操作的代码非常简单（上面两个块的代码重复上下文）：
+
+```c++
+    // If BinOp binds less tightly with RHS than the operator after RHS, let
+    // the pending operator take RHS as its LHS.
+    int NextPrec = GetTokPrecedence();
+    if (TokPrec < NextPrec) {
+      RHS = ParseBinOpRHS(TokPrec+1, std::move(RHS));
+      if (!RHS)
+        return nullptr;
+    }
+    // Merge LHS/RHS.
+    LHS = llvm::make_unique<BinaryExprAST>(BinOp, std::move(LHS),
+                                           std::move(RHS));
+  }  // loop around to the top of the while loop.
+}
+```
+
+此时，我们知道主要的RHS二元运算符优先于当前正在解析的binop。因此，我们知道任何运算符都优先于“+”的对的序列应该被一起解析并返回为“RHS”。为此，我们递归调用ParseBinOpRHS函数，指定“TokPrec + 1”作为它继续所需的最小优先级。在上面的例子中，这将导致它将`（c + d）* e * f`的AST节点作为RHS返回，然后将其设置为“+”表达式的RHS。
+
+最后，在while循环的下一次迭代中，解析“+ g”片段并将其添加到AST。使用这一小段代码（14行代码），我们以非常优雅的方式正确处理完全通用的二元表达式解析。这是对这段代码的旋风之旅，它有点微妙。我建议通过几个棘手的例子来看看它是如何工作的。
+
+这包含了表达式的处理。此时，我们可以将解析器指向任意标记流并从中构建表达式，停止在不属于表达式的第一个标记处。接下来我们需要处理函数定义等。
+
+### 2.6 解析其余部分(Parsing the Rest)
+
+接下来还缺少函数原型的处理。 在Kaleidoscope中，这些用于'extern'函数声明以及函数体定义。 执行此操作的代码是直截了当的，并且不是很有趣（一旦表达式幸存下来）： 
+
+```c++
+/// prototype
+///   ::= id '(' id* ')'
+static std::unique_ptr<PrototypeAST> ParsePrototype() {
+  if (CurTok != tok_identifier)
+    return LogErrorP("Expected function name in prototype");
+
+  std::string FnName = IdentifierStr;
+  getNextToken();
+
+  if (CurTok != '(')
+    return LogErrorP("Expected '(' in prototype");
+
+  // Read the list of argument names.
+  std::vector<std::string> ArgNames;
+  while (getNextToken() == tok_identifier)
+    ArgNames.push_back(IdentifierStr);
+  if (CurTok != ')')
+    return LogErrorP("Expected ')' in prototype");
+
+  // success.
+  getNextToken();  // eat ')'.
+
+  return llvm::make_unique<PrototypeAST>(FnName, std::move(ArgNames));
+}
+```
+
+鉴于此，函数定义非常简单，只是一个原型加上一个表达式来实现正文：
+
+```c++
+/// definition ::= 'def' prototype expression
+static std::unique_ptr<FunctionAST> ParseDefinition() {
+  getNextToken();  // eat def.
+  auto Proto = ParsePrototype();
+  if (!Proto) return nullptr;
+
+  if (auto E = ParseExpression())
+    return llvm::make_unique<FunctionAST>(std::move(Proto), std::move(E));
+  return nullptr;
+}
+```
+
+另外，我们支持`extern`来声明`sin`和`cos`之类的函数，以及支持用户函数的前向声明。 这些`extern`只是没有实现的原型：
+
+```c++
+/// external ::= 'extern' prototype
+static std::unique_ptr<PrototypeAST> ParseExtern() {
+  getNextToken();  // eat extern.
+  return ParsePrototype();
+}
+```
+
+最后，我们还让用户输入任意顶层表达式并动态评估它们。 我们将通过为它们定义匿名的nullary（零参数）函数来处理这个问题：
+
+```c++
+/// toplevelexpr ::= expression
+static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
+  if (auto E = ParseExpression()) {
+    // Make an anonymous proto.
+    auto Proto = llvm::make_unique<PrototypeAST>("", std::vector<std::string>());
+    return llvm::make_unique<FunctionAST>(std::move(Proto), std::move(E));
+  }
+  return nullptr;
+}
+```
+
+现在我们已经完成了所有部分，让我们构建一个小驱动程序，让我们实际执行我们构建的代码！
+
+### 2.7 驱动(The Driver)
+
+这个驱动程序只是通过顶层调度循环调用所有解析部分。 这里没什么有趣的，所以我只包括顶层循环。 请参阅下面的“顶层解析”部分中的完整代码。
+
+```c++
+/// top ::= definition | external | expression | ';'
+static void MainLoop() {
+  while (1) {
+    fprintf(stderr, "ready> ");
+    switch (CurTok) {
+    case tok_eof:
+      return;
+    case ';': // ignore top-level semicolons.
+      getNextToken();
+      break;
+    case tok_def:
+      HandleDefinition();
+      break;
+    case tok_extern:
+      HandleExtern();
+      break;
+    default:
+      HandleTopLevelExpression();
+      break;
+    }
+  }
+}
+```
+
+最有趣的部分是我们忽略顶层分号。 你问，这是为什么？ 基本原因是，如果在命令行中键入“4 + 5”，则解析器不知道这是否是您要键入的结尾。 例如，在下一行，您可以键入“def foo ...”，在这种情况下，4 + 5是顶级表达式的结尾。 或者，您可以键入“* 6”，这将继续表达式。 使用顶级分号允许您键入“4 + 5;”，解析器将知道您已完成。
+
+### 2.8 小结
+
+只有不到400行的注释代码（240行非注释，非空行代码），我们完全定义了我们的最小语言，包括词法分析器，解析器和AST构建器。 完成此操作后，可执行文件将验证Kaleidoscope代码并告诉我们它是否在语法上无效。 例如，这是一个示例交互：
+
+```shell
+$ ./a.out
+ready> def foo(x y) x+foo(y, 4.0);
+Parsed a function definition.
+ready> def foo(x y) x+y y;
+Parsed a function definition.
+Parsed a top-level expr
+ready> def foo(x y) x+y );
+Parsed a function definition.
+Error: unknown token when expecting an expression
+ready> extern sin(a);
+ready> Parsed an extern
+ready> ^D
+$
+```
+
+这里有很大的扩展空间。 您可以定义新的AST节点，以多种方式扩展语言等。在下一部分中，我们将介绍如何从AST生成LLVM中间表示（IR）。
+
+### 2.9 Full Code Listing
+
+以下是我们正在运行的示例的完整代码清单。 因为它使用LLVM库，我们需要将它们链接起来。为此，我们使用[llvm-config](http://llvm.org/cmds/llvm-config.html)工具通知makefile /命令行有关使用哪些选项：
+
+```shell
+# Compile
+clang++ -g -O3 toy.cpp `llvm-config --cxxflags`
+# Run
+./a.out
+```
+
+[Here is the code](https://github.com/llvm-mirror/llvm/blob/master/examples/Kaleidoscope/Chapter2/toy.cpp)
+

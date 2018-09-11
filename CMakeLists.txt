@@ -20,7 +20,6 @@ add_definitions(${LLVM_DEFINITIONS})
 
 
 
-#add_executable(implement_llvm main.cpp lib/llvm_tutorial/src/BuildingAJIT/Chapter01/KaleidoscopeJIT.h lib/llvm_tutorial/src/BuildingAJIT/Chapter01/toy.cpp)
 add_subdirectory(lib)
 
 

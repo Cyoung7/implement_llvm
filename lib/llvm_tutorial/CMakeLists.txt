@@ -8,3 +8,4 @@ macro(add_kaleidoscope_chapter name)
 endmacro(add_kaleidoscope_chapter name)
 
 add_subdirectory(src/BuildingAJIT)
+add_subdirectory(src/Chapter02)
