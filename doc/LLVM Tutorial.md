@@ -1,5 +1,9 @@
 # LLVM Tutorial
 
+[链接](http://llvm.org/docs/tutorial/)
+
+[TOC]
+
 ## 1.Tutorial Introduction and the Lexer
 
 ### 1.1 Tutorial Introduction
@@ -129,3 +133,34 @@ if (isdigit(LastChar) || LastChar == '.') {   // Number: [0-9.]+
 }
 ```
 
+这是处理输入的非常简单的代码。 当从输入读取数值时，我们使用C strtod函数将其转换为我们存储在NumVal中的数值。 请注意，这里没有进行足够的错误检查：它将错误地读取“1.23.45.67”并像处理“1.23”一样处理它。 随意扩展它:)。 接下来我们处理注释：
+
+```c++
+if (LastChar == '#') {
+  // Comment until end of line.
+  do
+    LastChar = getchar();
+  while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
+
+  if (LastChar != EOF)
+    return gettok();
+}
+```
+
+我们通过跳到行尾来处理注释，然后返回下一个符号。 最后，如果输入与上述情况之一不匹配，则它是像“+”这样的运算符字符或文件的结尾。 这些代码使用以下代码处理：
+
+```c++
+// Check for end of file.  Don't eat the EOF.
+  if (LastChar == EOF)
+    return tok_eof;
+
+  // Otherwise, just return the character as its ascii value.
+  int ThisChar = LastChar;
+  LastChar = getchar();
+  return ThisChar;
+}
+```
+
+有了这个，我们有了基本的`Kaleidoscope`语言的完整词法分析器（Lexer的完整代码清单可以在本教程的下一章中找到）。 接下来，我们将构建一个简单的解析器，使用它来构建抽象语法树(AST)。 当我们有这个时，我们将包含一个驱动程序，以便您可以一起使用词法分析器和解析器。
+
+## 2
