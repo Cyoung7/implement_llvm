@@ -163,4 +163,248 @@ if (LastChar == '#') {
 
 有了这个，我们有了基本的`Kaleidoscope`语言的完整词法分析器（Lexer的完整代码清单可以在本教程的下一章中找到）。 接下来，我们将构建一个简单的解析器，使用它来构建抽象语法树(AST)。 当我们有这个时，我们将包含一个驱动程序，以便您可以一起使用词法分析器和解析器。
 
-## 2
+## 2. Implementing a Parser and AST
+
+### 2.1 第二章简介
+
+欢迎阅读“使用LLVM实现语言”教程的第2章。 本章介绍如何使用第1章中构建的词法分析器为我们的Kaleidoscope语言构建完整的解析器。 一旦我们有了解析器，我们将定义并构建一个抽象语法树（AST）。
+
+我们将构建的解析器使用递归下降解析和操作符优先解析的组合来解析Kaleidoscope语言（后者用于二元表达式，前者用于其他所有内容）。 在我们解析之前，让我们来谈谈解析器的输出：抽象语法树。
+
+### 2.3 The Abstract Syntax Tree (AST,抽象语法树)
+
+程序的`AST`以这样的方式捕获其行为，即编译器的后续阶段（例如代码生成）很容易解释。 我们基本上希望语言中每个构件都有一个对象，AST应该对语言进行密切建模。 在Kaleidoscope中，我们有表达式，原型和函数对象。 我们先从表达式开始：
+
+```c++
+/// ExprAST - Base class for all expression nodes.
+class ExprAST {
+public:
+  virtual ~ExprAST() {}
+};
+
+/// NumberExprAST - Expression class for numeric literals like "1.0".
+class NumberExprAST : public ExprAST {
+  double Val;
+
+public:
+  NumberExprAST(double Val) : Val(Val) {}
+};
+```
+
+上面的代码显示了基本`ExprAST`类的定义和我们用于数字文字的一个子类。 关于此代码的重要注意事项是`NumberExprAST`类将文字的数值捕获为实例变量。 这允许编译器的后续阶段知道存储的数值是什么。
+
+现在我们只创建了一个`AST`，因此它们还没有有用的访问方法。 例如，简单的添加虚拟方法来非常容易地打印代码。 以下是我们将在Kaleidoscope语言的基本形式中使用的其他表达式AST节点定义：
+
+```c++
+// VariableExprAST - Expression class for referencing a variable, like "a".
+class VariableExprAST : public ExprAST {
+  std::string Name;
+
+public:
+  VariableExprAST(const std::string &Name) : Name(Name) {}
+};
+
+/// BinaryExprAST - Expression class for a binary operator.
+class BinaryExprAST : public ExprAST {
+  char Op;
+  std::unique_ptr<ExprAST> LHS, RHS;
+
+public:
+  BinaryExprAST(char op, std::unique_ptr<ExprAST> LHS,
+                std::unique_ptr<ExprAST> RHS)
+    : Op(op), LHS(std::move(LHS)), RHS(std::move(RHS)) {}
+};
+
+/// CallExprAST - Expression class for function calls.
+class CallExprAST : public ExprAST {
+  std::string Callee;
+  std::vector<std::unique_ptr<ExprAST>> Args;
+
+public:
+  CallExprAST(const std::string &Callee,
+              std::vector<std::unique_ptr<ExprAST>> Args)
+    : Callee(Callee), Args(std::move(Args)) {}
+};
+```
+
+这里的所有（有意而为）都相当直接：变量捕获变量名称，二元运算符捕获它们的操作符（例如'+'），并且调用捕获函数名称以及任何参数表达式的列表。 关于我们的AST的一个好处是它捕获语言特性而不关心语言的语法。 请注意，这里没有讨论二元运算符的优先级，词法结构等。
+
+对于我们的基础语言，这些是我们将定义的所有表达式节点。 因为它还没有条件控制流程，所以它不是图灵完备的; 我们将在以后的文章中解决这个问题。 接下来我们需要的两件事是讨论函数接口的方法，以及讨论函数本身的方法：
+
+```c++
+/// PrototypeAST - This class represents the "prototype" for a function,
+/// which captures its name, and its argument names (thus implicitly the number
+/// of arguments the function takes).
+class PrototypeAST {
+  std::string Name;
+  std::vector<std::string> Args;
+
+public:
+  PrototypeAST(const std::string &name, std::vector<std::string> Args)
+    : Name(name), Args(std::move(Args)) {}
+
+  const std::string &getName() const { return Name; }
+};
+
+/// FunctionAST - This class represents a function definition itself.
+class FunctionAST {
+  std::unique_ptr<PrototypeAST> Proto;
+  std::unique_ptr<ExprAST> Body;
+
+public:
+  FunctionAST(std::unique_ptr<PrototypeAST> Proto,
+              std::unique_ptr<ExprAST> Body)
+    : Proto(std::move(Proto)), Body(std::move(Body)) {}
+};
+```
+
+在Kaleidoscope中，只使用参数的个数来作为函数输入。 由于所有值都是双精度浮点数，因此每个参数的类型不需要任何存储空间。 在更进一步和现实性的语言中，“ExprAST”类可能具有类型字段。
+
+有了这个框架，我们现在可以讨论在Kaleidoscope中解析表达式和函数体。
+
+### 2.3 基础解析(Parser Basics)
+
+现在我们要构建一个AST，我们需要定义解析器代码来构建它。 这里的想法是我们要解析类似“x + y”（由词法分析器返回的三个标记）到AST中，这可以通过这样的调用生成：
+
+```c++
+auto LHS = llvm::make_unique<VariableExprAST>("x");
+auto RHS = llvm::make_unique<VariableExprAST>("y");
+auto Result = std::make_unique<BinaryExprAST>('+', std::move(LHS),
+                                              std::move(RHS));
+```
+
+为此，我们首先定义一些基本的辅助程序：
+
+```c++
+/// CurTok/getNextToken - Provide a simple token buffer.  CurTok is the current
+/// token the parser is looking at.  getNextToken reads another token from the
+/// lexer and updates CurTok with its results.
+static int CurTok;
+static int getNextToken() {
+  return CurTok = gettok();
+}
+```
+
+这在词法分析器里实现了一个简单的标记缓冲区。 这允许我们在词法分析器返回时提前查看下一个符号。 我们解析器中的每个函数都假定CurTok是需要解析的当前符号。
+
+```c++
+/// LogError* - These are little helper functions for error handling.
+std::unique_ptr<ExprAST> LogError(const char *Str) {
+  fprintf(stderr, "LogError: %s\n", Str);
+  return nullptr;
+}
+std::unique_ptr<PrototypeAST> LogErrorP(const char *Str) {
+  LogError(Str);
+  return nullptr;
+}
+```
+
+LogError事务是我们的解析器将用于处理错误的简单帮助程序事务。 我们的解析器中的错误恢复不是最好的，并且对用户不是特别友好的，但它对我们的教程来说已经足够了。 这些事务使得在具有各种返回类型的事务中更容易处理错误：它们全部返回null。
+
+有了这些基本的辅助函数，我们就可以实现我们语法的第一部分：数字文字。
+
+### 2.4 基础表达式解析(Basic Expression Parsing)
+
+我们从数字开始，因为它们处理起来最简单。 对于语法中的每个作业，我们将定义一个解析该作业的函数。 对于数字，我们有：
+
+```c++
+/// numberexpr ::= number
+static std::unique_ptr<ExprAST> ParseNumberExpr() {
+  auto Result = llvm::make_unique<NumberExprAST>(NumVal);
+  getNextToken(); // consume the number
+  return std::move(Result);
+}
+```
+
+这个事务非常简单：当前符号是tok_number符号时，它希望被调用。 它获取当前数字值，创建NumberExprAST节点，将词法分析器前进到下一个符号，最后返回。
+
+这有一些有趣的方面。 最重要的一点是，这个例事务会占用与其相关的所有符号，并返回带有下一个符号（它不是语法生成的一部分）的词法分析器缓冲区(buffer)。 这是递归下降解析器的一种相当标准的方法。 有关更好的示例，括号运算符的定义如下：
+
+```c++
+/// parenexpr ::= '(' expression ')'
+static std::unique_ptr<ExprAST> ParseParenExpr() {
+  getNextToken(); // eat (.
+  auto V = ParseExpression();
+  if (!V)
+    return nullptr;
+
+  if (CurTok != ')')
+    return LogError("expected ')'");
+  getNextToken(); // eat ).
+  return V;
+}
+```
+
+这个函数说明了解析器中一些有趣的东西：
+
+- 1）它显示了我们如何使用LogError事务。调用时，此函数需要当前符号为`(`标记，但在解析子表达式后，可能没有等待到`)`。例如，如果用户输入`（4 x`而不是`（4）`，解析器应该发出错误。因为错误可能发生，解析器需要一种方式来指明它们发生错误：在我们的解析器中，我们返回null错误。
+- 2）这个函数的另一个有趣的方面是它通过调用ParseExpression使用递归（我们很快就会看到ParseExpression可以调用ParseParenExpr）。这很强大，因为它允许我们处理递归语法，并使每个作业变得非常简单。请注意，括号本身不会导致AST节点的建立。虽然我们可以这样做，但括号最重要的作用是引导解析器并提供分组。解析器构造AST后，不需要括号。
+
+下一个简单的作业是用于处理变量引用和函数调用：
+
+```c++
+/// identifierexpr
+///   ::= identifier
+///   ::= identifier '(' expression* ')'
+static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
+  std::string IdName = IdentifierStr;
+
+  getNextToken();  // eat identifier.
+
+  if (CurTok != '(') // Simple variable ref.
+    return llvm::make_unique<VariableExprAST>(IdName);
+
+  // Call.
+  getNextToken();  // eat (
+  std::vector<std::unique_ptr<ExprAST>> Args;
+  if (CurTok != ')') {
+    while (1) {
+      if (auto Arg = ParseExpression())
+        Args.push_back(std::move(Arg));
+      else
+        return nullptr;
+
+      if (CurTok == ')')
+        break;
+
+      if (CurTok != ',')
+        return LogError("Expected ')' or ',' in argument list");
+      getNextToken();
+    }
+  }
+
+  // Eat the ')'.
+  getNextToken();
+
+  return llvm::make_unique<CallExprAST>(IdName, std::move(Args));
+}
+```
+
+此事务遵循与其他事务相同的样式。 （如果当前符号是tok_identifier符号，则期望被调用）。 它还有递归和错误处理。 一个有趣的方面是它使用预测来确定当前标识符是独立变量引用还是函数调用表达式。 它通过检查标识符后面的标记是否为`(`标记，根据需要构造VariableExprAST或CallExprAST节点来处理此问题。
+
+现在我们已经拥有了所有简单的表达式解析逻辑，我们可以定义一个辅助函数将它们组合成一个入口点。 我们称这类表达式为“主”表达式，使得本教程后面更加清晰。 为了解析任意的主表达式，我们需要确定它是什么类型的表达式：
+
+```c++
+/// primary
+///   ::= identifierexpr
+///   ::= numberexpr
+///   ::= parenexpr
+static std::unique_ptr<ExprAST> ParsePrimary() {
+  switch (CurTok) {
+  default:
+    return LogError("unknown token when expecting an expression");
+  case tok_identifier:
+    return ParseIdentifierExpr();
+  case tok_number:
+    return ParseNumberExpr();
+  case '(':
+    return ParseParenExpr();
+  }
+}
+```
+
+现在你看到了这个函数的定义，可以更明显的看到为什么我们在各种函数中需要假设CurTok的状态。 这使得可以采用预测的方式来确定正在检查的表达式的类型，然后使用函数调用对其进行解析。
+
+现在处理了基本表达式，我们需要处理二进制表达式。 它们有点复杂。
+
+### 2.5 二元表达式解析(Binary Expression Parsing)
