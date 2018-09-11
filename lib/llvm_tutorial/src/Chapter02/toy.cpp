@@ -16,7 +16,7 @@
 // Lexer
 //===----------------------------------------------------------------------===//
 
-// The lexer returns tokens [0-255] if it is an unknown character, otherwise one
+// The lexer(词法分析器) returns tokens [0-255] if it is an unknown character, otherwise one
 // of these for known things.
 enum Token {
     tok_eof = -1,

@@ -15,12 +15,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/CMakeLists.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/doc/LLVM Tutorial.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/LLVM Tutorial.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -99,8 +94,8 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3240">
-              <caret line="180" column="12" selection-start-line="180" selection-start-column="12" selection-end-line="180" selection-end-column="12" />
+            <state relative-caret-position="-108">
+              <caret line="18" column="18" selection-start-line="18" selection-start-column="18" selection-end-line="18" selection-end-column="18" />
               <folding>
                 <element signature="e#40#71#0" expanded="true" />
               </folding>
@@ -157,8 +152,8 @@
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/Chapter01/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
+        <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp" />
       </list>
     </option>
   </component>
@@ -173,8 +168,8 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="216" />
-    <option name="y" value="38" />
+    <option name="x" value="361" />
+    <option name="y" value="56" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
   </component>
@@ -292,24 +287,25 @@
       <workItem from="1536293447397" duration="8631000" />
       <workItem from="1536479730756" duration="3803000" />
       <workItem from="1536545971828" duration="9687000" />
-      <workItem from="1536639589519" duration="4151000" />
+      <workItem from="1536639589519" duration="4804000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="33178000" />
+    <option name="totallyTimeSpent" value="33831000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="216" y="38" width="1400" height="999" extended-state="0" />
+    <frame x="361" y="56" width="1400" height="999" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.9289428" visible="true" weight="0.27193618" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.8745981" visible="true" weight="0.25308195" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Messages" order="7" weight="0.3272101" />
       <window_info anchor="bottom" id="CMake" order="7" weight="0.38002297" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.33754304" />
-      <window_info id="Structure" order="1" sideWeight="0.07105719" side_tool="true" visible="true" weight="0.27193618" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.2858783" />
+      <window_info id="Structure" order="1" sideWeight="0.12540193" side_tool="true" visible="true" weight="0.25308195" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
@@ -629,8 +625,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3240">
-          <caret line="180" column="12" selection-start-line="180" selection-start-column="12" selection-end-line="180" selection-end-column="12" />
+        <state relative-caret-position="-108">
+          <caret line="18" column="18" selection-start-line="18" selection-start-column="18" selection-end-line="18" selection-end-column="18" />
           <folding>
             <element signature="e#40#71#0" expanded="true" />
           </folding>
