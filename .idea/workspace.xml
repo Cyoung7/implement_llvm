@@ -15,7 +15,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/doc/LLVM Tutorial.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/LLVM Tutorial.md" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -33,18 +33,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="288">
               <caret line="22" column="18" lean-forward="true" selection-start-line="22" selection-start-column="18" selection-end-line="22" selection-end-column="18" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="KaleidoscopeJIT.h" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/Chapter01/KaleidoscopeJIT.h">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1548">
-              <caret line="86" column="10" selection-start-line="86" selection-start-column="10" selection-end-line="86" selection-end-column="10" />
-              <folding>
-                <element signature="e#143#174#0" expanded="true" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -167,9 +155,9 @@
     <packageJsonPaths />
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds">
-    <option name="x" value="361" />
-    <option name="y" value="56" />
+  <component name="ProjectFrameBounds" extendedState="1">
+    <option name="x" value="253" />
+    <option name="y" value="81" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
   </component>
@@ -287,15 +275,15 @@
       <workItem from="1536293447397" duration="8631000" />
       <workItem from="1536479730756" duration="3803000" />
       <workItem from="1536545971828" duration="9687000" />
-      <workItem from="1536639589519" duration="4804000" />
+      <workItem from="1536639589519" duration="6007000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="33831000" />
+    <option name="totallyTimeSpent" value="35034000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="361" y="56" width="1400" height="999" extended-state="0" />
+    <frame x="253" y="81" width="1400" height="999" extended-state="1" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.8745981" visible="true" weight="0.25308195" />
@@ -531,9 +519,6 @@
       </provider>
     </entry>
     <entry file="file:///media/cyoung/000E88CC0009670E/llvm/build_install/include/llvm/IR/Module.h" />
-    <entry file="file://$PROJECT_DIR$/doc/LLVM Tutorial.md">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="432">
@@ -622,6 +607,9 @@
           <caret line="3" column="40" selection-start-line="3" selection-start-column="40" selection-end-line="3" selection-end-column="40" />
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/doc/LLVM Tutorial.md">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
