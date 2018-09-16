@@ -710,7 +710,7 @@ public:
 
 `codegen`方法表示为该`AST`节点发出`IR`及其依赖的所有内容，并且它们都返回一个`LLVM Value`对象。 `Value`是用于表示LLVM中的[静态单一分配（SSA）寄存器](http://en.wikipedia.org/wiki/Static_single_assignment_form)或`SSA值`的类。 `SSA值`的最独特之处在于它们的值是在相关指令执行时计算，并且在指令重新执行之前（执行中）它不会获得新值。换句话说，没有办法“改变”SSA值。欲了解更多信息，请阅读[静态单一作业](http://en.wikipedia.org/wiki/Static_single_assignment_form) :一旦你理解它们，这些概念就非常自然了。
 
-请注意，不是将虚方法添加到ExprAST类层次结构中，而是使用访问者模式或其他方式对此进行建模也是有意义的。同样，本教程将不再讨论良好的软件工程实践：出于我们的目的，添加虚拟方法是最简单的。
+请注意，不是将虚方法添加到ExprAST类层次结构中，而是使用访问模式或其他方式对此进行建模也是有意义的。同样，本教程将不再讨论良好的软件工程实践：出于我们的目的，添加虚拟方法是最简单的。
 
 第二件事我们想要一个如同用于解析器的“LogError”方法 ，它将用于报告在代码生成期间发现的错误（例如，使用未声明的参数）：
 
@@ -732,13 +732,13 @@ Value *LogErrorV(const char *Str) {
 
 `TheModule`是一个包含函数和全局变量的LLVM结构。在许多方面，它是LLVM IR用于包含代码的顶层结构。它将存储我们生成的所有IR，这就是`codegen`方法返回原始值*而不是`unique_ptr <Value>`的原因。
 
-NamedValues映射会跟踪当前作用域中定义的值以及它们的LLVM表示形式。 （换句话说，它是代码的符号表）。在这种形式的万花筒中，唯一可以引用的是功能参数。因此，在为其函数体生成代码时，函数参数将在此映射中。
+NamedValues map会跟踪当前作用域中定义的值以及它们的LLVM表示形式。 （换句话说，它是代码的符号表）。在这种形式的语言中，唯一可以引用的是函数参数。因此，在为其函数体生成代码时，函数参数将在此映射中。
 
 有了这些基础知识，我们就可以开始讨论如何为每个表达式生成代码。请注意，这假设已将Builder设置为生成代码。现在，我们假设已经完成了，我们只是用它来发出代码。
 
 ### 3.3 中间表示代码生成
 
-为表达式节点生成LLVM代码非常简单：所有四个表达式节点的注释代码少于45行。 首先，我们将做数字表示：
+为表达式节点生成LLVM代码非常简单：所有四个表达式节点的非注释代码少于45行。 首先，我们将做数值表示：
 
 ```c++
 Value *NumberExprAST::codegen() {
@@ -746,7 +746,7 @@ Value *NumberExprAST::codegen() {
 }
 ```
 
-在LLVM IR中，数字常量用`ConstantFP`类表示，它在内部保存`APFloat`中的数值（`APFloat`具有保持任意精度的浮点常数的能力）。 这段代码基本上只是创建并返回一个`ConstantFP`。 请注意，在LLVM IR中，常量都是唯一的并且共享。 出于这个原因，API使用`oo :: get（...）`而不是`new foo（..）`或`foo :: Create（..）`。
+在LLVM IR中，数字常量用`ConstantFP`类表示，它在内部保存`APFloat`中的数值（`APFloat`具有保持任意精度的浮点常数的能力）。 这段代码基本上只是创建并返回一个`ConstantFP`。 请注意，在LLVM IR中，常量都是唯一的并且共享。 出于这个原因，API使用`foo :: get（...）`而不是`new foo（..）`或`foo :: Create（..）`。
 
 ```c++
 Value *VariableExprAST::codegen() {
@@ -787,7 +787,7 @@ Value *BinaryExprAST::codegen() {
 
 二元运算符更有意思。这里的基本思想是递归地为表达式的左侧散发(emits)代码，然后是右侧，然后我们计算二元表达式的结果。在此代码中，我们对操作码进行了简单的切换，以创建正确的LLVM指令。
 
-在上面的示例中，LLVM builder 类开始显示其值。 IRBuilder知道在哪里插入新创建的指令，您所要做的就是指定要创建的指令（例如使用CreateFAdd），使用哪些操作数（此处为L和R），并可选择为生成的指令提供名称。
+在上面的示例中，LLVM builder 类开始显示其价值。 IRBuilder知道在哪里插入新创建的指令，您所要做的就是指定要创建的指令（例如使用CreateFAdd），使用哪些操作数（此处为L和R），并可选择为生成的指令提供名称。
 
 LLVM的一个好处是名称只是一个提示。例如，如果上面的代码散发多个“addtmp”变量，LLVM将自动为每个变量提供一个增加的唯一数字后缀。指令的本地值名称纯粹是可选的，但它使读取IR转储更加容易。
 
@@ -841,7 +841,7 @@ Function *PrototypeAST::codegen() {
 
 这段代码将很多功能集成到几行中。首先请注意，此函数返回`Function *`而不是`Value *`。因为“原型”实际上是关于函数的外部接口（不是由表达式计算的值），所以它返回与codegen时相对应的LLVM函数是有意义的。
 
-对`FunctionType :: get`的调用创建了应该用于给定Prototype的FunctionType。由于Kaleidoscope中的所有函数参数都是double类型，因此第一行创建了一个“N”个LLVM double类型值的向量。然后使用Functiontype :: get方法创建一个函数类型，该函数类型将“N"个double数作为参数，结果返回一个double值，而不是vararg（false参数表示这一点）。请注意，LLVM中的类型与常量一样是唯一的，所以你不需要“new”一个类型，你直接“get”它。
+对`FunctionType :: get`的调用创建了应该用于给定Prototype的FunctionType。由于Kaleidoscope中的所有函数参数都是double类型，因此第一行创建了一个“N”个LLVM double类型值的向量。然后使用Functiontype :: get方法创建一个函数类型，该函数将“N"个double数作为参数，结果返回一个double值，而不是vararg（false参数表示这一点）。请注意，LLVM中的类型与常量一样是唯一的，所以你不需要“new”一个类型，你直接“get”它。
 
 上面的最后一行实际上创建了与Prototype相对应的IR函数。表示要使用的类型，链接和名称，以及要插入的模块(module)。 “[外部链接](http://llvm.org/docs/LangRef.html#linkage)”意味着该函数可以在当前模块外部定义和/或可以由模块外部的函数调用。传入的名称是用户指定的名称：由于指定了“TheModule”，因此该名称在“TheModule”的符号(symbol)表中注册。
 
@@ -902,7 +902,7 @@ if (Value *RetVal = Body->codegen()) {
 }
 ```
 
-一旦设置了插入点并填充了NamedValues映射，我们就会调用`codegen`方法来获取函数的根表达式。 如果没有发生错误，则会发出代码以将表达式计算到条目块中并返回计算的值。 假设没有错误，我们然后创建一个LLVM ret指令( [ret instruction](http://llvm.org/docs/LangRef.html#ret-instruction))，完成该函数。 构建函数后，我们调用LLVM提供的verifyFunction。 此函数对生成的代码执行各种一致性检查，以确定我们的编译器是否正在执行所有操作。 使用它很重要：它可以捕获很多错误。 函数执行完成并验证后，我们将其返回。
+一旦设置了插入点并填充了NamedValues映射，我们就会调用`codegen`方法来获取函数的根表达式。 如果没有发生错误，则会发出代码以将表达式计算到基础块中并返回计算的值。 假设没有错误，我们然后创建一个LLVM ret指令( [ret instruction](http://llvm.org/docs/LangRef.html#ret-instruction))，完成该函数。 构建函数后，我们调用LLVM提供的verifyFunction。 此函数对生成的代码执行各种一致性检查，以确定我们的编译器是否正在执行所有操作。 使用它很重要：它可以捕获很多错误。 函数执行完成并验证后，我们将其返回。
 
 ```c++
  // Error reading body, remove function.
@@ -911,7 +911,7 @@ if (Value *RetVal = Body->codegen()) {
 }
 ```
 
-这里留下的唯一一件事是处理错误情形。 为简单起见，我们仅通过删除函数(由eraseFromParent方法生成)来处理此问题。 这允许用户重新定义之前错误输入的函数：如果我们没有删除它，它将存在于带有正文的符号表中，从而阻止将来重新定义。
+这里留下的唯一一件事是处理错误情形。 为简单起见，我们仅通过删除函数(由eraseFromParent方法生成)来处理此问题。 这允许用户重新定义之前错误输入的函数：如果我们没有删除它，它将存在于带有context的符号表中，从而阻止将来重新定义。
 
 但是，此代码确实存在错误：如果FunctionAST :: codegen（）方法找到现有的IR函数，则它不会根据定义自己的原型验证其签名。 这意味着较早的'extern'声明将优先于函数定义的签名，这可能导致codegen失败，例如，如果函数参数的名称不同。 有很多方法可以解决这个问题，看看你能想出什么！ 这是一个测试用例：
 
@@ -1036,3 +1036,460 @@ clang++ -g -O3 toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs co
 ```
 
  [Here is the code](https://github.com/llvm-mirror/llvm/blob/master/examples/Kaleidoscope/Chapter3/toy.cpp)
+
+## 4. Kaleidoscope: Adding JIT and Optimizer Support
+
+### 4.1 第4章介绍
+
+欢迎阅读“使用LLVM实现语言”教程的第4章。 第1-3章描述了简单语言的实现，并增加了对生成LLVM IR的支持。 本章介绍两种新技术：为您的语言添加优化器支持，以及添加JIT编译器支持。 这些新增内容将演示如何为Kaleidoscope语言提供优质，高效的代码。
+
+### 4.2 细小常数折叠
+
+我们在第3章的演示优雅且易于扩展。 不幸的是，它不会产生很棒的代码。 但是，在编译简单代码时，IRBuilder确实给了我们明显的优化：
+
+```shell
+ready> def test(x) 1+2+x;
+Read function definition:
+define double @test(double %x) {
+entry:
+        %addtmp = fadd double 3.000000e+00, %x
+        ret double %addtmp
+}
+```
+
+此代码如果不通过解析输入构建的AST的文字转录。 那将是：
+
+```shell
+ready> def test(x) 1+2+x;
+Read function definition:
+define double @test(double %x) {
+entry:
+        %addtmp = fadd double 2.000000e+00, 1.000000e+00
+        %addtmp1 = fadd double %addtmp, %x
+        ret double %addtmp1
+}
+```
+
+如上所述，常量折叠是一种非常常见且非常重要的优化：以至于许多语言实现者在其AST表示中实现常量折叠支持。
+
+使用LLVM，您不需要在AST中支持。由于构建LLVM IR的所有调用都通过LLVM IR构建器，因此构建器本身会在调用它时检查是否存在常量折叠机会。如果是这样，它只是执行常量折叠并返回常量而不是创建指令。
+
+嗯，这很容易:)。在实践中，我们建议在生成这样的代码时始终使用IRBuilder。它的使用没有“语法开销”（你不必在任何地方使用常量检查来编译你的编译器）并且它可以大大减少在某些情况下生成的LLVM IR的数量（特别是对于具有宏预处理器的语言或使用很多常量）。
+
+另一方面，IRBuilder受到以下事实的限制：它在构建代码时将所有分析内联到代码中。下面是一个稍微复杂的例子：
+
+```
+ready> def test(x) (1+2+x)*(x+(1+2));
+ready> Read function definition:
+define double @test(double %x) {
+entry:
+        %addtmp = fadd double 3.000000e+00, %x
+        %addtmp1 = fadd double %x, 3.000000e+00
+        %multmp = fmul double %addtmp, %addtmp1
+        ret double %multmp
+}
+```
+
+在这种情况下，乘法的LHS和RHS是相同的值。 我们真的很想看到这产生“tmp = x + 3; result = tmp * tmp;“而不是两次计算”x + 3“。
+
+不幸的是，没有多少本地分析能够检测并纠正这一点。 这需要两个转换：表达式的重新关联（使add的词法相同）和Common Subexpression Elimination（CSE）删除冗余的add指令。 幸运的是，LLVM以“passes”的形式提供了您可以使用的各种优化。
+
+### 4.3 LLVM Optimization Passes
+
+LLVM提供了许多优化过程，它们可以执行许多不同类型的操作并具有不同的权衡。与其他系统不同，LLVM并不认为一组优化适用于所有语言和所有情况的错误概念。 LLVM允许编译器实现者就要使用的优化，按什么顺序以及在什么情况下做出完整的决策。
+
+作为一个具体的例子，LLVM支持“whole module”passes，它们可以查看尽可能大的代码体（通常是整个文件，但如果在链接时运行，这可能是整个程序的重要部分） 。它还支持并包含“per-function”passes，它一次只能在一个函数上运行，而不需要查看其他函数。有关传递及其运行方式的更多信息，请参阅[如何编写Pass]( [How to Write a Pass](http://llvm.org/docs/WritingAnLLVMPass.html))文档和[LLVM Pass列表](http://llvm.org/docs/Passes.html)。
+
+对于Kaleidoscope，我们目前正在生成函数，一次一个，当用户输入它们时。我们不会在这个设置中瞄准最优优化，但我们也想要尽可能抓住简单快捷的东西。因此，当用户键入函数时，我们将选择运行一些按函数优化。如果我们想要创建一个“静态Kaleidoscope编译器”，我们将使用现在拥有的代码，除非我们推迟运行优化器直到整个文件被解析。
+
+为了实现每个函数的优化，我们需要设置一个FunctionPassManager来保存和组织我们想要运行的LLVM优化。完成后，我们可以添加一组优化来运行。对于我们想要优化的每个模块，我们需要一个新的FunctionPassManager，因此我们将编写一个函数来为我们创建和初始化module 和 pass manager：
+
+```c++
+void InitializeModuleAndPassManager(void) {
+  // Open a new module.
+  TheModule = llvm::make_unique<Module>("my cool jit", TheContext);
+
+  // Create a new pass manager attached to it.
+  TheFPM = llvm::make_unique<FunctionPassManager>(TheModule.get());
+
+  // Do simple "peephole" optimizations and bit-twiddling optzns.
+  TheFPM->add(createInstructionCombiningPass());
+  // Reassociate expressions.
+  TheFPM->add(createReassociatePass());
+  // Eliminate Common SubExpressions.
+  TheFPM->add(createGVNPass());
+  // Simplify the control flow graph (deleting unreachable blocks, etc).
+  TheFPM->add(createCFGSimplificationPass());
+
+  TheFPM->doInitialization();
+}
+```
+
+此代码初始化全局模块TheModule，以及函数pass manager  `TheFPM`，它附加到TheModule。 一旦设置了pass manager ，我们就会使用一系列“add”调用来添加一堆LLVM Passes。
+
+在这种情况下，我们选择添加四个优化过程。 我们在这里选择的通道是一组非常标准的“cleanup”优化，可用于各种代码。 我不会深入研究他们的所作所为，但相信我，他们是一个很好的起点:)。
+
+一旦设置了PassManager，我们就需要使用它。 我们通过在构造新创建的函数（在FunctionAST :: codegen（）中）之后运行它，但在它返回到客户端之前执行此操作：
+
+```c++
+if (Value *RetVal = Body->codegen()) {
+  // Finish off the function.
+  Builder.CreateRet(RetVal);
+
+  // Validate the generated code, checking for consistency.
+  verifyFunction(*TheFunction);
+
+  // Optimize the function.
+  TheFPM->run(*TheFunction);
+
+  return TheFunction;
+}
+```
+
+如您所见，这非常简单。 FunctionPassManager优化并更新LLVM功能*，改进（但愿）它的主体。 有了这个，我们可以再次尝试我们的测试：
+
+```
+ready> def test(x) (1+2+x)*(x+(1+2));
+ready> Read function definition:
+define double @test(double %x) {
+entry:
+        %addtmp = fadd double %x, 3.000000e+00
+        %multmp = fmul double %addtmp, %addtmp
+        ret double %multmp
+}
+```
+
+正如预期的那样，我们现在可以获得优化的代码，从每次执行此函数时都可以保存浮点加法指令。
+
+LLVM提供了各种可在某些情况下使用的优化。 有关各种Passes的一些文档可用，但它不是很完整。 另一个好的想法来源可以来自于看看Clang开始运行的Passes。 “opt”工具允许您尝试从命令行传递，以便您可以查看它们是否执行任何操作。
+
+现在我们已经从前端获得了合理的代码，让我们谈谈关于它的执行！
+
+### 4.4 Adding a JIT Compiler
+
+LLVM IR中提供的代码可以应用各种各样的工具。例如，您可以对其运行优化（如上所述），您可以将其以文本或二进制形式转储，您可以将代码编译为某个目标的汇编文件（.s），或者您可以JIT编译它。 LLVM IR表示的好处在于它是编译器的许多不同部分之间的“通用currency(货币)”。
+
+在本节中，我们将向我们的解释器添加JIT编译器支持。我们想要Kaleidoscope的基本思想是让用户像现在一样输入函数体，但是立即评估他们输入的顶级表达式。例如，如果他们输入“1 + 2;”，我们应该评估如果他们定义了一个函数，他们应该可以从命令行调用它。
+
+为此，我们首先准备环境以为当前本机目标创建代码并声明和初始化JIT。这是通过调用一些InitializeNativeTarget \ *函数并添加一个全局变量TheJIT，并在main中初始化它来完成的：
+
+```c++
+static std::unique_ptr<KaleidoscopeJIT> TheJIT;
+...
+int main() {
+  InitializeNativeTarget();
+  InitializeNativeTargetAsmPrinter();
+  InitializeNativeTargetAsmParser();
+
+  // Install standard binary operators.
+  // 1 is lowest precedence.
+  BinopPrecedence['<'] = 10;
+  BinopPrecedence['+'] = 20;
+  BinopPrecedence['-'] = 20;
+  BinopPrecedence['*'] = 40; // highest.
+
+  // Prime the first token.
+  fprintf(stderr, "ready> ");
+  getNextToken();
+
+  TheJIT = llvm::make_unique<KaleidoscopeJIT>();
+
+  // Run the main "interpreter loop" now.
+  MainLoop();
+
+  return 0;
+}
+```
+
+我们还需要为JIT设置数据布局：
+
+```c++
+void InitializeModuleAndPassManager(void) {
+  // Open a new module.
+  TheModule = llvm::make_unique<Module>("my cool jit", TheContext);
+  TheModule->setDataLayout(TheJIT->getTargetMachine().createDataLayout());
+
+  // Create a new pass manager attached to it.
+  TheFPM = llvm::make_unique<FunctionPassManager>(TheModule.get());
+  ...
+```
+
+KaleidoscopeJIT类是一个专门为这些教程构建的简单JIT，可以在llvm-src / examples / Kaleidoscope / include / KaleidoscopeJIT.h的LLVM源代码中找到。 在后面的章节中，我们将看看它是如何工作的并使用新功能扩展它，但是现在我们将把它当作给定的。 它的API非常简单：addModule将一个LLVM IR模块添加到JIT中，使其功能可用于执行; removeModule删除一个模块，释放与该模块中的代码相关的任何内存; 和findSymbol允许我们查找编译代码的指针。
+
+我们可以使用这个简单的API并更改我们解析顶级表达式的代码，如下所示：
+
+```c++
+static void HandleTopLevelExpression() {
+  // Evaluate a top-level expression into an anonymous function.
+  if (auto FnAST = ParseTopLevelExpr()) {
+    if (FnAST->codegen()) {
+
+      // JIT the module containing the anonymous expression, keeping a handle so
+      // we can free it later.
+      auto H = TheJIT->addModule(std::move(TheModule));
+      InitializeModuleAndPassManager();
+
+      // Search the JIT for the __anon_expr symbol.
+      auto ExprSymbol = TheJIT->findSymbol("__anon_expr");
+      assert(ExprSymbol && "Function not found");
+
+      // Get the symbol's address and cast it to the right type (takes no
+      // arguments, returns a double) so we can call it as a native function.
+      double (*FP)() = (double (*)())(intptr_t)ExprSymbol.getAddress();
+      fprintf(stderr, "Evaluated to %f\n", FP());
+
+      // Delete the anonymous expression module from the JIT.
+      TheJIT->removeModule(H);
+    }
+```
+
+如果解析和codegen成功，则下一步是将包含顶层表达式的模块添加到JIT。我们通过调用addModule来实现这一点，addModule触发模块中所有函数的代码生成，并返回一个句柄，可以用来稍后从JIT中删除模块。一旦将模块添加到JIT，就不能再修改它，因此我们还打开一个新模块，通过调用InitializeModuleAndPassManager（）来保存后续代码。
+
+一旦我们将模块添加到JIT，我们需要获得指向最终生成代码的指针。我们通过调用JIT的findSymbol方法并传递顶级表达式函数的名称来执行此操作：__ anon_expr。由于我们刚刚添加了这个函数，我们断言findSymbol返回了一个结果。
+
+接下来，我们通过在符号上调用getAddress（）来获取__anon_expr函数的内存中地址。回想一下，我们将顶层表达式编译为一个自包含的LLVM函数，该函数不带参数并返回计算的double。因为LLVM JIT编译器与本机平台ABI匹配，这意味着您可以将结果指针强制转换为该类型的函数指针并直接调用它。这意味着，JIT编译代码与静态链接到应用程序的本机机器代码之间没有区别。
+
+最后，由于我们不支持对顶层表达式进行重新评估，因此当我们完成释放相关内存时，我们会从JIT中删除该模块。但是，回想一下，我们之前创建的几行模块（通过InitializeModuleAndPassManager）仍处于打开状态，等待添加新代码。
+
+只需这两个变化，让我们看看Kaleidoscope现在如何运作！
+
+```
+ready> 4+5;
+Read top-level expression:
+define double @0() {
+entry:
+  ret double 9.000000e+00
+}
+
+Evaluated to 9.000000
+```
+
+好吧，这看起来基本上是有效的。 该函数的转储显示了“无参数函数总是返回double”，我们为每个键入的顶层表达式合成。这演示了非常基本的功能，但我们可以做更多吗？
+
+```
+ready> def testfunc(x y) x + y*2;
+Read function definition:
+define double @testfunc(double %x, double %y) {
+entry:
+  %multmp = fmul double %y, 2.000000e+00
+  %addtmp = fadd double %multmp, %x
+  ret double %addtmp
+}
+
+ready> testfunc(4, 10);
+Read top-level expression:
+define double @1() {
+entry:
+  %calltmp = call double @testfunc(double 4.000000e+00, double 1.000000e+01)
+  ret double %calltmp
+}
+
+Evaluated to 24.000000
+
+ready> testfunc(5, 10);
+ready> LLVM ERROR: Program used external function 'testfunc' which could not be resolved!
+```
+
+函数定义和调用也有效，但最后一行出了问题。call看起来有效，发生了什么？正如您可能从API中猜到的那样，模块是JIT的分配单元，而testfunc是包含匿名表达式的同一模块的一部分。当我们从JIT中删除该模块以释放匿名表达式的内存时，我们删除了testfunc的定义。然后，当我们第二次尝试调用testfunc时，JIT再也找不到它了。
+
+解决此问题的最简单方法是将匿名表达式放在与其余函数定义不同的模块中。只要每个被调用的函数都有一个原型，JIT就会愉快地解决跨模块边界的函数调用，并在调用之前添加到JIT中。通过将匿名表达式放在不同的模块中，我们可以删除它而不影响其余的功能。
+
+事实上，我们将更进一步，将每个函数都放在自己的模块中。这样做可以让我们利用KaleidoscopeJIT的有用属性，使我们的环境更像REPL：函数可以多次添加到JIT（与每个函数必须具有唯一定义的模块不同）。当您在KaleidoscopeJIT中查找符号时，它将始终返回最新的定义：
+
+```
+ready> def foo(x) x + 1;
+Read function definition:
+define double @foo(double %x) {
+entry:
+  %addtmp = fadd double %x, 1.000000e+00
+  ret double %addtmp
+}
+
+ready> foo(2);
+Evaluated to 3.000000
+
+ready> def foo(x) x + 2;
+define double @foo(double %x) {
+entry:
+  %addtmp = fadd double %x, 2.000000e+00
+  ret double %addtmp
+}
+
+ready> foo(2);
+Evaluated to 4.000000
+```
+
+为了让每个函数都存在于自己的模块中，我们需要一种方法来重新生成我们打开的每个新模块中的预先函数声明：
+
+```c++
+static std::unique_ptr<KaleidoscopeJIT> TheJIT;
+
+...
+
+Function *getFunction(std::string Name) {
+  // First, see if the function has already been added to the current module.
+  if (auto *F = TheModule->getFunction(Name))
+    return F;
+
+  // If not, check whether we can codegen the declaration from some existing
+  // prototype.
+  auto FI = FunctionProtos.find(Name);
+  if (FI != FunctionProtos.end())
+    return FI->second->codegen();
+
+  // If no existing prototype exists, return null.
+  return nullptr;
+}
+
+...
+
+Value *CallExprAST::codegen() {
+  // Look up the name in the global module table.
+  Function *CalleeF = getFunction(Callee);
+
+...
+
+Function *FunctionAST::codegen() {
+  // Transfer ownership of the prototype to the FunctionProtos map, but keep a
+  // reference to it for use below.
+  auto &P = *Proto;
+  FunctionProtos[Proto->getName()] = std::move(Proto);
+  Function *TheFunction = getFunction(P.getName());
+  if (!TheFunction)
+    return nullptr;
+```
+
+为了实现这一点，我们首先添加一个新的全局函数FunctionProtos，它包含每个函数的最新原型。 我们还将添加一个方便的方法getFunction（）来替换对TheModule-> getFunction（）的调用。 我们的便捷方法在TheModule中搜索现有的函数声明，如果没有找到，则回退到从FunctionProtos生成新的声明。 在CallExprAST :: codegen（）中，我们只需要替换对TheModule-> getFunction（）的调用。 在FunctionAST :: codegen（）中，我们需要先更新FunctionProtos映射，然后调用getFunction（）。 完成此操作后，我们总是可以在当前模块中获取任何先前声明的函数的函数声明。
+
+我们还需要更新HandleDefinition和HandleExtern：
+
+```c++
+static void HandleDefinition() {
+  if (auto FnAST = ParseDefinition()) {
+    if (auto *FnIR = FnAST->codegen()) {
+      fprintf(stderr, "Read function definition:");
+      FnIR->print(errs());
+      fprintf(stderr, "\n");
+      TheJIT->addModule(std::move(TheModule));
+      InitializeModuleAndPassManager();
+    }
+  } else {
+    // Skip token for error recovery.
+     getNextToken();
+  }
+}
+
+static void HandleExtern() {
+  if (auto ProtoAST = ParseExtern()) {
+    if (auto *FnIR = ProtoAST->codegen()) {
+      fprintf(stderr, "Read extern: ");
+      FnIR->print(errs());
+      fprintf(stderr, "\n");
+      FunctionProtos[ProtoAST->getName()] = std::move(ProtoAST);
+    }
+  } else {
+    // Skip token for error recovery.
+    getNextToken();
+  }
+}
+```
+
+在HandleDefinition中，我们添加两行来将新定义的函数传递给JIT并打开一个新模块。 在HandleExtern中，我们只需添加一行即可将原型添加到FunctionProtos中。
+
+通过这些更改，让我们再次尝试我们的REPL（这次我删除了匿名函数的转储，你现在应该得到这个想法:)：
+
+```
+ready> def foo(x) x + 1;
+ready> foo(2);
+Evaluated to 3.000000
+
+ready> def foo(x) x + 2;
+ready> foo(2);
+Evaluated to 4.000000
+```
+
+有用！
+
+即使使用这个简单的代码，我们也会获得一些令人惊讶的强大功能 - 请查看：
+
+```
+ready> extern sin(x);
+Read extern:
+declare double @sin(double)
+
+ready> extern cos(x);
+Read extern:
+declare double @cos(double)
+
+ready> sin(1.0);
+Read top-level expression:
+define double @2() {
+entry:
+  ret double 0x3FEAED548F090CEE
+}
+
+Evaluated to 0.841471
+
+ready> def foo(x) sin(x)*sin(x) + cos(x)*cos(x);
+Read function definition:
+define double @foo(double %x) {
+entry:
+  %calltmp = call double @sin(double %x)
+  %multmp = fmul double %calltmp, %calltmp
+  %calltmp2 = call double @cos(double %x)
+  %multmp4 = fmul double %calltmp2, %calltmp2
+  %addtmp = fadd double %multmp, %multmp4
+  ret double %addtmp
+}
+
+ready> foo(4.0);
+Read top-level expression:
+define double @3() {
+entry:
+  %calltmp = call double @foo(double 4.000000e+00)
+  ret double %calltmp
+}
+
+Evaluated to 1.000000
+```
+
+哇，JIT怎么知道sin和cos？答案非常简单：KaleidoscopeJIT有一个简单的符号解析规则，用于查找任何给定模块中不可用的符号：首先，它搜索已经添加到JIT的所有模块，从最近的到最古老的，找到最新的定义。如果在JIT中找不到定义，它将回退到在Kaleidoscope进程本身上调用“dlsym（”sin“）”。由于“sin”是在JIT的地址空间中定义的，它只是简单地修补模块中的调用以直接调用libm版本的sin。但在某些情况下，这甚至更进一步：因为sin和cos是标准数学函数的名称，当使用上面的“sin（1.0）”中的常量调用时，常量文件夹将直接评估函数调用正确的结果。
+
+在未来，我们将看到如何调整此符号解析规则，以启用各种有用的功能，从安全性（限制JIT代码可用的符号集）到基于符号名称的动态代码生成，甚至是惰性的编译
+
+符号解析规则的一个直接好处是我们现在可以通过编写任意C ++代码来实现操作来扩展语言。例如，如果我们添加：
+
+```
+#ifdef _WIN32
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLEXPORT
+#endif
+
+/// putchard - putchar that takes a double and returns 0.
+extern "C" DLLEXPORT double putchard(double X) {
+  fputc((char)X, stderr);
+  return 0;
+}
+```
+
+注意，对于Windows，我们需要实际导出函数，因为动态符号加载器将使用GetProcAddress来查找符号。
+
+现在我们可以使用以下内容为控制台生成简单的输出：“extern putchard（x）; putchard（120）;“，在控制台上打印小写的'x'（120是'x'的ASCII码）。 类似的代码可用于在Kaleidoscope中实现文件I / O，控制台输入和许多其他功能。
+
+这完成了Kaleidoscope教程的JIT和优化器章节。 此时，我们可以编译非Turing完整的编程语言，优化和JIT以用户驱动的方式编译它。 接下来我们将研究用[控制流构造扩展语言](http://llvm.org/docs/tutorial/LangImpl05.html)，解决一些有趣的LLVM IR问题。
+
+### 4.5 Full Code Listing
+
+以下是我们的运行示例的完整代码清单，使用LLVM JIT和优化器进行了增强。 要构建此示例，请使用：
+
+```shell
+# Compile
+clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core mcjit native` -O3 -o toy
+# Run
+./toy
+```
+
+如果您在Linux上编译它，请确保添加“-rdynamic”选项。 这可确保在运行时正确解析外部函数。
+
+[Here is the code](https://github.com/llvm-mirror/llvm/blob/master/examples/Kaleidoscope/Chapter4/toy.cpp)
