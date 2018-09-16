@@ -168,7 +168,7 @@ namespace {
         PrototypeAST(std::string Name, std::vector<std::string> Args)
                 : Name(std::move(Name)), Args(std::move(Args)) {}
 
-        Function *codegen();
+        Function *codegen()  ;
         const std::string &getName() const { return Name; }
     };
 
@@ -465,6 +465,7 @@ Value *CallExprAST::codegen() {
     std::vector<Value *> ArgsV;
     for (unsigned i = 0, e = static_cast<unsigned int>(Args.size()); i != e; ++i) {
         ArgsV.push_back(Args[i]->codegen());
+        //
         if (!ArgsV.back())
             return nullptr;
     }
