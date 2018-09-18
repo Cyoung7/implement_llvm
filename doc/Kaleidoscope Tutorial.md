@@ -1,4 +1,4 @@
-# LLVM Tutorial
+# Kaleidoscope Tutorial
 
 [原文链接](http://llvm.org/docs/tutorial/)
 
