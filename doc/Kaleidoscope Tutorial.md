@@ -1,4 +1,6 @@
-# Kaleidoscope Tutorial
+
+
+# LLVM Tutorial
 
 [原文链接](http://llvm.org/docs/tutorial/)
 
@@ -1493,3 +1495,284 @@ clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core m
 如果您在Linux上编译它，请确保添加“-rdynamic”选项。 这可确保在运行时正确解析外部函数。
 
 [Here is the code](https://github.com/llvm-mirror/llvm/blob/master/examples/Kaleidoscope/Chapter4/toy.cpp)
+
+##  5.Kaleidoscope: Extending the Language: Control Flow
+
+### 5.1 第5章介绍
+
+欢迎阅读“使用LLVM实现语言”教程的第5章。 第1-4部分介绍了简单的Kaleidoscope语言的实现，并包括对生成LLVM IR的支持，然后是优化和JIT编译器。 不幸的是，正如所呈现的那样，Kaleidoscope几乎没用：它除了调用和返回之外没有其他控制流。 这意味着您不能在代码中使用条件分支，从而显着限制其功能。 在本期“构建编译器”中，我们将扩展Kaleidoscope，使其具有if / then / else表达式和一个简单的'for'循环。
+
+### 5.2 If/Then/Else
+
+扩展Kaleidoscope以支持if / then / else非常简单。 它基本上只需要为词法分析器，解析器，AST和LLVM代码发射器添加对这个“新”概念的支持。 这个例子很好，因为它显示了随着时间的推移“增强”一种语言是多么容易，随着新想法的发现逐渐扩展它。
+
+在我们开始“如何”添加此扩展之前，让我们谈谈我们想要的“什么”。 基本的想法是我们希望能够写出这样的东西：
+
+```python
+def fib(x)
+  if x < 3 then
+    1
+  else
+    fib(x-1)+fib(x-2);
+```
+
+在Kaleidoscope中，每个构造都是一个表达式：没有语句。 因此，if / then / else表达式需要返回与其他任何值相同的值。 由于我们使用的几乎是函数形式，我们将对其进行评估，然后根据条件的解析方式返回“then”或“else”值。 这与C“？：”表达非常相似。
+
+if / then / else表达式的语义是它将条件计算为布尔相等的值：0.0被认为是假，其他一切被认为是真。 如果条件为真，则计算并返回第一个子表达式，如果条件为假，则计算并返回第二个子表达式。 由于Kaleidoscope允许单方面有效性，因此这种行为对于确定是非常重要的。
+
+现在我们知道了我们“想要”的东西，让我们把它分解成它的组成部分。
+
+#### 5.2.1. Lexer Extensions for If/Then/Else
+
+词法分析器扩展很简单。 首先，我们为相关标记添加新的枚举值：
+
+```c++
+// control
+tok_if = -6,
+tok_then = -7,
+tok_else = -8,
+```
+
+一旦我们有了这个，我们就会识别词法分析器中的新关键字。 这很简单：
+
+```c++
+...
+if (IdentifierStr == "def")
+  return tok_def;
+if (IdentifierStr == "extern")
+  return tok_extern;
+if (IdentifierStr == "if")
+  return tok_if;
+if (IdentifierStr == "then")
+  return tok_then;
+if (IdentifierStr == "else")
+  return tok_else;
+return tok_identifier;
+```
+
+#### 5.2.2. AST Extensions for If/Then/Else
+
+为了表示新表达式，我们为它添加了一个新的AST节点：
+
+```c++
+/// IfExprAST - Expression class for if/then/else.
+class IfExprAST : public ExprAST {
+  std::unique_ptr<ExprAST> Cond, Then, Else;
+
+public:
+  IfExprAST(std::unique_ptr<ExprAST> Cond, std::unique_ptr<ExprAST> Then,
+            std::unique_ptr<ExprAST> Else)
+    : Cond(std::move(Cond)), Then(std::move(Then)), Else(std::move(Else)) {}
+
+  Value *codegen() override;
+};
+```
+
+AST节点只有指向各种子表达式的指针。
+
+#### 5.2.3. Parser Extensions for If/Then/Else
+
+现在我们有来自词法分析器的相关标记，并且我们要构建AST节点，我们的解析逻辑相对简单。 首先我们定义一个新的解析函数：
+
+```c++
+/// ifexpr ::= 'if' expression 'then' expression 'else' expression
+static std::unique_ptr<ExprAST> ParseIfExpr() {
+  getNextToken();  // eat the if.
+
+  // condition.
+  auto Cond = ParseExpression();
+  if (!Cond)
+    return nullptr;
+
+  if (CurTok != tok_then)
+    return LogError("expected then");
+  getNextToken();  // eat the then
+
+  auto Then = ParseExpression();
+  if (!Then)
+    return nullptr;
+
+  if (CurTok != tok_else)
+    return LogError("expected else");
+
+  getNextToken();
+
+  auto Else = ParseExpression();
+  if (!Else)
+    return nullptr;
+
+  return llvm::make_unique<IfExprAST>(std::move(Cond), std::move(Then),
+                                      std::move(Else));
+}
+```
+
+接下来我们将它作为主要表达式连接起来：
+
+```c++
+static std::unique_ptr<ExprAST> ParsePrimary() {
+  switch (CurTok) {
+  default:
+    return LogError("unknown token when expecting an expression");
+  case tok_identifier:
+    return ParseIdentifierExpr();
+  case tok_number:
+    return ParseNumberExpr();
+  case '(':
+    return ParseParenExpr();
+  case tok_if:
+    return ParseIfExpr();
+  }
+}
+```
+
+#### 5.2.4. LLVM IR for If/Then/Else
+
+现在我们已经解析并构建了AST，最后一部分是添加LLVM代码生成支持。 这是if / then / else示例中最有趣的部分，因为这是它开始引入新概念的地方。 上面的所有代码都已在前面的章节中详细介绍过。
+
+为了激发我们想要生成的代码，让我们看一个简单的例子。 考虑：
+
+```
+extern foo();
+extern bar();
+def baz(x) if x then foo() else bar();
+```
+
+如果您不优化，您（很快）从Kaleidoscope获取的代码如下所示：
+
+```
+declare double @foo()
+
+declare double @bar()
+
+define double @baz(double %x) {
+entry:
+  %ifcond = fcmp one double %x, 0.000000e+00
+  br i1 %ifcond, label %then, label %else
+
+then:       ; preds = %entry
+  %calltmp = call double @foo()
+  br label %ifcont
+
+else:       ; preds = %entry
+  %calltmp1 = call double @bar()
+  br label %ifcont
+
+ifcont:     ; preds = %else, %then
+  %iftmp = phi double [ %calltmp, %then ], [ %calltmp1, %else ]
+  ret double %iftmp
+}
+```
+
+要可视化控制流图，您可以使用LLVM“opt”工具的一个漂亮功能。 如果将此LLVM IR放入“t.ll”并运行“llvm-as <t.ll |” opt -analyze -view-cfg“，会弹出一个窗口，你会看到这个图：
+
+![hello](/media/cyoung/000E88CC0009670E/CLionProjects/implement_llvm/doc/image/hello.png)
+
+另一种方法是通过将实际调用插入代码并重新编译或通过调用这些来调用“F-> viewCFG（）”或“F-> viewCFGOnly（）”（其中F是“函数*”）。调试器。 LLVM具有许多用于可视化各种图形的很好的功能。
+
+回到生成的代码，它非常简单：条目块评估条件表达式（在我们的例子中为“x”），并将结果与“fcmp one”指令进行比较（'one'是“Ordered and Not”等于”）。根据此表达式的结果，代码跳转到“then”或“else”块，其中包含true / false情况的表达式。
+
+一旦then / else块完成执行，它们都会回到'ifcont'块以执行在if / then / else之后发生的代码。在这种情况下，唯一要做的就是返回函数的调用者。那么问题就变成了：代码如何知道返回哪个表达式？
+
+这个问题的答案涉及一个重要的SSA操作：Phi操作。如果你不熟悉SSA，维基百科的文章是一个很好的介绍，你最喜欢的搜索引擎上有各种其他介绍。简短的版本是Phi操作的“执行”需要“记住”哪个块控制来自哪里。 Phi操作采用与输入控制块相对应的值。在这种情况下，如果控制来自“then”块，它将获得“calltmp”的值。如果控制来自“else”块，则它获得“calltmp1”的值。
+
+在这一点上，你可能开始想“哦不！这意味着我的简单优雅的前端必须开始生成SSA表单才能使用LLVM！“幸运的是，事实并非如此，我们强烈建议不要在前端实施SSA构造算法，除非有一个非常好的理由这样做。实际上，在为可能需要Phi节点的普通命令式编程语言编写的代码中，有两种值可以浮动：
+
+- 涉及用户变量的代码：x = 1; x = x + 1;
+- AST结构中隐含的值，例如本例中的Phi节点。
+
+在本教程的第7章（“可变变量”）中，我们将深入讨论＃1。 现在，请相信我，你不需要SSA构造来处理这种情况。 对于＃2，您可以选择使用我们将为＃1描述的技术，或者如果方便的话，您可以直接插入Phi节点。 在这种情况下，生成Phi节点非常容易，因此我们选择直接进行。
+
+好的，足够的动力和概述，让我们生成代码！
+
+#### 5.2.5. Code Generation for If/Then/Else
+
+为了生成代码，我们为IfExprAST实现了codegen方法：
+
+```c++
+Value *IfExprAST::codegen() {
+  Value *CondV = Cond->codegen();
+  if (!CondV)
+    return nullptr;
+
+  // Convert condition to a bool by comparing non-equal to 0.0.
+  CondV = Builder.CreateFCmpONE(
+      CondV, ConstantFP::get(TheContext, APFloat(0.0)), "ifcond");
+```
+
+这段代码很简单，与我们之前看到的类似。 我们为条件发出表达式，然后将该值与零进行比较，以获得真值作为1位（bool）值。
+
+```c++
+Function *TheFunction = Builder.GetInsertBlock()->getParent();
+
+// Create blocks for the then and else cases.  Insert the 'then' block at the
+// end of the function.
+BasicBlock *ThenBB =
+    BasicBlock::Create(TheContext, "then", TheFunction);
+BasicBlock *ElseBB = BasicBlock::Create(TheContext, "else");
+BasicBlock *MergeBB = BasicBlock::Create(TheContext, "ifcont");
+
+Builder.CreateCondBr(CondV, ThenBB, ElseBB);
+```
+
+此代码创建与if / then / else语句相关的基本块，并直接对应于上例中的块。第一行获取正在构建的当前Function对象。它通过询问构建器当前的BasicBlock，并询问该块的“父”（它当前嵌入的函数）来获得这一点。
+
+一旦有了，就会创建三个块。请注意，它将“TheFunction”传递给“then”块的构造函数。这会导致构造函数自动将新块插入指定函数的末尾。创建了另外两个块，但尚未插入到该函数中。
+
+一旦创建了块，我们就可以发出在它们之间选择的条件分支。请注意，创建新块不会隐式影响IRBuilder，因此它仍然会插入条件进入的块中。另请注意，它正在创建“then”块和“else”块的分支，即使“else”块尚未插入到函数中。这一切都很好：它是LLVM支持前向引用的标准方式。
+
+```c++
+// Emit then value.
+Builder.SetInsertPoint(ThenBB);
+
+Value *ThenV = Then->codegen();
+if (!ThenV)
+  return nullptr;
+
+Builder.CreateBr(MergeBB);
+// Codegen of 'Then' can change the current block, update ThenBB for the PHI.
+ThenBB = Builder.GetInsertBlock();
+```
+
+插入条件分支后，我们移动构建器以开始插入“then”块。严格地说，此调用将插入点移动到指定块的末尾。但是，由于“then”块是空的，它也可以通过在块的开头插入来开始。 :)
+
+一旦设置了插入点，我们递归地编码来自AST的“then”表达式。为了完成“then”块，我们为合并块创建了一个无条件分支。 LLVM IR的一个有趣（也是非常重要）方面是它需要使用控制流指令（例如return或branch）“终止”所有基本块。这意味着必须在LLVM IR中明确指出所有控制流。如果违反此规则，验证程序将发出错误。
+
+这里的最后一行非常微妙，但非常重要。基本问题是当我们在合并块中创建Phi节点时，我们需要设置块/值对，以指示Phi将如何工作。重要的是，Phi节点期望在CFG中具有块的每个前任的条目。那么，为什么我们在将它们设置为ThenBB 5行以上时获取当前块？问题是“Then”表达式实际上可能会改变Builder发出的块，例如，如果它包含嵌套的“if / then / else”表达式。因为以递归方式调用codegen（）可以任意改变当前块的概念，所以我们需要获得将设置Phi节点的代码的最新值。
+
+```c++
+// Emit else block.
+TheFunction->getBasicBlockList().push_back(ElseBB);
+Builder.SetInsertPoint(ElseBB);
+
+Value *ElseV = Else->codegen();
+if (!ElseV)
+  return nullptr;
+
+Builder.CreateBr(MergeBB);
+// codegen of 'Else' can change the current block, update ElseBB for the PHI.
+ElseBB = Builder.GetInsertBlock();
+```
+
+'else'块的代码生成与'then'块的codegen基本相同。 唯一显着的区别是第一行，它将'else'块添加到函数中。 先前回想一下，'else'块已创建，但未添加到该函数中。 既然发出了'then'和'else'块，我们可以使用合并代码完成：
+
+```c++
+  // Emit merge block.
+  TheFunction->getBasicBlockList().push_back(MergeBB);
+  Builder.SetInsertPoint(MergeBB);
+  PHINode *PN =
+    Builder.CreatePHI(Type::getDoubleTy(TheContext), 2, "iftmp");
+
+  PN->addIncoming(ThenV, ThenBB);
+  PN->addIncoming(ElseV, ElseBB);
+  return PN;
+}
+```
+
+这里的前两行现在很熟悉：第一行将“merge”块添加到Function对象（它之前是浮动的，就像上面的else块一样）。 第二个更改插入点，以便新创建的代码将进入“合并”块。 完成后，我们需要创建PHI节点并为PHI设置块/值对。
+
+最后，CodeGen函数返回phi节点作为if / then / else表达式计算的值。 在上面的示例中，此返回值将提供给顶级函数的代码，该函数将创建返回指令。
+
+总的来说，我们现在能够在Kaleidoscope中执行条件代码。 通过此扩展，Kaleidoscope是一种相当完整的语言，可以计算各种数字函数。 接下来我们将添加另一个非功能语言熟悉的有用表达式...
+
+### 5.3. ‘for’ Loop Expression
+
