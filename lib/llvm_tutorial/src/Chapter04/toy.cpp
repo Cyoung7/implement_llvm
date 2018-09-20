@@ -29,7 +29,7 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <vector>
+#include <utility> #include <vector>
 #include <llvm/ExecutionEngine/Orc/Core.h>
 
 
@@ -116,3 +116,228 @@ static int gettok(){
     LastChar = getchar();
     return ThisChar;
 }
+
+
+//=========----------------------------========//
+// AST
+//=========----------------------------========//
+
+namespace {
+    class ExprAST{
+    public:
+        //virtual:基类的指针可以执行派生类,virtual告诉编译器调用派生类的相应函数
+        virtual ~ExprAST() = default;
+
+        virtual Value *codegen() = 0;
+    };
+
+    //数值节点
+    class NumberExprAST:public ExprAST{
+        double Val;
+    public:
+        NumberExprAST(double Val):Val(Val){}
+
+        Value *codegen() override ;
+    };
+
+    //变量节点
+    class VariableExprAST:public ExprAST{
+        std::string Name;
+    public:
+        VariableExprAST(std::string name):Name(std::move(name)){}
+
+        Value *codegen() override ;
+    };
+
+    //二元表达式节点
+    class BinaryExprAST:public ExprAST{
+        char Op;
+        std::unique_ptr<ExprAST> LHS,RHS;
+
+    public:
+        BinaryExprAST(char op,std::unique_ptr<ExprAST>lsh,std::unique_ptr<ExprAST>rsh)
+                :Op(op),LHS(std::move(lsh)),RHS(std::move(rsh)){}
+
+        Value *codegen() override;
+
+    };
+
+
+    //函数调用节点
+    class CallExprAST : public ExprAST {
+        std::string Callee;
+        //每一个参数可以是一个表达式,所以这里参数是一系列节点
+        std::vector<std::unique_ptr<ExprAST>> Args;
+
+    public:
+        CallExprAST(std::string Callee,
+                    std::vector<std::unique_ptr<ExprAST>> Args)
+                : Callee(std::move(Callee)), Args(std::move(Args)) {}
+
+        Value *codegen() override;
+    };
+
+    //函数声明节点
+
+    class PrototypeAST {
+        std::string Name;
+        //每个参数就是一个变量名
+        std::vector<std::string> Args;
+
+    public:
+        PrototypeAST(std::string Name, std::vector<std::string> Args)
+                : Name(std::move(Name)), Args(std::move(Args)) {}
+
+        Function *codegen();
+        const std::string &getName() const { return Name; }
+    };
+
+    //函数定义节点
+    class FunctionAST {
+        std::unique_ptr<PrototypeAST> Proto;
+        //函数体就是一个表达式
+        std::unique_ptr<ExprAST> Body;
+    public:
+        FunctionAST(std::unique_ptr<PrototypeAST> Proto,
+                    std::unique_ptr<ExprAST> Body)
+                : Proto(std::move(Proto)), Body(std::move(Body)) {}
+
+        Function *codegen();
+    };
+}
+
+
+//==========-------------------------======================//
+// 解析
+//==========-------------------------======================//
+
+//但前标识符的标记
+static int CurTok;
+//读入下一个标识符,也可以理解为吃掉当前标识符
+static int getNextToken(){
+    return CurTok = gettok();
+}
+
+//二元操作符的优先级
+static std::map<char, int> BinopPrecedence;
+
+static int GetTokPrecedence(){
+    //该标识符的标记不再ascii范围内,一定是上面几种特殊标识符
+    if(!isascii(CurTok)){
+        return -1;
+    }
+
+    int TokPrec = BinopPrecedence[CurTok];
+    //没有该二元操作符
+    if (TokPrec <= 0)
+        return -1;
+    return TokPrec;
+}
+
+std::unique_ptr<ExprAST> LogError(const char *str){
+    fprintf(stderr, "Error: %s\n", str);
+    return nullptr;
+}
+
+std::unique_ptr<PrototypeAST> LogErrorP(const char *Str) {
+    LogError(Str);
+    return nullptr;
+}
+
+
+//声明解析表达式的函数
+static std::unique_ptr<ExprAST> ParseExpression();
+
+//数值解析
+static std::unique_ptr<ExprAST> ParseNumberExpr(){
+
+//    std::unique_ptr<NumberExprAST> result = llvm::make_unique<NumberExprAST>(NumVal);
+    //auto:根据变量初始值的类型自动为此变量选择匹配的类型,必须在定义是初始化
+    auto result = llvm::make_unique<NumberExprAST>(NumVal);
+    //读入下一个标识符
+    getNextToken();
+    //这里是创建一个result节点,然后将result的指针返回
+    return std::move(result);
+}
+
+//解析()中的表达式
+static std::unique_ptr<ExprAST> ParseParentExpr(){
+    //吃掉 (
+    getNextToken();
+    //在解析表达式时,统一标准是要吃掉表达式的所有标识符,并移动到下一个标识符
+    auto V = ParseExpression();
+    if(!V){
+        return nullptr;
+    }
+    //这里的下一个标识符必须是 )
+    if(CurTok != ')'){
+        return LogError("expected ')'");
+    }
+    return V;
+}
+
+//解析一个标识符,后边如果有(),就是函数函数调用
+static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
+    //当前读入的标识符
+    std::string IdName = IdentifierStr;
+    //吃掉标识符
+    getNextToken();
+
+    //简单的变量标识符
+    if (CurTok != '('){
+        return std::move(llvm::make_unique<VariableExprAST>(IdName));
+    }
+
+    //函数调用
+    //吃掉 (
+    getNextToken();
+    std::vector<std::unique_ptr<ExprAST>> Args;
+
+    //函数带参数
+    if(CurTok != ')'){
+        while (true){
+            if (auto Arg = ParseExpression()){
+                Args.push_back(std::move(Arg));
+            } else{
+                return nullptr;
+            }
+
+            //所有参数解析完毕
+            if(CurTok == ')'){
+                break;
+            }
+            //表达式解析之后既不是,又不是) ,输入有误
+            if (CurTok != ','){
+                return LogError("Expected ')' or ',' in argument list");
+            }
+            //吃掉,
+            getNextToken();
+        }
+    }
+    //吃掉 )
+    getNextToken();
+    return llvm::make_unique<CallExprAST>(IdName,std::move(Args));
+}
+
+//解析主表达式,作为解析各种表达式的入口
+static std::unique_ptr<ExprAST> ParsePrimary() {
+    switch (CurTok){
+        default:
+            return LogError("unknown token when expecting an expression");
+        //当前是一个标识符,其可能是一个普通标识符,也可能是一个函数调用标识符
+        case tok_identifier:
+            return ParseIdentifierExpr();
+        case tok_number:
+            return ParseNumberExpr();
+        case '(':
+            return ParseParentExpr();
+    }
+}
+
+//解析二元操作符,形式 (op + 主表达式)*
+
+
+
+
+
+
