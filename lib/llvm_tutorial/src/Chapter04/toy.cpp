@@ -439,3 +439,14 @@ static std::unique_ptr<PrototypeAST> ParseExtern() {
 }
 
 
+//代码生成
+static LLVMContext TheContext;
+static IRBuilder<> builder(TheContext);
+static std::unique_ptr<Module> theModule;
+static std::map<std::string,Value*> nameValue;
+static std::unique_ptr<legacy::FunctionPassManager> TheFPM;
+static std::unique_ptr<KaleidoscopeJIT> TheJIT;
+static std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
+
+
+

@@ -17,7 +17,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/include/KaleidoscopeJIT.h" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/include/KaleidoscopeJIT.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
@@ -48,11 +48,8 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="473">
-              <caret line="441" lean-forward="true" selection-start-line="441" selection-end-line="441" />
-              <folding>
-                <element signature="e#40#82#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="76">
+              <caret line="4" column="34" selection-start-line="4" selection-start-column="34" selection-end-line="4" selection-end-column="34" />
             </state>
           </provider>
         </entry>
@@ -78,8 +75,8 @@
       <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="190">
-              <caret line="10" column="30" selection-start-line="10" selection-start-column="30" selection-end-line="10" selection-end-column="30" />
+            <state relative-caret-position="38">
+              <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
             </state>
           </provider>
         </entry>
@@ -111,7 +108,6 @@
         <option value="$PROJECT_DIR$/cmake-build-debug/CMakeCache.txt" />
         <option value="$PROJECT_DIR$/main.cpp" />
         <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/lib/llvm_tutorial/include/KaleidoscopeJIT.h" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/lib/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/Chapter01/KaleidoscopeJIT.h" />
@@ -125,6 +121,7 @@
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp" />
+        <option value="$PROJECT_DIR$/lib/llvm_tutorial/include/KaleidoscopeJIT.h" />
       </list>
     </option>
   </component>
@@ -139,7 +136,7 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="669" />
+    <option name="x" value="381" />
     <option name="y" value="81" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
@@ -180,29 +177,6 @@
               <item name="lib" type="462c0819:PsiDirectoryNode" />
               <item name="llvm_tutorial" type="462c0819:PsiDirectoryNode" />
               <item name="include" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="implement_llvm" type="b2602c69:ProjectViewProjectNode" />
-              <item name="implement_llvm" type="462c0819:PsiDirectoryNode" />
-              <item name="lib" type="462c0819:PsiDirectoryNode" />
-              <item name="llvm_tutorial" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="implement_llvm" type="b2602c69:ProjectViewProjectNode" />
-              <item name="implement_llvm" type="462c0819:PsiDirectoryNode" />
-              <item name="lib" type="462c0819:PsiDirectoryNode" />
-              <item name="llvm_tutorial" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="Chapter02" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="implement_llvm" type="b2602c69:ProjectViewProjectNode" />
-              <item name="implement_llvm" type="462c0819:PsiDirectoryNode" />
-              <item name="lib" type="462c0819:PsiDirectoryNode" />
-              <item name="llvm_tutorial" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="Chapter04" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -267,16 +241,15 @@
       <workItem from="1537194202894" duration="1278000" />
       <workItem from="1537243558495" duration="3566000" />
       <workItem from="1537434505431" duration="4164000" />
-      <workItem from="1537451583057" duration="4568000" />
+      <workItem from="1537451583057" duration="5253000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="79410000" />
+    <option name="totallyTimeSpent" value="80095000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="669" y="81" width="1400" height="999" extended-state="0" />
-    <editor active="true" />
+    <frame x="381" y="81" width="1400" height="999" extended-state="0" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.8614357" visible="true" weight="0.22571428" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -436,13 +409,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/include/KaleidoscopeJIT.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="8" selection-start-line="8" selection-end-line="8" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/Chapter01/KaleidoscopeJIT.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1548">
@@ -515,13 +481,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp" />
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/CMakeLists.txt" />
-    <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="10" column="30" selection-start-line="10" selection-start-column="30" selection-end-line="10" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/Transforms/InstCombine/InstCombine.h" />
     <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/ExecutionEngine/Orc/Core.h" />
     <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/ADT/STLExtras.h" />
@@ -556,13 +515,29 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="38">
+          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/include/KaleidoscopeJIT.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2527">
+          <caret line="133" selection-start-line="133" selection-end-line="133" />
+          <folding>
+            <element signature="e#195#226#0" expanded="true" />
+            <element signature="e#3139#3630#0" expanded="true" />
+            <element signature="e#4465#4880#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="473">
-          <caret line="441" lean-forward="true" selection-start-line="441" selection-end-line="441" />
-          <folding>
-            <element signature="e#40#82#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="76">
+          <caret line="4" column="34" selection-start-line="4" selection-start-column="34" selection-end-line="4" selection-end-column="34" />
         </state>
       </provider>
     </entry>
