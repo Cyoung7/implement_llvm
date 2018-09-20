@@ -336,8 +336,106 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
 
 //解析二元操作符,形式 (op + 主表达式)*
 
+static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
+                                              std::unique_ptr<ExprAST>LHS){
+    while (true){
+        int TokPrec = GetTokPrecedence();
+        //当前op优先级小于之前所有op的优先级,返回当前op之前的表达式
+        if(TokPrec < ExprPrec){
+            return LHS;
+        }
+        //拿到当前操作符
+        int BinOp = CurTok;
+        getNextToken();
+
+        //解析op右边的主表达式
+        auto RHS = ParsePrimary();
+
+        if (!RHS){
+            return nullptr;
+        }
+        //到此CurTok已经来到下一个op
+        //拿到下一个op的优先级
+        int NextPrec = GetTokPrecedence();
+        if(TokPrec < NextPrec){
+            //进入递归，
+            RHS = ParseBinOpRHS(TokPrec+1,std::move(RHS));
+            if (!RHS){
+                return nullptr;
+            }
+        }
+
+        //合并LHS/RHS
+        LHS = llvm::make_unique<BinaryExprAST>(BinOp,std::move(LHS),std::move(RHS));
+
+    }
+
+}
+
+
+//解析整表达式
+static std::unique_ptr<ExprAST> ParseExpression() {
+    auto LHS = ParsePrimary();
+    if(!LHS){
+        return nullptr;
+    }
+    return ParseBinOpRHS(0,std::move(LHS));
+}
+
+//解析函数原型
+static std::unique_ptr<PrototypeAST> ParsePrototype(){
+    if(CurTok != tok_identifier){
+        return LogErrorP("Expected function name in prototype");
+    }
+    std::string FnName = IdentifierStr;
+    //吃掉函数名
+    getNextToken();
+
+    if (CurTok != '(')
+        return LogErrorP("Expected '(' in prototype");
+    std::vector<std::string> ArgNames;
+    //这里为了简单起见，参数之间以空格间隔，而不是,
+    while (getNextToken() == tok_identifier)
+        ArgNames.push_back(IdentifierStr);
+
+    if (CurTok != ')')
+        return LogErrorP("Expected ')' in prototype");
+
+    // 吃掉)
+    getNextToken();
+
+    return llvm::make_unique<PrototypeAST>(FnName, std::move(ArgNames));
+}
+
+//函数定义解析
+static std::unique_ptr<FunctionAST> ParseDefinition() {
+    //吃掉def
+    getNextToken();
+    auto Proto = ParsePrototype();
+    if(!Proto){
+        return nullptr;
+    }
+    if (auto E = ParseExpression()){
+        return llvm::make_unique<FunctionAST>(std::move(Proto),std::move(E));
+    }
+    return nullptr;
+}
 
 
 
+static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
+    if (auto E = ParseExpression()) {
+        // Make an anonymous proto.
+        auto Proto = llvm::make_unique<PrototypeAST>("__anon_expr",
+                                                     std::vector<std::string>());
+        return llvm::make_unique<FunctionAST>(std::move(Proto), std::move(E));
+    }
+    return nullptr;
+}
+
+static std::unique_ptr<PrototypeAST> ParseExtern() {
+    getNextToken(); // eat extern.
+    return ParsePrototype();
+}
 
 
