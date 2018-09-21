@@ -1,11 +1,6 @@
-//
-// Created by cyoung on 18-9-10.
-//
-
 #ifndef LLVM_EXECUTIONENGINE_ORC_KALEIDOSCOPEJIT_H
 #define LLVM_EXECUTIONENGINE_ORC_KALEIDOSCOPEJIT_H
 
-#endif //LLV_EXECUTIONENGINE_ORC__KALEIDOSCOPEJIT_H
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"

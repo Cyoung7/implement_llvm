@@ -29,7 +29,8 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <utility> #include <vector>
+#include <utility>
+#include <vector>
 #include <llvm/ExecutionEngine/Orc/Core.h>
 
 
@@ -450,3 +451,281 @@ static std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
 
 
 
+Value *LogErrorV(const char *Str) {
+    LogError(Str);
+    return nullptr;
+}
+
+//函数是声明的代码生成
+Function *getFunction(const std::string &Name){
+    if(auto *F = theModule->getFunction(Name)){
+        return F;
+    }
+    auto FI = FunctionProtos.find(Name);
+    if(FI != FunctionProtos.end()){
+        return FI->second->codegen();
+    }
+    return nullptr;
+}
+
+//数值代码生成
+Value * NumberExprAST::codegen() {
+    return ConstantFP::get(TheContext,APFloat(Val));
+}
+
+//变量代码生成
+Value * VariableExprAST::codegen() {
+    Value *V = nameValue[Name];
+    if(!V){
+        return LogErrorV("Unknown variable name");
+    }
+    return V;
+}
+
+//二元表达式的代码生成
+Value* BinaryExprAST::codegen() {
+    Value* l = LHS->codegen();
+    Value* r = RHS->codegen();
+    if(!l || !r){
+        return nullptr;
+    }
+    switch (Op){
+        case '+':
+            return builder.CreateAdd(l,r,"addtmp");
+        case '-':
+            return builder.CreateFSub(l,r,"sumtmp");
+        case '*':
+            return builder.CreateFMul(l,r,"multmp");
+        case '<':
+            return builder.CreateFCmpULT(l,r,"cmptmp");
+        default:
+            return LogErrorV("invalid binary operator");
+    }
+}
+
+//函数调用代码生成
+Value* CallExprAST::codegen() {
+    //调用之前必须要先声明或定义
+    Function* calleeF = getFunction(Callee);
+    if(!calleeF){
+        return LogErrorV("Unknown function referenced");
+    }
+
+    //声明函数与调用函数参数个数不匹配
+    if(calleeF->arg_size() != Args.size()){
+        return LogErrorV("Incorrect # arguments passed");
+    }
+    std::vector<Value*> ArgsV;
+    for(unsigned i=0,e= static_cast<unsigned int>(Args.size()); i != e; ++i){
+        ArgsV.push_back(Args[i]->codegen());
+        if(!ArgsV.back()){
+            return nullptr;
+        }
+    }
+    return builder.CreateCall(calleeF,ArgsV,"calltmp");
+}
+
+//函数声明的代码生成
+Function* PrototypeAST::codegen() {
+    //所有的参数类型均为double
+    std::vector<Type*> Doubles(Args.size(),Type::getDoubleTy(TheContext));
+    //函数类型,需要其返回值类型,和参数类型,这个false什么意思
+    FunctionType* FT = FunctionType::get(Type::getDoubleTy(TheContext),Doubles, false);
+    //此函数为外部可见函数,并将函数存入theModel
+    Function* F = Function::Create(FT,Function::ExternalLinkage,Name,theModule.get());
+
+    //为参数附上参数名
+    unsigned idx = 0;
+    for(auto &Arg:F->args()){
+        Arg.setName(Args[idx++]);
+    }
+    return F;
+}
+
+//函数定义代码生成
+Function* FunctionAST::codegen() {
+    //引用只是起一个别名
+    PrototypeAST &p = *Proto;
+    //在函数表里注册
+    FunctionProtos[Proto->getName()] = std::move(Proto);
+
+    Function* theFunction = getFunction(p.getName());
+    if(!theFunction){
+        return nullptr;
+    }
+
+    //希望在此之前函数是没被定义过的
+    if (!theFunction->empty())
+        return (Function*)LogErrorV("Function cannot be redefined.");
+
+    //将BB插入到theFunction中
+    BasicBlock* BB = BasicBlock::Create(TheContext,"entry",theFunction);
+    //将新指令插入到基础块的末尾,现在没有控制流,所以只有一个块
+    builder.SetInsertPoint(BB);
+    //这不是很理解
+    nameValue.clear();
+    //将函数参数添加到nameValue中,以便被VariableAST节点访问
+    for(auto &Arg:theFunction->args()){
+        nameValue[Arg.getName()] = &Arg;
+    }
+
+    //
+    if(Value* retVal = Body->codegen()){
+        //创建一个ret指令,表示函数结束
+        builder.CreateRet(retVal);
+        verifyFunction(*theFunction);
+        //对函数进行优化
+        TheFPM->run(*theFunction);
+
+        return theFunction;
+    }
+    //body为空指针,取消theFunction在Module中的注册
+    theFunction->eraseFromParent();
+    return nullptr;
+}
+
+//===========--------------------------------------------==============//
+//顶层解析 + JIT Driver
+//===========--------------------------------------------==============//
+
+static void InitializeModuleAndPassManager(){
+    //开一个新module
+    theModule = llvm::make_unique<Module>("my cool Jit",TheContext);
+    theModule->setDataLayout(TheJIT->getTargetMachine().createDataLayout());
+
+    //创建一个新pass manager来跟踪,管理函数pass和基础块pass
+    TheFPM = llvm::make_unique<legacy::FunctionPassManager>(theModule.get());
+
+    //添加各种各样的pass,这是一组标准的cleanup优化
+    TheFPM->add(createInstructionCombiningPass());
+    TheFPM->add(createReassociatePass());
+    TheFPM->add(createGVNPass());
+    TheFPM->add(createCFGSimplificationPass());
+
+    TheFPM->doInitialization();
+}
+
+static void HandleDefinition(){
+    if(auto FnAST = ParseDefinition()){
+        if(auto *FnIR = FnAST->codegen()){
+            fprintf(stderr, "Read function definition:");
+            FnIR->print(errs());
+            fprintf(stderr, "\n");
+            TheJIT->addModule(std::move(theModule));
+            InitializeModuleAndPassManager();
+        }
+    } else{
+        //跳过错误的覆盖
+        getNextToken();
+    }
+}
+
+static void HandleExtern() {
+    if (auto ProtoAST = ParseExtern()) {
+        if (auto *FnIR = ProtoAST->codegen()) {
+            fprintf(stderr, "Read extern: ");
+            FnIR->print(errs());
+            fprintf(stderr, "\n");
+            FunctionProtos[ProtoAST->getName()] = std::move(ProtoAST);
+        }
+    } else {
+        getNextToken();
+    }
+}
+
+
+static void HandleTopLevelExpression(){
+    if(auto FnAST = ParseTopLevelExpr()){
+        if(FnAST->codegen()){
+            auto H = TheJIT->addModule(std::move(theModule));
+            InitializeModuleAndPassManager();
+
+            auto ExprSymbol = TheJIT->findSymbol("__anon_expr");
+            assert(ExprSymbol && "Function not found");
+
+            double (*FP)() = (double (*)())(intptr_t)cantFail(ExprSymbol.getAddress());
+            fprintf(stderr, "Evaluated to %f\n", FP());
+
+            TheJIT->removeModule(H);
+        }
+    } else{
+        getNextToken();
+    }
+}
+
+/// top ::= definition | external | expression | ';'
+static void MainLoop() {
+    while (true) {
+        fprintf(stderr, "ready> ");
+        switch (CurTok) {
+            case tok_eof:
+                return;
+            case ';': // ignore top-level semicolons.
+                getNextToken();
+                break;
+            case tok_def:
+                HandleDefinition();
+                break;
+            case tok_extern:
+                HandleExtern();
+                break;
+            default:
+                HandleTopLevelExpression();
+                break;
+        }
+    }
+}
+
+
+
+//===----------------------------------------------------------------------===//
+// "Library" functions that can be "extern'd" from user code.
+//===----------------------------------------------------------------------===//
+
+#ifdef _WIN32
+#define DLLEXPORT __declspec(dllexport)
+#else
+#define DLLEXPORT
+#endif
+
+/// putchard - putchar that takes a double and returns 0.
+extern "C" DLLEXPORT double putchard(double X) {
+    fputc((char)X, stderr);
+    return 0;
+}
+
+/// printd - printf that takes a double prints it as "%f\n", returning 0.
+extern "C" DLLEXPORT double printd(double X) {
+    fprintf(stderr, "%f\n", X);
+    return 0;
+}
+
+//===----------------------------------------------------------------------===//
+// Main driver code.
+//===----------------------------------------------------------------------===//
+
+int main() {
+    InitializeNativeTarget();
+    InitializeNativeTargetAsmPrinter();
+    InitializeNativeTargetAsmParser();
+
+    // Install standard binary operators.
+    // 1 is lowest precedence.
+    BinopPrecedence['<'] = 10;
+    BinopPrecedence['+'] = 20;
+    BinopPrecedence['-'] = 20;
+    BinopPrecedence['*'] = 40; // highest.
+
+    // Prime the first token.
+    fprintf(stderr, "ready> ");
+    getNextToken();
+
+    TheJIT = llvm::make_unique<KaleidoscopeJIT>();
+
+    InitializeModuleAndPassManager();
+
+    // Run the main "interpreter loop" now.
+    MainLoop();
+
+    return 0;
+}

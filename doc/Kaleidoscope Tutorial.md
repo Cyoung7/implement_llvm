@@ -1,5 +1,3 @@
-
-
 # LLVM Tutorial
 
 [原文链接](http://llvm.org/docs/tutorial/)
@@ -1098,7 +1096,7 @@ entry:
 
 ### 4.3 LLVM Optimization Passes
 
-LLVM提供了许多优化过程，它们可以执行许多不同类型的操作并具有不同的权衡。与其他系统不同，LLVM并不认为一组优化适用于所有语言和所有情况的错误概念。 LLVM允许编译器实现者就要使用的优化，按什么顺序以及在什么情况下做出完整的决策。
+LLVM提供了许多优化过程，它们可以执行许多不同类型的操作并具有不同的权衡。与其他系统不同，LLVM并不认为一组优化适用于所有语言和所有情况的错误概念。 LLVM允许编译器实现者就 要使用的优化，按什么顺序以及在什么情况下做出完整的决策。
 
 作为一个具体的例子，LLVM支持“whole module”passes，它们可以查看尽可能大的代码体（通常是整个文件，但如果在链接时运行，这可能是整个程序的重要部分） 。它还支持并包含“per-function”passes，它一次只能在一个函数上运行，而不需要查看其他函数。有关传递及其运行方式的更多信息，请参阅[如何编写Pass]( [How to Write a Pass](http://llvm.org/docs/WritingAnLLVMPass.html))文档和[LLVM Pass列表](http://llvm.org/docs/Passes.html)。
 

@@ -1,4 +1,13 @@
-set(LLVM_LINK_COMPONENTS Core Support)
+set(LLVM_LINK_COMPONENTS  Analysis
+        Core
+        ExecutionEngine
+        InstCombine
+        Object
+        OrcJIT
+        RuntimeDyld
+        ScalarOpts
+        Support
+        native)
 
 add_kaleidoscope_chapter(Kaleidoscope-Ch3  toy.cpp)
 #export_executable_symbols(Kaleidoscope-Ch3)
