@@ -608,7 +608,7 @@ int main() {
     BinopPrecedence['*'] = 40; // highest.
 
     // Prime the first token.
-    fprintf(stderr, "ready> ");
+    fprintf(stderr, "ready(chapter03)> ");
     getNextToken();
 
     // Make the module, which holds all the code.
