@@ -2,12 +2,12 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true" buildAllGenerated="true">
     <generated>
-      <config projectName="implement_llvm" targetName="Kaleidoscope-Ch2" />
-      <config projectName="implement_llvm" targetName="Kaleidoscope-Ch3" />
-      <config projectName="implement_llvm" targetName="Kaleidoscope-Ch4" />
-      <config projectName="implement_llvm" targetName="intrinsics_gen" />
       <config projectName="implement_llvm" targetName="BuildingAJIT-Ch1" />
       <config projectName="implement_llvm" targetName="llvm_tutorial" />
+      <config projectName="implement_llvm" targetName="Kaleidoscope-Ch4" />
+      <config projectName="implement_llvm" targetName="Kaleidoscope-Ch3" />
+      <config projectName="implement_llvm" targetName="Kaleidoscope-Ch2" />
+      <config projectName="implement_llvm" targetName="intrinsics_gen" />
     </generated>
   </component>
   <component name="CMakeSettings" AUTO_RELOAD="true">
@@ -17,11 +17,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
@@ -56,11 +51,10 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="354">
-              <caret line="672" column="49" lean-forward="true" selection-start-line="672" selection-start-column="49" selection-end-line="672" selection-end-column="49" />
+            <state relative-caret-position="373">
+              <caret line="574" column="31" lean-forward="true" selection-start-line="574" selection-start-column="31" selection-end-line="574" selection-end-column="31" />
               <folding>
                 <element signature="e#0#42#0" expanded="true" />
-                <element signature="e#19618#19657#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -69,8 +63,8 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="268">
-              <caret line="565" column="12" selection-start-line="565" selection-start-column="12" selection-end-line="566" selection-end-column="34" />
+            <state relative-caret-position="287">
+              <caret line="566" column="34" lean-forward="true" selection-start-line="564" selection-start-column="12" selection-end-line="566" selection-end-column="34" />
               <folding>
                 <element signature="e#40#69#0" expanded="true" />
               </folding>
@@ -81,7 +75,7 @@
       <file leaf-file-name="LegacyPassManager.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../llvm/build_install/include/llvm/IR/LegacyPassManager.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="211">
+            <state relative-caret-position="1330">
               <caret line="70" column="50" selection-start-line="70" selection-start-column="50" selection-end-line="70" selection-end-column="50" />
             </state>
           </provider>
@@ -90,7 +84,7 @@
       <file leaf-file-name="TargetSelect.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../llvm/build_install/include/llvm/Support/TargetSelect.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="186">
+            <state relative-caret-position="2432">
               <caret line="128" column="40" selection-start-line="128" selection-start-column="40" selection-end-line="128" selection-end-column="40" />
             </state>
           </provider>
@@ -123,6 +117,7 @@
     <findStrings>
       <find>isVarArg</find>
       <find>InitializeModuleAndPassManager</find>
+      <find>getFunction</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -162,8 +157,8 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="406" />
-    <option name="y" value="25" />
+    <option name="x" value="486" />
+    <option name="y" value="49" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
   </component>
@@ -173,7 +168,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -239,6 +233,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -302,23 +297,24 @@
       <workItem from="1537451583057" duration="5253000" />
       <workItem from="1537515288279" duration="9760000" />
       <workItem from="1537876663873" duration="6251000" />
+      <workItem from="1537883048430" duration="1075000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="96106000" />
+    <option name="totallyTimeSpent" value="97181000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="406" y="25" width="1400" height="999" extended-state="0" />
+    <frame x="486" y="49" width="1400" height="999" extended-state="0" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.8210526" visible="true" weight="0.225" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.8196147" visible="true" weight="0.225" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.67142856" weight="0.25615212" />
+      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.6692857" weight="0.25615212" />
       <window_info anchor="bottom" id="CMake" order="7" sideWeight="0.6578571" weight="0.29865772" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.24285714" side_tool="true" visible="true" weight="0.25615212" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.245" side_tool="true" visible="true" weight="0.36129755" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.75714284" weight="0.36129755" />
-      <window_info id="Structure" order="1" sideWeight="0.17894737" side_tool="true" visible="true" weight="0.225" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.755" visible="true" weight="0.36129755" />
+      <window_info id="Structure" order="1" sideWeight="0.18038529" side_tool="true" visible="true" weight="0.225" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49857143" weight="0.38926175" />
@@ -377,17 +373,17 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp</url>
-          <line>743</line>
+          <line>747</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp</url>
-          <line>760</line>
+          <line>764</line>
           <option name="timeStamp" value="18" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp</url>
-          <line>696</line>
+          <line>700</line>
           <option name="timeStamp" value="19" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
@@ -641,14 +637,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../../llvm/build_install/include/llvm/Support/TargetSelect.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="186">
+        <state relative-caret-position="2432">
           <caret line="128" column="40" selection-start-line="128" selection-start-column="40" selection-end-line="128" selection-end-column="40" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../llvm/build_install/include/llvm/IR/LegacyPassManager.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="211">
+        <state relative-caret-position="1330">
           <caret line="70" column="50" selection-start-line="70" selection-start-column="50" selection-end-line="70" selection-end-column="50" />
         </state>
       </provider>
@@ -669,8 +665,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="268">
-          <caret line="565" column="12" selection-start-line="565" selection-start-column="12" selection-end-line="566" selection-end-column="34" />
+        <state relative-caret-position="287">
+          <caret line="566" column="34" lean-forward="true" selection-start-line="564" selection-start-column="12" selection-end-line="566" selection-end-column="34" />
           <folding>
             <element signature="e#40#69#0" expanded="true" />
           </folding>
@@ -679,11 +675,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="354">
-          <caret line="672" column="49" lean-forward="true" selection-start-line="672" selection-start-column="49" selection-end-line="672" selection-end-column="49" />
+        <state relative-caret-position="373">
+          <caret line="574" column="31" lean-forward="true" selection-start-line="574" selection-start-column="31" selection-end-line="574" selection-end-column="31" />
           <folding>
             <element signature="e#0#42#0" expanded="true" />
-            <element signature="e#19618#19657#0" expanded="true" />
           </folding>
         </state>
       </provider>

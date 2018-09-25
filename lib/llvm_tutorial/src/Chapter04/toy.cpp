@@ -664,6 +664,10 @@ static void HandleTopLevelExpression() {
     // Evaluate a top-level expression into an anonymous function.
     if (auto FnAST = ParseTopLevelExpr()) {
         if (auto *FnIR = FnAST->codegen()) {
+            fprintf(stderr, "Read top-level expression:");
+            FnIR->print(errs());
+            fprintf(stderr, "\n");
+
             // JIT the module containing the anonymous expression, keeping a handle so
             // we can free it later.
             //返回添加模块的句柄，用来删除模块用
