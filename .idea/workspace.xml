@@ -63,8 +63,8 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="338">
-              <caret line="685" column="13" lean-forward="true" selection-start-line="685" selection-start-column="13" selection-end-line="685" selection-end-column="13" />
+            <state relative-caret-position="230">
+              <caret line="394" column="12" selection-start-line="394" selection-start-column="9" selection-end-line="394" selection-end-column="12" />
               <folding>
                 <element signature="e#40#82#0" expanded="true" />
                 <element signature="e#27945#27984#0" expanded="true" />
@@ -189,8 +189,8 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="414" />
-    <option name="y" value="51" />
+    <option name="x" value="600" />
+    <option name="y" value="81" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
   </component>
@@ -350,15 +350,15 @@
       <workItem from="1537515288279" duration="9760000" />
       <workItem from="1537876663873" duration="6251000" />
       <workItem from="1537883048430" duration="1075000" />
-      <workItem from="1537932151163" duration="20209000" />
+      <workItem from="1537932151163" duration="21487000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="117390000" />
+    <option name="totallyTimeSpent" value="118668000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="414" y="51" width="1400" height="999" extended-state="0" />
+    <frame x="600" y="81" width="1400" height="999" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.81766915" visible="true" weight="0.22480059" />
@@ -771,8 +771,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="338">
-          <caret line="685" column="13" lean-forward="true" selection-start-line="685" selection-start-column="13" selection-end-line="685" selection-end-column="13" />
+        <state relative-caret-position="230">
+          <caret line="394" column="12" selection-start-line="394" selection-start-column="9" selection-end-line="394" selection-end-column="12" />
           <folding>
             <element signature="e#40#82#0" expanded="true" />
             <element signature="e#27945#27984#0" expanded="true" />

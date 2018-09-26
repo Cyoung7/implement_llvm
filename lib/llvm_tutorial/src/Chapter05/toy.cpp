@@ -683,7 +683,7 @@ Value *IfExprAST::codegen() {
     TheFunction->getBasicBlockList().push_back(MergeBB);
     //更改插入点,以便新创件的代码进入"合并"块
     Builder.SetInsertPoint(MergeBB);
-    //创建phi节点
+    //创建phi节点,这个不知道啥意思
     PHINode *PN = Builder.CreatePHI(Type::getDoubleTy(TheContext), 2, "iftmp");
 
     PN->addIncoming(ThenV, ThenBB);
