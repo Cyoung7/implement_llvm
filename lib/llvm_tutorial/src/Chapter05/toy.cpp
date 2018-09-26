@@ -375,7 +375,7 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
 
     if (CurTok != tok_identifier)
         return LogError("expected identifier after for");
-
+    //循环变量
     std::string IdName = IdentifierStr;
     getNextToken(); // eat identifier.
 
@@ -388,6 +388,7 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
         return nullptr;
     if (CurTok != ',')
         return LogError("expected ',' after for start value");
+    // 吃掉,
     getNextToken();
 
     auto End = ParseExpression();
@@ -395,6 +396,7 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
         return nullptr;
 
     // The step value is optional.
+    //step可以忽略
     std::unique_ptr<ExprAST> Step;
     if (CurTok == ',') {
         getNextToken();
@@ -407,6 +409,7 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
         return LogError("expected 'in' after for");
     getNextToken(); // eat 'in'.
 
+    //循环体也作为一个表达式看待
     auto Body = ParseExpression();
     if (!Body)
         return nullptr;
@@ -431,8 +434,10 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseNumberExpr();
         case '(':
             return ParseParenExpr();
+        // if语句也可以是一个主表达式
         case tok_if:
             return ParseIfExpr();
+        // for也是一个主表达式
         case tok_for:
             return ParseForExpr();
     }
@@ -470,8 +475,7 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
         }
 
         // Merge LHS/RHS.
-        LHS =
-                llvm::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
+        LHS = llvm::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
     }
 }
 
@@ -616,7 +620,7 @@ Value *CallExprAST::codegen() {
         return LogErrorV("Incorrect # arguments passed");
 
     std::vector<Value *> ArgsV;
-    for (unsigned i = 0, e = Args.size(); i != e; ++i) {
+    for (unsigned i = 0, e = static_cast<unsigned int>(Args.size()); i != e; ++i) {
         ArgsV.push_back(Args[i]->codegen());
         if (!ArgsV.back())
             return nullptr;
@@ -625,6 +629,7 @@ Value *CallExprAST::codegen() {
     return Builder.CreateCall(CalleeF, ArgsV, "calltmp");
 }
 
+// if 语句的代码生成
 Value *IfExprAST::codegen() {
     Value *CondV = Cond->codegen();
     if (!CondV)
@@ -634,28 +639,34 @@ Value *IfExprAST::codegen() {
     CondV = Builder.CreateFCmpONE(
             CondV, ConstantFP::get(TheContext, APFloat(0.0)), "ifcond");
 
+    //获取当前正在构建的function对象,构建器当前的BB的"父",当前块嵌入的函数
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
 
     // Create blocks for the then and else cases.  Insert the 'then' block at the
     // end of the function.
+    // 构造函数会自动将新块插入到函数中
     BasicBlock *ThenBB = BasicBlock::Create(TheContext, "then", TheFunction);
     BasicBlock *ElseBB = BasicBlock::Create(TheContext, "else");
+
     BasicBlock *MergeBB = BasicBlock::Create(TheContext, "ifcont");
 
+    //根据条件创建块分支
     Builder.CreateCondBr(CondV, ThenBB, ElseBB);
 
-    // Emit then value.
+    // Emit then value.现在then 块是空的
     Builder.SetInsertPoint(ThenBB);
 
     Value *ThenV = Then->codegen();
     if (!ThenV)
         return nullptr;
-
+    // 为了完成“then”块，我们为合并块创建了一个无条件分支????
     Builder.CreateBr(MergeBB);
     // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
+    //这一句话非常重要,见文档
     ThenBB = Builder.GetInsertBlock();
 
     // Emit else block.
+    // 将else块加入到函数中
     TheFunction->getBasicBlockList().push_back(ElseBB);
     Builder.SetInsertPoint(ElseBB);
 
@@ -668,8 +679,11 @@ Value *IfExprAST::codegen() {
     ElseBB = Builder.GetInsertBlock();
 
     // Emit merge block.
+    // 将merge块添加到Function对象,之前是浮动的
     TheFunction->getBasicBlockList().push_back(MergeBB);
+    //更改插入点,以便新创件的代码进入"合并"块
     Builder.SetInsertPoint(MergeBB);
+    //创建phi节点
     PHINode *PN = Builder.CreatePHI(Type::getDoubleTy(TheContext), 2, "iftmp");
 
     PN->addIncoming(ThenV, ThenBB);
