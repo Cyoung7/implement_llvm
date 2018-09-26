@@ -338,6 +338,7 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
 }
 
 /// ifexpr ::= 'if' expression 'then' expression 'else' expression
+// if表达式的解析
 static std::unique_ptr<ExprAST> ParseIfExpr() {
     getNextToken(); // eat the if.
 
@@ -356,7 +357,7 @@ static std::unique_ptr<ExprAST> ParseIfExpr() {
 
     if (CurTok != tok_else)
         return LogError("expected else");
-
+    // 吃掉 else
     getNextToken();
 
     auto Else = ParseExpression();
@@ -368,6 +369,7 @@ static std::unique_ptr<ExprAST> ParseIfExpr() {
 }
 
 /// forexpr ::= 'for' identifier '=' expr ',' expr (',' expr)? 'in' expression
+// for循环的解析
 static std::unique_ptr<ExprAST> ParseForExpr() {
     getNextToken(); // eat the for.
 
