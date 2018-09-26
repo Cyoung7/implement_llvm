@@ -1663,7 +1663,7 @@ ifcont:     ; preds = %else, %then
 
 要可视化控制流图，您可以使用LLVM“opt”工具的一个漂亮功能。 如果将此LLVM IR放入“t.ll”并运行“llvm-as <t.ll |” opt -analyze -view-cfg“，会弹出一个窗口，你会看到这个图：
 
-![hello](/media/cyoung/000E88CC0009670E/CLionProjects/implement_llvm/doc/image/hello.png)
+![LangImpl05-cfg](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/LangImpl05-cfg.png)
 
 另一种方法是通过将实际调用插入代码并重新编译或通过调用这些来调用“F-> viewCFG（）”或“F-> viewCFGOnly（）”（其中F是“函数*”）。调试器。 LLVM具有许多用于可视化各种图形的很好的功能。
 
