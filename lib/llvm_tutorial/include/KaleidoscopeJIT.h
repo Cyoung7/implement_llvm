@@ -37,6 +37,7 @@ namespace llvm {
                         return ObjectLayer.findSymbol(Name, true);
                     },
                     [](Error Err) { cantFail(std::move(Err), "lookupFlags failed"); })),
+
                       TM(EngineBuilder().selectTarget()), DL(TM->createDataLayout()),
                       ObjectLayer(ES,
                                   [this](VModuleKey) {
