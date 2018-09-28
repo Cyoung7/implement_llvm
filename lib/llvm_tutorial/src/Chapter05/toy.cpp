@@ -30,7 +30,8 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <utility> #include <vector>
+#include <utility>
+#include <vector>
 
 using namespace llvm;
 using namespace llvm::orc;
@@ -636,6 +637,7 @@ Value *IfExprAST::codegen() {
         return nullptr;
 
     // Convert condition to a bool by comparing non-equal to 0.0.
+    //返回一位的bool值
     CondV = Builder.CreateFCmpONE(
             CondV, ConstantFP::get(TheContext, APFloat(0.0)), "ifcond");
 
@@ -650,7 +652,7 @@ Value *IfExprAST::codegen() {
 
     BasicBlock *MergeBB = BasicBlock::Create(TheContext, "ifcont");
 
-    //根据条件创建块分支
+    //根据条件创建条件分支
     Builder.CreateCondBr(CondV, ThenBB, ElseBB);
 
     // Emit then value.现在then 块是空的
@@ -659,15 +661,17 @@ Value *IfExprAST::codegen() {
     Value *ThenV = Then->codegen();
     if (!ThenV)
         return nullptr;
-    // 为了完成“then”块，我们为合并块创建了一个无条件分支????
+    // 为了完成“then”块
+    // 我们为合并块创建了一个无条件分支
     Builder.CreateBr(MergeBB);
     // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
-    //这一句话非常重要,见文档
+    //这一句话非常重要,需要获取phi节点的最新值
     ThenBB = Builder.GetInsertBlock();
 
     // Emit else block.
     // 将else块加入到函数中
     TheFunction->getBasicBlockList().push_back(ElseBB);
+    //将创建的指令附加到指定块的末尾
     Builder.SetInsertPoint(ElseBB);
 
     Value *ElseV = Else->codegen();
@@ -683,7 +687,7 @@ Value *IfExprAST::codegen() {
     TheFunction->getBasicBlockList().push_back(MergeBB);
     //更改插入点,以便新创件的代码进入"合并"块
     Builder.SetInsertPoint(MergeBB);
-    //创建phi节点,这个不知道啥意思
+    //创建phi节点,这个不知道啥意思,也是一个value
     PHINode *PN = Builder.CreatePHI(Type::getDoubleTy(TheContext), 2, "iftmp");
 
     PN->addIncoming(ThenV, ThenBB);
@@ -715,7 +719,9 @@ Value *ForExprAST::codegen() {
     // Make the new basic block for the loop header, inserting after current
     // block.
     Function *TheFunction = Builder.GetInsertBlock()->getParent();
+    // 启动循环体的块,进入到循环,start表达式生成的BB
     BasicBlock *PreheaderBB = Builder.GetInsertBlock();
+    // 循环体内部的块
     BasicBlock *LoopBB = BasicBlock::Create(TheContext, "loop", TheFunction);
 
     // Insert an explicit fall through from the current block to the LoopBB.
@@ -727,11 +733,13 @@ Value *ForExprAST::codegen() {
     // Start the PHI node with an entry for Start.
     PHINode *Variable =
             Builder.CreatePHI(Type::getDoubleTy(TheContext), 2, VarName);
+    // 循环变量赋值初始值
     Variable->addIncoming(StartVal, PreheaderBB);
 
     // Within the loop, the variable is defined equal to the PHI node.  If it
     // shadows an existing variable, we have to restore it, so save it now.
     Value *OldVal = NamedValues[VarName];
+    // 包含函数参数和循环变量,将现在循环变量值加入其中
     NamedValues[VarName] = Variable;
 
     // Emit the body of the loop.  This, like any other expr, can change the
@@ -748,9 +756,11 @@ Value *ForExprAST::codegen() {
             return nullptr;
     } else {
         // If not specified, use 1.0.
+        // 默认步长为1
         StepVal = ConstantFP::get(TheContext, APFloat(1.0));
     }
 
+    //计算下一次循环变量的值
     Value *NextVar = Builder.CreateFAdd(Variable, StepVal, "nextvar");
 
     // Compute the end condition.
@@ -763,6 +773,7 @@ Value *ForExprAST::codegen() {
             EndCond, ConstantFP::get(TheContext, APFloat(0.0)), "loopcond");
 
     // Create the "after loop" block and insert it.
+    // 这个block是 End->codegen()时生成的
     BasicBlock *LoopEndBB = Builder.GetInsertBlock();
     BasicBlock *AfterBB =
             BasicBlock::Create(TheContext, "afterloop", TheFunction);
@@ -774,6 +785,7 @@ Value *ForExprAST::codegen() {
     Builder.SetInsertPoint(AfterBB);
 
     // Add a new entry to the PHI node for the backedge.
+    // 将输入数据添加到循环phi节点
     Variable->addIncoming(NextVar, LoopEndBB);
 
     // Restore the unshadowed variable.
@@ -981,7 +993,7 @@ int main() {
     BinopPrecedence['*'] = 40; // highest.
 
     // Prime the first token.
-    fprintf(stderr, "ready> ");
+    fprintf(stderr, "ready(chapter05)> ");
     getNextToken();
 
     TheJIT = llvm::make_unique<KaleidoscopeJIT>();
