@@ -16,7 +16,7 @@
 
 传统静态编译器（如大多数C编译器）最流行的设计是三阶段设计，其主要组件是前端，优化器和后端。 前端解析源代码，检查它是否有错误，并构建一个特定于语言的抽象语法树（AST）来表示输入代码。 AST可选地转换为新的表示以进行优化，优化器和后端在代码上运行。
 
-![SimpleCompiler](/home/cyoung/CLionProjects/implement_llvm/doc/image/Intro to LLVM/SimpleCompiler.png)
+![SimpleCompiler](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/Intro%20to%20LLVM/SimpleCompiler.png)
 
 ​								三阶段编译器的三个主要组件
 
@@ -28,7 +28,7 @@
 
 当编译器决定支持多种源语言或目标体系结构时，这种经典设计的最重要的优势就来了。 如果编译器在其优化器中使用公共代码表示，则可以为任何可以编译到它的语言编写前端，并且可以为可以从中编译的任何目标编写后端，如下图所示:
 
-![RetargetableCompiler](/home/cyoung/CLionProjects/implement_llvm/doc/image/Intro to LLVM/RetargetableCompiler.png)
+![RetargetableCompiler](/https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/Intro%20to%20LLVM/RetargetableCompiler.png)
 
 使用此设计，移植编译器以支持新的源语言（例如，Algol或BASIC）只需要实现新的前端，但现有的优化器和后端可以重用。 如果这些部分没有分开，那么实现新的源语言需要从头开始，因此支持`N`目标和`M`源语言需要N * M个编译器。
 
@@ -156,7 +156,7 @@ for (BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I)
 
 在基于LLVM的编译器中，前端负责解析，验证和诊断输入代码中的错误，然后将解析的代码转换为LLVM IR（通常但不总是通过构建AST然后将AST转换为LLVM IR）。 该IR可选地通过一系列改进代码的分析和优化过程提供，然后被发送到代码生成器以生成本机机器代码， 如图所示。 这是三阶段设计的一个非常简单的实现，但是这个简单的描述掩盖了LLVM架构从LLVM IR派生的一些功能和灵活性。
 
-![LLVMCompiler1](/home/cyoung/CLionProjects/implement_llvm/doc/image/Intro to LLVM/LLVMCompiler1.png) 
+![LLVMCompiler1](/https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/Intro%20to%20LLVM/LLVMCompiler1.png) 
 
 
 
@@ -197,7 +197,7 @@ FunctionPass *createHelloPass() { return new Hello(); }
 
 LLVM优化器的基于库的设计允许我们的实现者选择执行传递的顺序，以及哪些对图像处理域有意义：如果所有内容都被定义为单个大函数，则它不会感觉浪费时间内联。 如果指针很少，别名分析和内存优化就不值得烦恼了。 然而，尽管我们尽最大努力，但LLVM并没有神奇地解决所有优化问题！ 由于传递子系统是模块化的，并且PassManager本身对传递的内部不了解，因此实现者可以自由地实现他们自己的语言特定传递，以弥补LLVM优化器中的缺陷或明确的语言特定优化机会。 下图显示了我们假设的XYZ图像处理系统的一个简单示例：
 
-![PassLinkage](/home/cyoung/CLionProjects/implement_llvm/doc/image/Intro to LLVM/PassLinkage.png)
+![PassLinkage](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/Intro%20to%20LLVM/PassLinkage.png)
 
 ​							使用LLVM的假设XYZ系统
 
@@ -217,7 +217,7 @@ LLVM代码生成器负责将LLVM IR转换为目标特定的机器代码。 一�
 
 “混合和匹配”的方法允许目标硬件作者选择对其体系结构有意义的内容，并允许跨不同目标重用大量代码。 这带来了另一个挑战：每个共享组件都需要能够以通用方式推断目标特定属性。 例如，共享寄存器分配器需要知道每个目标硬件的寄存器文件以及指令与其寄存器操作数之间存在的约束。 LLVM的解决方案是为每个目标提供由tblgen工具处理的声明性特定语言（一组`.td`文件）的目标描述。 x86目标的（简化）构建过程[如图11.5](https://translate.googleusercontent.com/translate_c?act=url&depth=1&hl=zh-CN&ie=UTF8&prev=_t&rurl=translate.google.com.hk&sl=en&sp=nmt4&tl=zh-CN&u=http://www.aosabook.org/en/llvm.html&xid=17259,1500000,15700023,15700124,15700149,15700186,15700191,15700201&usg=ALkJrhinVvXb6fPVCPRe2wOKN2jF14NpYQ#fig.llvm.x86)所示。
 
-![X86Target](/home/cyoung/CLionProjects/implement_llvm/doc/image/Intro to LLVM/X86Target.png)
+![X86Target](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/Intro%20to%20LLVM/X86Target.png)
 
  `.td`文件支持的不同子系统允许目标作者构建其目标的不同部分。 例如，x86后端定义了一个寄存器类，它包含所有名为`GR32`的32位寄存器（在`.td`文件中，目标特定定义都是大写），如下所示：
 
@@ -255,13 +255,13 @@ def NOT32r : I<0xF7, MRM2r,
 
 链接时优化（LTO）解决了编译器传统上一次只看到一个转换单元（例如，`.c`具有其所有头的文件）的问题，因此不能跨文件边界进行优化（如内联）。Clang等LLVM编译器使用`-flto`或`-O4`命令行选项支持此功能。此选项指示编译器向`.o`文件发出LLVM bitcode，而不是写出本机对象文件，并将代码生成延迟到链接时间，如图所示。
 
-![LTO](/home/cyoung/CLionProjects/implement_llvm/doc/image/Intro to LLVM/LTO.png)
+![LTO](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/Intro%20to%20LLVM/LTO.png)
 
 细节因您所使用的操作系统而异，但重要的是链接器检测到它具有LLVM bitcode `.o`文件而不是本机对象文件。当它看到这一点时，它会将所有bitcode文件读入内存，将它们链接在一起，然后在聚合上运行LLVM优化器。由于优化器现在可以看到代码的更大部分，它可以内联，传播常量，执行更积极的死代码消除，以及更多跨文件边界。虽然许多现代编译器支持LTO，但大多数（例如，GCC，Open64，英特尔编译器等）都是通过昂贵且缓慢的序列化过程来实现的。在LLVM中，LTO自然地脱离了系统的设计，并且适用于不同的源语言（与许多其他编译器不同），因为IR是真正的中间源语言。
 
 安装时优化是延迟代码生成的想法，甚至比链接时间晚，一直到安装时间，下图所示。安装时间是一个非常有趣的时间（如果软件在一个盒子中发货，下载，上传到移动设备等），因为这是当你找到你所针对的设备的细节时。例如，在x86系列中，存在各种各样的芯片和特性。通过延迟指令选择，调度和代码生成的其他方面，您可以为应用程序最终运行的特定硬件选择最佳答案。
 
-![InstallTime](/home/cyoung/CLionProjects/implement_llvm/doc/image/Intro to LLVM/InstallTime.png)
+![InstallTime](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/Intro%20to%20LLVM/InstallTime.png)
 
 #### 1.6.2 单元测试优化器
 

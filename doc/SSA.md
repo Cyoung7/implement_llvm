@@ -41,17 +41,17 @@ SSA的主要用途来自于它如何通过简化变量的属性来同时简化�
 
 将普通代码转换为SSA形式主要是用新变量替换每个赋值的目标，并将变量的每个用法替换为到达该点的变量的“版本”。 例如，请考虑以下控制流程图：
 
-![SSA_example1.1](/home/cyoung/CLionProjects/implement_llvm/doc/image/SSA_example1.1.png)
+![SSA_example1.1](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/SSA/SSA_example1.1.png)
 
 更改“x <-- x - 3”左侧的名称，并将x的以下用法更改为该新名称将使程序保持不变。 这可以在SSA中通过创建两个新变量来利用：x1和x2，每个变量只分配一次。 同样，为所有其他变量提供可区分的下标产生：
 
-![SSA_example1.2](/home/cyoung/CLionProjects/implement_llvm/doc/image/SSA_example1.2.png)
+![SSA_example1.2](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/SSA/SSA_example1.2.png)
 
 很清楚每个用途所指的定义，除了一种情况：底部块中y的两个使用都可以指y1或y2，这取决于控制流采用的路径。
 
 要解决此问题，会在最后一个块中插入一个特殊语句，称为Φ（Phi）函数。 该语句将通过“选择”y1或y2生成y的新定义，称为y3，具体取决于过去的控制流程。
 
-![SSA_example1.3](/home/cyoung/CLionProjects/implement_llvm/doc/image/SSA_example1.3.png)
+![SSA_example1.3](https://github.com/Cyoung7/implement_llvm/blob/master/doc/image/SSA/SSA_example1.3.png)
 
 现在，最后一个块可以简单地使用y3，并且将以任一方式获得正确的值。不需要x的Φ函数：只有x的一个版本，即x2到达这个位置，所以没有问题（换句话说，Φ（x2，x2）= x2）。
 
