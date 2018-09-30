@@ -709,5 +709,176 @@ Superclasses: [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](
   - `const std::vector<Use> &getValues() const`: 返回构成此数组的组件常量的向量。
 - `GlobalValue`:这表示全局变量或函数。 在任何一种情况下，该值都是一个固定的固定地址（链接后）。
 
-### The GlobalValue class(null)
+### The GlobalValue class
 
+`#include "llvm/IR/GlobalValue.h"`
+
+header source: [GlobalValue.h](http://llvm.org/doxygen/GlobalValue_8h_source.html)
+
+doxygen info: [GlobalValue Class](http://llvm.org/doxygen/classllvm_1_1GlobalValue.html)
+
+Superclasses: [Constant](http://llvm.org/docs/ProgrammersManual.html#constant), [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](http://llvm.org/docs/ProgrammersManual.html#value)
+
+Global values（[GlobalVariables](http://llvm.org/docs/ProgrammersManual.html#globalvariable)或[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)）是在所有函数体(body)中,唯一可见的LLVM值。因为它们在全局范围内可见，所以它们还在不同转换单元中,与定义其他全局变量相关联。为了控制链接过程，GlobalValues知道它们的链接规则。具体来说，GlobalValues知道它们是否具有内部链接或外部链接，如LinkageTypes枚举所定义。
+
+如果GlobalValue具有内部链接（相当于C中的静态链接），则当前转换单元外部的代码不可见，并且不参与链接。如果它具有外部链接，则外部代码可以看到它，并且确实参与链接。除了链接信息，GlobalValues还会跟踪它们当前所属的模块。
+
+因为GlobalValues是内存对象，所以它们总是由它们的地址引用。因此，全局类型始终是指向其内容的指针。在使用GetElementPtrInst指令时记住这一点很重要，因为必须首先取消引用此指针。例如，如果你有一个GlobalVariable（GlobalValue的子类），它是一个24 int的数组，键入[24 x i32]，那么GlobalVariable是指向该数组的指针。虽然此数组的第一个元素的地址和GlobalVariable的值相同，但它们具有不同的类型。 GlobalVariable的类型是[24 x i32]。第一个元素的类型是i32。因此，访问全局值需要先使用GetElementPtrInst取消引用指针，然后才能访问其元素。 “[LLVM语言参考手册](http://llvm.org/docs/LangRef.html#globalvars)”对此进行了解释。
+
+#### Important Public Members of the GlobalValue class
+
+- `bool hasInternalLinkage() const`
+
+  `bool hasExternalLinkage() const`
+
+  `void setInternalLinkage(bool HasInternalLinkage)`
+
+  这些方法操纵GlobalValue的链接特征。
+
+- `Module *getParent()`
+
+  这将返回GlobalValue当前嵌入的[Module](http://llvm.org/docs/ProgrammersManual.html#module)。
+
+### The Function class
+
+`#include "llvm/IR/Function.h"`
+
+header source: [Function.h](http://llvm.org/doxygen/Function_8h_source.html)
+
+doxygen info: [Function Class](http://llvm.org/doxygen/classllvm_1_1Function.html)
+
+Superclasses: [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue), [Constant](http://llvm.org/docs/ProgrammersManual.html#constant), [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](http://llvm.org/docs/ProgrammersManual.html#value)
+
+Function类表示LLVM中的单个执行过程。 它实际上是LLVM层次结构中更复杂的类之一，因为它必须跟踪大量数据。 Function类跟踪[BasicBlocks](http://llvm.org/docs/ProgrammersManual.html#basicblock)列表，正式[Arguments](http://llvm.org/docs/ProgrammersManual.html#argument)列表和[SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable)。
+
+ [BasicBlock](http://llvm.org/docs/ProgrammersManual.html#basicblock)s列表是Function对象中最常用的部分。该列表强制函数中块的隐式排序，其表示代码将如何在后端布局。此外，第一个BasicBlock是函数的隐式入口节点。 LLVM中明确表示，分支作为此初始块是不合法的。没有隐式退出节点，实际上单个Function可能有多个退出节点。如果BasicBlock列表为空，则表示Function实际上是一个函数声明：函数的函数体尚未链接。
+
+除了 [BasicBlock](http://llvm.org/docs/ProgrammersManual.html#basicblock)s列表之外，Function类还跟踪函数接收的正式[Argument](http://llvm.org/docs/ProgrammersManual.html#argument)s 列表。此容器管理Argument节点的生存期，就像BasicBlock列表对BasicBlocks一样。
+
+ [SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable) 是一种非常少使用的LLVM功能，仅在您必须按名称查找值时使用。除此之外，SymbolTable在内部用于确保函数体中的Instructions，BasicBlocks或Arguments的名称之间没有冲突。
+
+请注意，Function可以是 [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)，可以是[Constant](http://llvm.org/docs/ProgrammersManual.html#constant).。函数的值是它的地址（链接后），保证是常量。
+
+#### Important Public Members of the Function
+
+- `Function(const FunctionType *Ty, LinkageTypes Linkage, const std::string &N = "", Module*Parent = 0)`
+
+  当您需要创建新函数以添加程序时使用的构造函数。 构造函数必须指定要创建的函数的类型以及函数应具有的链接类型。 FunctionType参数指定函数的形式参数和返回值。 相同的 [FunctionType](http://llvm.org/docs/ProgrammersManual.html#functiontype)值可用于创建多个函数。 Parent参数指定定义函数的Module。 如果提供了此参数，则该函数将自动插入到该模块的函数列表中。
+
+- `bool isDeclaration()`
+
+  返回函数是否已定义主体。 如果函数是“外部引用(external)”，则它没有函数体，因此必须通过链接到另一个定义此函数的转换单元中来解析。
+
+- `Function::iterator` - Typedef for basic block list iterator
+
+  `Function::const_iterator` - Typedef for const_iterator.
+
+  `begin()`, `end()`, `size()`, `empty()`
+
+  这些转发方法可以轻松访问Function对象的 [BasicBlock](http://llvm.org/docs/ProgrammersManual.html#basicblock)列表的内容。 
+
+- `Function::BasicBlockListType &getBasicBlockList()`
+
+  返回BasicBlocks列表。 当您需要更新列表或执行没有转发方法的复杂操作时，必须使用此选项。
+
+- `Function::arg_iterator` - 参数列表迭代器的Typedef
+
+  `Function::const_arg_iterator` - const_iterator的Typedef。
+
+  `arg_begin()`, `arg_end()`, `arg_size()`, `arg_empty()`
+
+  这些转发方法可以轻松访问Function对象的[Argument](http://llvm.org/docs/ProgrammersManual.html#argument)列表的内容。
+
+- `Function::ArgumentListType &getArgumentList()`
+
+  返回Argument列表。 当您需要更新列表或执行没有转发方法的复杂操作时，必须使用此选项。
+
+- `BasicBlock &getEntryBlock()`
+
+  返回函数的条目BasicBlock。 因为函数的入口块始终是第一个块，所以它返回Function的第一个块。
+
+- `Type *getReturnType()`
+
+  `FunctionType *getFunctionType()`
+
+   这将遍历函数的类型并返回函数的返回类型或实际函数的[FunctionType](http://llvm.org/docs/ProgrammersManual.html#functiontype)。
+
+- `SymbolTable *getSymbolTable()`
+
+  返回指向此函数的[SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable) 的指针。
+
+### The GlobalVariable class
+
+`#include "llvm/IR/GlobalVariable.h"`
+
+header source: [GlobalVariable.h](http://llvm.org/doxygen/GlobalVariable_8h_source.html)
+
+doxygen info: [GlobalVariable Class](http://llvm.org/doxygen/classllvm_1_1GlobalVariable.html)
+
+Superclasses: [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue), [Constant](http://llvm.org/docs/ProgrammersManual.html#constant), [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](http://llvm.org/docs/ProgrammersManual.html#value)
+
+全局变量用（意外惊喜）GlobalVariable类表示。 与函数一样，GlobalVariables也是[GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)的子类，因此总是由它们的地址引用（全局值必须存在于内存中，因此它们的“名称”指的是它们的常量地址）。 有关详细信息，请参阅[GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)。 全局变量可能具有初始值（必须是 [Constant](http://llvm.org/docs/ProgrammersManual.html#constant)），如果它们具有初始化程序，则它们本身可以标记为“常量”（表示它们的内容在运行时永远不会更改）。
+
+#### Important Public Members of the GlobalVariable class
+
+- `GlobalVariable(const Type *Ty, bool isConstant, LinkageTypes &Linkage, Constant *Initializer =0, const std::string &Name = "", Module* Parent = 0)`
+
+  创建指定类型的新全局变量。 如果isConstant为true，则全局变量将被标记为对程序不变。 Linkage参数指定变量的链接类型（内部，外部，弱，linkonce，追加）。 如果链接是InternalLinkage，WeakAnyLinkage，WeakODRLinkage，LinkOnceAnyLinkage或LinkOnceODRLinkage，那么结果全局变量将具有内部链接。 AppendingLinkage将变量的所有实例（在不同的转换单元中）连接在一起作为单个变量，但仅适用于数组。 有关链接类型的更多详细信息，请[参阅LLVM语言参考]( [LLVM Language Reference](http://llvm.org/docs/LangRef.html#modulestructure))。 可选地，也可以为全局变量指定初始化器，名称和放置变量的模块。
+
+- `bool isConstant() const`
+
+  如果这是一个已知在运行时不被修改的全局变量，则返回true。
+
+- `bool hasInitializer()`
+
+  如果此全局变量具有初始值设定项，则返回true。
+
+- `Constant *getInitializer()`
+
+  返回GlobalVariable的初始值。 如果没有初始化程序，则调用此方法是不合法的。
+
+### The BasicBlock class
+
+`#include "llvm/IR/BasicBlock.h"`
+
+header source: [BasicBlock.h](http://llvm.org/doxygen/BasicBlock_8h_source.html)
+
+doxygen info: [BasicBlock Class](http://llvm.org/doxygen/classllvm_1_1BasicBlock.html)
+
+Superclass: [Value](http://llvm.org/docs/ProgrammersManual.html#value)
+
+ 此类表示代码的单个条目单个退出部分，通常称为编译器社区的基本块。 BasicBlock类维护一个 [Instruction](http://llvm.org/docs/ProgrammersManual.html#instruction)列表，它们构成块的主体。 匹配语言定义，这个指令列表的最后一个元素总是一个终结符指令（ [TerminatorInst](http://llvm.org/docs/ProgrammersManual.html#terminatorinst) 类的子类）。
+
+除了跟踪组成块的指令列表之外，BasicBlock类还跟踪它嵌入的 [Function](http://llvm.org/docs/ProgrammersManual.html#c-function)。
+
+请注意，BasicBlocks本身就是 [Value](http://llvm.org/docs/ProgrammersManual.html#value)s，因为它们被分支等指令引用，并且可以进入切换表。 BasicBlocks有类型标签。
+
+#### Important Public Members of the BasicBlock class
+
+- `BasicBlock(const std::string &Name = "", Function *Parent = 0)`
+
+  BasicBlock构造函数用于创建插入函数的新基本块。 构造函数可选地为新块命名，并使用[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)将其插入。 如果指定了Parent参数，则新的BasicBlock会自动插入到指定Function的末尾，如果未指定，则必须手动将BasicBlock插入到Function中。
+
+- `BasicBlock::iterator` - Typedef用于指令列表迭代器
+
+  `BasicBlock::const_iterator` - Typedef for const_iterator.
+
+  `begin()`, `end()`, `front()`, `back()`, `size()`, `empty()` STL-用于访问指令列表的样式函数。
+
+  这些方法和typedef是转发函数，它们具有与相同名称的标准库方法相同的语义。 这些方法以易于操作的方式公开基本块的基础指令列表。 要获得完整的容器操作（包括更新列表的操作），必须使用getInstList（）方法。
+
+- `BasicBlock::InstListType &getInstList()`
+
+  此方法用于访问实际包含指令的基础容器。 当BasicBlock类中没有转发函数用于您要执行的操作时，必须使用此方法。 由于没有用于“更新”操作的转发功能，因此如果要更新BasicBlock的内容，则需要使用此功能。
+
+- `Function *getParent()`
+
+  返回指向嵌入块的函数的指针，如果无家可归，则返回空指针。
+
+- `TerminatorInst *getTerminator()`
+
+  返回指向出现在BasicBlock末尾的终止符指令的指针。 如果没有终结器指令，或者块中的最后一条指令不是终结符，则返回空指针。
+
+### The Argument class
+
+Value的这个子类定义了函数的传入形式参数的接口。 函数维护其正式参数的列表。 参数具有指向父函数的指针。
