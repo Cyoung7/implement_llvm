@@ -148,5 +148,31 @@ define i32 @main() {   ; i32()*
 
 函数声明具有除external或extern_weak之外的任何链接类型是非法的。
 
-### Calling Conventions(调用习惯)
+### Calling Conventions(调用公约)(null)
+
+## Type System
+
+## Constants
+
+## Other Values
+
+## Metadata
+
+## Module Flags Metadata
+
+## Automatic Linker Flags Named Metadata
+
+## ThinLTO Summary
+
+## Intrinsic Global Variables(指令全局变量)
+
+## Instruction Reference(指令参考)
+
+## Intrinsic Functions(内建函数)
+
+
+
+
+
+
 
