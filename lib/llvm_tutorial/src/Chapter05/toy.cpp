@@ -425,6 +425,7 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
 ///   ::= parenexpr
 ///   ::= ifexpr
 ///   ::= forexpr
+// ParsePrimary 和 ParseExpression
 static std::unique_ptr<ExprAST> ParsePrimary() {
     switch (CurTok) {
         default:
@@ -656,22 +657,24 @@ Value *IfExprAST::codegen() {
     Builder.CreateCondBr(CondV, ThenBB, ElseBB);
 
     // Emit then value.现在then 块是空的
+    // 设置代码块的插入点,后面插入代码会根据此插入点插入代码块
     Builder.SetInsertPoint(ThenBB);
 
     Value *ThenV = Then->codegen();
     if (!ThenV)
         return nullptr;
     // 为了完成“then”块
-    // 我们为合并块创建了一个无条件分支
+    // 我们为合并块创建了一个无条件分支,llvm需要一个控制流来终止所有的基本块
     Builder.CreateBr(MergeBB);
     // Codegen of 'Then' can change the current block, update ThenBB for the PHI.
     //这一句话非常重要,需要获取phi节点的最新值
+    //需要在Then生成代码之后,更新ThenBB的代码块
     ThenBB = Builder.GetInsertBlock();
 
     // Emit else block.
     // 将else块加入到函数中
     TheFunction->getBasicBlockList().push_back(ElseBB);
-    //将创建的指令附加到指定块的末尾
+    //将插入点设置到ElseBB之后
     Builder.SetInsertPoint(ElseBB);
 
     Value *ElseV = Else->codegen();
@@ -685,11 +688,12 @@ Value *IfExprAST::codegen() {
     // Emit merge block.
     // 将merge块添加到Function对象,之前是浮动的
     TheFunction->getBasicBlockList().push_back(MergeBB);
-    //更改插入点,以便新创件的代码进入"合并"块
+    //更改插入点
     Builder.SetInsertPoint(MergeBB);
     //创建phi节点,这个不知道啥意思,也是一个value
     PHINode *PN = Builder.CreatePHI(Type::getDoubleTy(TheContext), 2, "iftmp");
-
+    //前面的创建条件分支和这里的phi节点有何关系
+    //phi节点如何知道该进入哪个块,以返回对应块的值
     PN->addIncoming(ThenV, ThenBB);
     PN->addIncoming(ElseV, ElseBB);
     return PN;
@@ -725,9 +729,11 @@ Value *ForExprAST::codegen() {
     BasicBlock *LoopBB = BasicBlock::Create(TheContext, "loop", TheFunction);
 
     // Insert an explicit fall through from the current block to the LoopBB.
+    // 从cur block(PreheaderBB)到LoopBB之间创建一个分支
     Builder.CreateBr(LoopBB);
 
     // Start insertion in LoopBB.
+    // 将LoopBB插入到代码块的末尾
     Builder.SetInsertPoint(LoopBB);
 
     // Start the PHI node with an entry for Start.
@@ -745,6 +751,7 @@ Value *ForExprAST::codegen() {
     // Emit the body of the loop.  This, like any other expr, can change the
     // current BB.  Note that we ignore the value computed by the body, but don't
     // allow an error.
+    // 循环变量有了初始状态,就可以为循环体生成代码了
     if (!Body->codegen())
         return nullptr;
 
@@ -775,6 +782,7 @@ Value *ForExprAST::codegen() {
     // Create the "after loop" block and insert it.
     // 这个block是 End->codegen()时生成的
     BasicBlock *LoopEndBB = Builder.GetInsertBlock();
+    //循环结束后的一个代码块
     BasicBlock *AfterBB =
             BasicBlock::Create(TheContext, "afterloop", TheFunction);
 
@@ -785,7 +793,7 @@ Value *ForExprAST::codegen() {
     Builder.SetInsertPoint(AfterBB);
 
     // Add a new entry to the PHI node for the backedge.
-    // 将输入数据添加到循环phi节点
+    // 将更新的循环变量添加到循环phi节点
     Variable->addIncoming(NextVar, LoopEndBB);
 
     // Restore the unshadowed variable.
