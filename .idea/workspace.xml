@@ -19,7 +19,7 @@
   <component name="ChangeListManager">
     <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/doc/LLVM Language Reference Manual.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/LLVM Language Reference Manual.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/doc/LLVM Programmer’s Manual.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/LLVM Programmer’s Manual.md" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -44,8 +44,8 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="810">
-              <caret line="721" column="7" lean-forward="true" selection-start-line="721" selection-start-column="7" selection-end-line="721" selection-end-column="7" />
+            <state relative-caret-position="342">
+              <caret line="739" column="75" lean-forward="true" selection-start-line="739" selection-start-column="75" selection-end-line="739" selection-end-column="75" />
               <folding>
                 <element signature="e#40#82#0" expanded="true" />
               </folding>
@@ -114,8 +114,8 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="342" />
-    <option name="y" value="46" />
+    <option name="x" value="508" />
+    <option name="y" value="45" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
   </component>
@@ -125,7 +125,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -175,6 +174,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -244,23 +244,24 @@
       <workItem from="1537932151163" duration="26006000" />
       <workItem from="1538044064027" duration="3000" />
       <workItem from="1538102358409" duration="20008000" />
-      <workItem from="1538277160835" duration="2993000" />
+      <workItem from="1538277160835" duration="3593000" />
+      <workItem from="1539059894010" duration="700000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="146191000" />
+    <option name="totallyTimeSpent" value="147491000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="342" y="46" width="1400" height="999" extended-state="0" />
+    <frame x="508" y="45" width="1400" height="999" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.81060606" visible="true" weight="0.22480059" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.8087432" visible="true" weight="0.22480059" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="CMake" order="7" sideWeight="0.6578571" weight="0.29865772" />
-      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.2501813" side_tool="true" visible="true" weight="0.39380023" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.2501813" side_tool="true" visible="true" weight="0.15958668" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.7498187" weight="0.39380023" />
-      <window_info id="Structure" order="1" sideWeight="0.18939394" side_tool="true" visible="true" weight="0.22480059" />
+      <window_info id="Structure" order="1" sideWeight="0.19125684" side_tool="true" visible="true" weight="0.22480059" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.6323423" weight="0.3892078" />
@@ -268,10 +269,10 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.65844816" weight="0.2858783" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.65844816" weight="0.2858783" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -677,8 +678,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="810">
-          <caret line="721" column="7" lean-forward="true" selection-start-line="721" selection-start-column="7" selection-end-line="721" selection-end-column="7" />
+        <state relative-caret-position="342">
+          <caret line="739" column="75" lean-forward="true" selection-start-line="739" selection-start-column="75" selection-end-line="739" selection-end-column="75" />
           <folding>
             <element signature="e#40#82#0" expanded="true" />
           </folding>

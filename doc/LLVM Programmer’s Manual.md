@@ -419,11 +419,187 @@ for (BasicBlock *Pred : predecessors(BB)) {
 
 同样，迭代后继者使用后继者。
 
-### Making simple changes(null)
+### Making simple changes
+
+LLVM基础结构中存在一些值得了解的原始转换操作。 执行转换时，操作基本块的内容是相当常见的。 本节介绍了执行此操作的一些常用方法，并提供了示例代码。
+
+#### Creating and inserting new Instructions
+
+*Instantiating Instructions(实例化说明)*
+
+创建指令很简单：只需调用构造函数以获得实例化的指令并提供必要的参数。 例如，AllocaInst只需要一个（const-ptr-to）类型。 从而：
+
+```c++
+auto *ai = new AllocaInst(Type::Int32Ty);
+```
+
+将创建一个AllocaInst实例，该实例表示在运行时在当前堆栈帧中分配一个整数。 每个指令子类可能都有不同的默认参数，这些参数会改变指令的语义，因此请参阅[doxygen文档](http://llvm.org/doxygen/classllvm_1_1Instruction.html)，了解您想要实例化的指令的子类。
+
+*Naming values(命名值)*
+
+在您能够命名指令的值时非常有用，因为这有助于调试转换。 如果您最终查看生成的LLVM机器代码，您肯定希望将逻辑名称与指令结果相关联！ 通过为指令构造函数的Name（默认）参数提供值，可以将逻辑名与运行时指令执行结果相关联。 例如，假设我正在编写一个动态为堆栈上的整数分配空间的转换，并且该整数将被某些其他代码用作某种索引。 为了实现这一点，我将AllocaInst置于某个Function的第一个BasicBlock的第一个点，并且我打算在同一个Function中使用它。 我可能会这样做：
+
+```c++
+auto *pa = new AllocaInst(Type::Int32Ty, 0, "indexLoc");
+```
+
+其中indexLoc现在是指令执行值的逻辑名，它是指向运行时堆栈上的整数的指针。
+
+*Inserting instructions(插入说明)*
+
+将指令插入到形成BasicBlock的现有指令序列中有三种方法：
+
+- 插入显式指令列表
+
+  给定`BasicBlock * pb`，`BasicBlock`中的`Instruction * pi`，以及我们希望在`* pi`之前插入的新创建的指令，我们执行以下操作：
+
+  ```c++
+  BasicBlock *pb = ...;
+  Instruction *pi = ...;
+  auto *newInst = new Instruction(...);
+  
+  pb->getInstList().insert(pi, newInst); // Inserts newInst before pi in pb
+  ```
+
+  附加到BasicBlock的末尾是如此常见，以至于Instruction类和指令派生类提供了构造函数，这些构造函数将指向要附加到BasicBlock的指针。 例如代码看起来像：
+
+  ```c++
+  BasicBlock *pb = ...;
+  auto *newInst = new Instruction(...);
+  
+  pb->getInstList().push_back(newInst); // Appends newInst to pb
+  ```
+
+  变为：
+
+  ```c++
+  BasicBlock *pb = ...;
+  auto *newInst = new Instruction(..., pb);
+  ```
+
+  哪个更干净，特别是如果你要创建长指令流。
+
+- 插入隐式指令列表
+
+  已经在`BasicBlock`中的指令实例隐含地与现有指令列表相关联：封闭基本块的指令列表。 因此，我们可以完成与上面的代码相同的事情而不通过执行以下方式给出`BasicBlock`：
+
+  ```c++
+  Instruction *pi = ...;
+  auto *newInst = new Instruction(...);
+  
+  pi->getParent()->getInstList().insert(pi, newInst);
+  ```
+
+  实际上，这一系列步骤经常发生，指令类和指令派生类提供了构造函数，这些构造函数采用（作为默认参数）指向新创建的指令应该在其之前的指令的指针。 也就是说，指令构造函数能够在该指令之前立即将新创建的实例插入所提供指令的BasicBlock中。 使用带有insertBefore（默认）参数的指令构造函数，上面的代码变为：
+
+  ```c++
+  Instruction* pi = ...;
+  auto *newInst = new Instruction(..., pi);
+  ```
+
+  更干净，特别是如果你创建了很多指令并将它们添加到`BasicBlocks`。
+
+- 使用`IRBuilder`实例插入
+
+  使用以前的方法插入几个指令可能非常费力。 IRBuilder是一个便利类，可用于在BasicBlock的末尾或特定指令之前添加多个指令。 它还支持常量折叠和重命名命名寄存器（请参阅IRBuilder的模板参数）。
+
+  下面的例子演示了IRBuilder的一个非常简单的用法，其中在指令pi之前插入了三条指令。 前两个指令是调用指令，第三个指令将两个调用的返回值相乘。
+
+  ```c++
+  Instruction *pi = ...;
+  IRBuilder<> Builder(pi);
+  CallInst* callOne = Builder.CreateCall(...);
+  CallInst* callTwo = Builder.CreateCall(...);
+  Value* result = Builder.CreateMul(callOne, callTwo);
+  ```
+
+  下面的示例与上面的示例类似，只是创建的IRBuilder在BasicBlock pb的末尾插入指令。
+
+  ```c++
+  BasicBlock *pb = ...;
+  IRBuilder<> Builder(pb);
+  CallInst* callOne = Builder.CreateCall(...);
+  CallInst* callTwo = Builder.CreateCall(...);
+  Value* result = Builder.CreateMul(callOne, callTwo);
+  ```
+
+  有关IRBuilder的实际用途，请[参阅Kaleidoscope](http://llvm.org/docs/tutorial/LangImpl03.html)：代码生成到LLVM IR。
+
+#### Deleting Instructions
+
+从形成BasicBlock的现有指令序列中删除指令非常简单：只需调用指令的eraseFromParent（）方法即可。 例如：
+
+```
+Instruction *I = .. ;
+I->eraseFromParent();
+```
+
+这将取消指令与其包含的基本块的链接并删除它。 如果您只想取消指令与其包含的基本块的链接但不删除它，则可以使用removeFromParent（）方法。
+
+#### Replacing an Instruction with another Value
+
+##### Replacing individual instructions
+
+替换indiv包括“[llvm/Transforms/Utils/BasicBlockUtils.h](http://llvm.org/doxygen/BasicBlockUtils_8h_source.html)”允许使用两个非常有用的替换函数：`ReplaceInstWithValue`和`ReplaceInstWithInst`指令
+
+##### Deleting Instructions
+
+- `ReplaceInstWithValue`
+
+  此函数用值替换给定指令的所有用法，然后删除原始指令。 以下示例说明了替换特定AllocaInst的结果，该结果为具有指向整数的空指针的单个整数分配内存。
+
+  ```c++
+  AllocaInst* instToReplace = ...;
+  BasicBlock::iterator ii(instToReplace);
+  ReplaceInstWithValue(instToReplace->getParent()->getInstList(), ii,                    Constant::getNullValue(PointerType::getUnqual(Type::Int32Ty)));
+  ```
+
+- `ReplaceInstWithInst`
+
+  该函数用另一条指令替换特定指令，将新指令插入旧指令所在位置的基本块中，并用新指令替换旧指令的任何用法。 以下示例说明将一个`AllocaInst`替换为另一个。
+
+  ```c++
+  AllocaInst* instToReplace = ...;
+  BasicBlock::iterator ii(instToReplace);
+  
+  ReplaceInstWithInst(instToReplace->getParent()->getInstList(), ii,
+                      new AllocaInst(Type::Int32Ty, 0, "ptrToReplacedInt"));
+  ```
+
+##### Replacing multiple uses of Users and Values
+
+替换用户和值的多种用途您可以使用`Value :: replaceAllUsesWith`和`User :: replaceUsesOfWith`一次更改多个用户。 有关详细信息，请分别参阅值[Value Class](http://llvm.org/doxygen/classllvm_1_1Value.html)和[User Class](http://llvm.org/doxygen/classllvm_1_1User.html)的doxygen文档。
+
+#### Deleting GlobalVariables
+
+从模块中删除全局变量就像删除指令一样简单。 首先，您必须有一个指向要删除的全局变量的指针。 您可以使用此指针将其从其父模块中删除。 例如：
+
+```c++
+GlobalVariable *GV = .. ;
+GV->eraseFromParent();
+```
+
+### How to Create Types
+
+在生成`IR`时，您可能需要一些复杂的类型。 如果您静态地知道这些类型，则可以使用`llvm/Support/TypeBuilder.h`中定义的`TypeBuilder <...> :: get（）`来检索它们。 `TypeBuilder`有两种形式，具体取决于您是构建交叉编译类型还是本机库使用。 `TypeBuilder <T，true>`要求T独立于主机环境，这意味着它是由`llvm :: types`（doxygen）命名空间中的类型以及由这些命名空间构建的指针，函数，数组等构建的。 `TypeBuilder <T，false>`还允许本机C类型，其大小可能取决于主机编译器。 例如，
+
+```c++
+FunctionType *ft = TypeBuilder<types::i<8>(types::i<32>*), true>::get();
+```
+
+比同等的更容易读写:
+
+```c++
+std::vector<const Type*> params;
+params.push_back(PointerType::getUnqual(Type::Int32Ty));
+FunctionType *ft = FunctionType::get(Type::Int8Ty, params, false);
+```
+
+ 有关详细信息,参看[class comment](http://llvm.org/doxygen/TypeBuilder_8h_source.html#l00001) 
 
 
 
-## Threads and LLVM
+## Threads and LLVM(null)
 
 ## Advanced Topics
 
