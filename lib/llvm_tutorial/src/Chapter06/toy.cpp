@@ -30,7 +30,7 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <vector>
+#include <utility> #include <vector>
 
 using namespace llvm;
 using namespace llvm::orc;
@@ -59,7 +59,7 @@ enum Token {
     tok_for = -9,
     tok_in = -10,
 
-    // operators
+    // operators,新的二元,一元操作符
     tok_binary = -11,
     tok_unary = -12
 };
@@ -161,7 +161,7 @@ namespace {
         std::string Name;
 
     public:
-        VariableExprAST(const std::string &Name) : Name(Name) {}
+        VariableExprAST(std::string Name) : Name(std::move(Name)) {}
 
         Value *codegen() override;
     };
@@ -169,6 +169,7 @@ namespace {
 /// UnaryExprAST - Expression class for a unary operator.
     class UnaryExprAST : public ExprAST {
         char Opcode;
+        //一元表达式对应的一个操作数, 它可以是一个表达式
         std::unique_ptr<ExprAST> Operand;
 
     public:
@@ -197,9 +198,9 @@ namespace {
         std::vector<std::unique_ptr<ExprAST>> Args;
 
     public:
-        CallExprAST(const std::string &Callee,
+        CallExprAST(std::string Callee,
                     std::vector<std::unique_ptr<ExprAST>> Args)
-                : Callee(Callee), Args(std::move(Args)) {}
+                : Callee(std::move(Callee)), Args(std::move(Args)) {}
 
         Value *codegen() override;
     };
@@ -222,10 +223,10 @@ namespace {
         std::unique_ptr<ExprAST> Start, End, Step, Body;
 
     public:
-        ForExprAST(const std::string &VarName, std::unique_ptr<ExprAST> Start,
+        ForExprAST(std::string VarName, std::unique_ptr<ExprAST> Start,
                    std::unique_ptr<ExprAST> End, std::unique_ptr<ExprAST> Step,
                    std::unique_ptr<ExprAST> Body)
-                : VarName(VarName), Start(std::move(Start)), End(std::move(End)),
+                : VarName(std::move(VarName)), Start(std::move(Start)), End(std::move(End)),
                   Step(std::move(Step)), Body(std::move(Body)) {}
 
         Value *codegen() override;
@@ -234,6 +235,7 @@ namespace {
 /// PrototypeAST - This class represents the "prototype" for a function,
 /// which captures its name, and its argument names (thus implicitly the number
 /// of arguments the function takes), as well as if it is an operator.
+//扩展为自定义运算符
     class PrototypeAST {
         std::string Name;
         std::vector<std::string> Args;
@@ -241,9 +243,9 @@ namespace {
         unsigned Precedence; // Precedence if a binary op.
 
     public:
-        PrototypeAST(const std::string &Name, std::vector<std::string> Args,
+        PrototypeAST(std::string Name, std::vector<std::string> Args,
                      bool IsOperator = false, unsigned Prec = 0)
-                : Name(Name), Args(std::move(Args)), IsOperator(IsOperator),
+                : Name(std::move(Name)), Args(std::move(Args)), IsOperator(IsOperator),
                   Precedence(Prec) {}
 
         Function *codegen();
@@ -537,9 +539,10 @@ static std::unique_ptr<ExprAST> ParseExpression() {
 ///   ::= id '(' id* ')'
 ///   ::= binary LETTER number? (id, id)
 ///   ::= unary LETTER (id)
+// 解析函数声明,或自定义的一元,二元操作符
 static std::unique_ptr<PrototypeAST> ParsePrototype() {
     std::string FnName;
-
+    //现在原型的类型:函数声明?一元操作符?二元运算符?
     unsigned Kind = 0; // 0 = identifier, 1 = unary, 2 = binary.
     unsigned BinaryPrecedence = 30;
 
@@ -552,24 +555,26 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
             getNextToken();
             break;
         case tok_unary:
-            getNextToken();
+            getNextToken(); // eat "unary"
+            //下一个必须是自定义操作符,操作符的CurTok是返回对应的ascii码,不能出现关键字等情况
             if (!isascii(CurTok))
                 return LogErrorP("Expected unary operator");
             FnName = "unary";
             FnName += (char)CurTok;
             Kind = 1;
-            getNextToken();
+            getNextToken(); //eat 一元操作符
             break;
         case tok_binary:
-            getNextToken();
+            getNextToken(); //eat "binary"
             if (!isascii(CurTok))
                 return LogErrorP("Expected binary operator");
             FnName = "binary";
             FnName += (char)CurTok;
             Kind = 2;
-            getNextToken();
+            getNextToken(); //eat二元运算符
 
             // Read the precedence if present.
+            //只有二元运算符才会有优先级
             if (CurTok == tok_number) {
                 if (NumVal < 1 || NumVal > 100)
                     return LogErrorP("Invalid precedence: must be 1..100");
@@ -592,6 +597,7 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
     getNextToken(); // eat ')'.
 
     // Verify right number of names for operator.
+    // 这个很妙啊
     if (Kind && ArgNames.size() != Kind)
         return LogErrorP("Invalid number of operands for operator");
 
@@ -705,6 +711,7 @@ Value *BinaryExprAST::codegen() {
             break;
     }
 
+    // 处理自定义的二元运算符
     // If it wasn't a builtin binary operator, it must be a user defined one. Emit
     // a call to it.
     Function *F = getFunction(std::string("binary") + Op);
@@ -908,6 +915,7 @@ Function *FunctionAST::codegen() {
         return nullptr;
 
     // If this is an operator, install it.
+    // 这里把二元操作符可以看成参数个数固定为2的函数,必函数多了优先级
     if (P.isBinaryOp())
         BinopPrecedence[P.getOperatorName()] = P.getBinaryPrecedence();
 

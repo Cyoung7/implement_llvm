@@ -19,8 +19,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/doc/Kaleidoscope Tutorial.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/Kaleidoscope Tutorial.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -43,13 +44,22 @@
         </entry>
       </file>
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp">
+        <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-4471">
-              <caret line="728" column="19" selection-start-line="728" selection-start-column="19" selection-end-line="728" selection-end-column="19" />
+            <state relative-caret-position="405">
+              <caret line="486" column="19" lean-forward="true" selection-start-line="486" selection-start-column="19" selection-end-line="486" selection-end-column="19" />
               <folding>
                 <element signature="e#40#82#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Instructions.h" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/IR/Instructions.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="225">
+              <caret line="3061" column="7" selection-start-line="3061" selection-start-column="7" selection-end-line="3061" selection-end-column="7" />
             </state>
           </provider>
         </entry>
@@ -119,8 +129,8 @@
         <option value="$PROJECT_DIR$/doc/SSA.md" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp" />
+        <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" />
       </list>
     </option>
   </component>
@@ -135,8 +145,8 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="475" />
-    <option name="y" value="81" />
+    <option name="x" value="450" />
+    <option name="y" value="79" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
   </component>
@@ -212,7 +222,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
+    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -276,23 +286,24 @@
       <workItem from="1538044064027" duration="3000" />
       <workItem from="1538102358409" duration="20008000" />
       <workItem from="1538277160835" duration="3593000" />
-      <workItem from="1539059894010" duration="10861000" />
+      <workItem from="1539059894010" duration="18172000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="157652000" />
+    <option name="totallyTimeSpent" value="164963000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="475" y="81" width="1400" height="999" extended-state="0" />
+    <frame x="450" y="79" width="1400" height="999" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.8088033" visible="true" weight="0.22480059" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.8088033" visible="true" weight="0.22480059" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Messages" order="7" sideWeight="0.6569978" weight="0.2858783" />
       <window_info anchor="bottom" id="CMake" order="7" sideWeight="0.6569978" weight="0.29850745" />
       <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.25163162" side_tool="true" visible="true" weight="0.1653272" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.7483684" visible="true" weight="0.1653272" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.7483684" visible="true" weight="0.1653272" />
       <window_info id="Structure" order="1" sideWeight="0.1911967" side_tool="true" visible="true" weight="0.22480059" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -638,13 +649,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/IR/Instructions.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="236">
-          <caret line="3061" column="39" selection-start-line="3061" selection-start-column="29" selection-end-line="3061" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/doc/Writing an LLVM Pass.md">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -686,17 +690,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="807" column="23" lean-forward="true" selection-start-line="807" selection-start-column="23" selection-end-line="807" selection-end-column="23" />
-          <folding>
-            <element signature="e#40#82#0" expanded="true" />
-            <element signature="e#31724#31763#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="306">
@@ -704,17 +697,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/IR/Instructions.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="225">
+          <caret line="3061" column="7" selection-start-line="3061" selection-start-column="7" selection-end-line="3061" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/IR/IRBuilder.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="159">
+        <state relative-caret-position="213">
           <caret line="120" column="14" selection-start-line="120" selection-start-column="14" selection-end-line="120" selection-end-column="14" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4471">
-          <caret line="728" column="19" selection-start-line="728" selection-start-column="19" selection-end-line="728" selection-end-column="19" />
+        <state relative-caret-position="243">
+          <caret line="838" column="60" selection-start-line="838" selection-start-column="60" selection-end-line="838" selection-end-column="60" />
+          <folding>
+            <element signature="e#40#82#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="405">
+          <caret line="486" column="19" lean-forward="true" selection-start-line="486" selection-start-column="19" selection-end-line="486" selection-end-column="19" />
           <folding>
             <element signature="e#40#82#0" expanded="true" />
           </folding>
