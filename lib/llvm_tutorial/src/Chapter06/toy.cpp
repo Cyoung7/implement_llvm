@@ -474,6 +474,7 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
 /// unary
 ///   ::= primary
 ///   ::= '!' unary
+//这个函数包含了主表达式解析和一元表达式的解析
 static std::unique_ptr<ExprAST> ParseUnary() {
     // If the current token is not an operator, it must be a primary expr.
     if (!isascii(CurTok) || CurTok == '(' || CurTok == ',')
@@ -482,6 +483,7 @@ static std::unique_ptr<ExprAST> ParseUnary() {
     // If this is a unary operator, read it.
     int Opc = CurTok;
     getNextToken();
+    //可以处理连续多个一元运算符
     if (auto Operand = ParseUnary())
         return llvm::make_unique<UnaryExprAST>(Opc, std::move(Operand));
     return nullptr;
@@ -678,6 +680,7 @@ Value *VariableExprAST::codegen() {
     return V;
 }
 
+// 一元运算符也是参数个数为1的函数:函数名:"unary" +Opcode
 Value *UnaryExprAST::codegen() {
     Value *OperandV = Operand->codegen();
     if (!OperandV)
@@ -994,6 +997,7 @@ static void HandleExtern() {
             fprintf(stderr, "Read extern: ");
             FnIR->print(errs());
             fprintf(stderr, "\n");
+            //在函数声明时,也会把函数名添加到查询表中
             FunctionProtos[ProtoAST->getName()] = std::move(ProtoAST);
         }
     } else {
@@ -1039,9 +1043,11 @@ static void MainLoop() {
             case ';': // ignore top-level semicolons.
                 getNextToken();
                 break;
+            //函数定义:必须包含函数体
             case tok_def:
                 HandleDefinition();
                 break;
+            //函数声明:没有函数体
             case tok_extern:
                 HandleExtern();
                 break;

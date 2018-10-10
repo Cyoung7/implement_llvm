@@ -19,8 +19,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/doc/Kaleidoscope Tutorial.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/Kaleidoscope Tutorial.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
@@ -46,8 +44,8 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="486" column="19" lean-forward="true" selection-start-line="486" selection-start-column="19" selection-end-line="486" selection-end-column="19" />
+            <state relative-caret-position="504">
+              <caret line="664" column="21" selection-start-line="664" selection-start-column="21" selection-end-line="664" selection-end-column="21" />
               <folding>
                 <element signature="e#40#82#0" expanded="true" />
               </folding>
@@ -101,6 +99,9 @@
       <find>ES</find>
       <find>TheFPM</find>
       <find>IRBui</find>
+      <find>FunctionProtos</find>
+      <find>ParseDefinition</find>
+      <find>UnaryExprAST</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -145,8 +146,8 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="450" />
-    <option name="y" value="79" />
+    <option name="x" value="329" />
+    <option name="y" value="81" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
   </component>
@@ -286,15 +287,15 @@
       <workItem from="1538044064027" duration="3000" />
       <workItem from="1538102358409" duration="20008000" />
       <workItem from="1538277160835" duration="3593000" />
-      <workItem from="1539059894010" duration="18172000" />
+      <workItem from="1539059894010" duration="23812000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="164963000" />
+    <option name="totallyTimeSpent" value="170603000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="450" y="79" width="1400" height="999" extended-state="0" />
+    <frame x="329" y="81" width="1400" height="999" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.8088033" visible="true" weight="0.22480059" />
@@ -723,8 +724,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="486" column="19" lean-forward="true" selection-start-line="486" selection-start-column="19" selection-end-line="486" selection-end-column="19" />
+        <state relative-caret-position="504">
+          <caret line="664" column="21" selection-start-line="664" selection-start-column="21" selection-end-line="664" selection-end-column="21" />
           <folding>
             <element signature="e#40#82#0" expanded="true" />
           </folding>
