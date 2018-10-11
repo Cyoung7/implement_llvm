@@ -30,7 +30,8 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <utility> #include <vector>
+#include <utility>
+#include <vector>
 
 using namespace llvm;
 using namespace llvm::orc;
@@ -69,6 +70,8 @@ static double NumVal;             // Filled in if tok_number
 
 /// gettok - Return the next token from standard input.
 static int gettok() {
+    // 这里的static是关键,只有第一次执行gettok才会初始化LastChar
+    // 后面gettok调用不会再初始化,而是继续保留上次的结果
     static int LastChar = ' ';
 
     // Skip any whitespace.
@@ -128,6 +131,8 @@ static int gettok() {
 
     // Otherwise, just return the character as its ascii value.
     int ThisChar = LastChar;
+    // LastChar指向下一个字符,供下一次gettok调用使用
+    // LastChar为静态变量,会保存到下一次调用
     LastChar = getchar();
     return ThisChar;
 }
@@ -475,8 +480,11 @@ static std::unique_ptr<ExprAST> ParsePrimary() {
 ///   ::= primary
 ///   ::= '!' unary
 //这个函数包含了主表达式解析和一元表达式的解析
+//这里解析的一元操作符是在操作符定义好的前提下,程序调用一元操作符时的解析
+//和 ParsePrototype 有本质的区别,这个是解析操作符的定义
 static std::unique_ptr<ExprAST> ParseUnary() {
     // If the current token is not an operator, it must be a primary expr.
+    //这个,:什么意思? 逗号不能作为一元操作符,进入到主表达式会报错
     if (!isascii(CurTok) || CurTok == '(' || CurTok == ',')
         return ParsePrimary();
 
@@ -542,6 +550,7 @@ static std::unique_ptr<ExprAST> ParseExpression() {
 ///   ::= binary LETTER number? (id, id)
 ///   ::= unary LETTER (id)
 // 解析函数声明,或自定义的一元,二元操作符
+//这里的操作符解析,主要解析操作符的定义(作为一个特殊的函数处理)
 static std::unique_ptr<PrototypeAST> ParsePrototype() {
     std::string FnName;
     //现在原型的类型:函数声明?一元操作符?二元运算符?
@@ -653,6 +662,7 @@ Value *LogErrorV(const char *Str) {
     return nullptr;
 }
 
+// 先去TheModule中找,再在FunctionProtos中生成
 Function *getFunction(std::string Name) {
     // First, see if the function has already been added to the current module.
     if (auto *F = TheModule->getFunction(Name))
@@ -661,6 +671,7 @@ Function *getFunction(std::string Name) {
     // If not, check whether we can codegen the declaration from some existing
     // prototype.
     auto FI = FunctionProtos.find(Name);
+    //
     if (FI != FunctionProtos.end())
         return FI->second->codegen();
 
@@ -896,7 +907,7 @@ Function *PrototypeAST::codegen() {
     std::vector<Type *> Doubles(Args.size(), Type::getDoubleTy(TheContext));
     FunctionType *FT =
             FunctionType::get(Type::getDoubleTy(TheContext), Doubles, false);
-
+    //生成的函数会在TheModule中注册
     Function *F =
             Function::Create(FT, Function::ExternalLinkage, Name, TheModule.get());
 

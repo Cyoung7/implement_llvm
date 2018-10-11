@@ -491,6 +491,7 @@ Function *PrototypeAST::codegen() {
     return F;
 }
 
+//函数定义的代码生成
 Function *FunctionAST::codegen() {
     // First, check for an existing function from a previous 'extern' declaration.
     Function *TheFunction = TheModule->getFunction(Proto->getName());
@@ -512,7 +513,7 @@ Function *FunctionAST::codegen() {
     NamedValues.clear();
     for (auto &Arg : TheFunction->args())
         NamedValues[Arg.getName()] = &Arg;
-
+    //body代码生成会将表达式所计算的值添加到基础块中,并返回计算值
     if (Value *RetVal = Body->codegen()) {
         // Finish off the function.
         Builder.CreateRet(RetVal);
