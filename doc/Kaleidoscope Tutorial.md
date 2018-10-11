@@ -2,8 +2,13 @@
 
 [原文链接](http://llvm.org/docs/tutorial/)
 
-Table of Contents
-=================
+目录生成指令:
+
+./gh-md-toc /home/cyoung/CLionProjects/implement_llvm/doc/Kaleidoscope\ Tutorial.md
+
+[TOC]
+
+
 
    * [LLVM Tutorial](#llvm-tutorial)
       * [1.Tutorial Introduction and the Lexer](#1tutorial-introduction-and-the-lexer)

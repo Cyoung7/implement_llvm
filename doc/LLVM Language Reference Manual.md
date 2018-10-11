@@ -2,7 +2,31 @@
 
 [原文链接](http://llvm.org/docs/LangRef.html)
 
+目录生成指令:
+
+./gh-md-toc /home/cyoung/CLionProjects/implement_llvm/doc/LLVM\ Language\ Reference\ Manual.md 
+
 [TOC]
+
+ * [LLVM Language Reference Manual](#llvm-language-reference-manual)
+      * [Abstract](#abstract)
+      * [Introduction](#introduction)
+      * [Well-Formedness](#well-formedness)
+      * [Identifiers](#identifiers)
+      * [High Level Structure](#high-level-structure)
+         * [Module Structure](#module-structure)
+         * [Linkage Types](#linkage-types)
+         * [Calling Conventions(调用公约)(null)](#calling-conventions调用公约null)
+      * [Type System](#type-system)
+      * [Constants](#constants)
+      * [Other Values](#other-values)
+      * [Metadata](#metadata)
+      * [Module Flags Metadata](#module-flags-metadata)
+      * [Automatic Linker Flags Named Metadata](#automatic-linker-flags-named-metadata)
+      * [ThinLTO Summary](#thinlto-summary)
+      * [Intrinsic Global Variables(指令全局变量)](#intrinsic-global-variables指令全局变量)
+      * [Instruction Reference(指令参考)](#instruction-reference指令参考)
+      * [Intrinsic Functions(内建函数)](#intrinsic-functions内建函数)
 
 ## Abstract
 
