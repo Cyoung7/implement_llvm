@@ -256,11 +256,596 @@ switch (X) {
 
 > 注意:虽然在整个LLVM中使用这种错误处理方案是理想的，但有些地方可能无法应用。 在绝对必须发出非编程错误且错误模型不可行的情况下，您可以调用report_fatal_error，它将调用已安装的错误处理程序，打印消息并退出程序。
 
+使用LLVM的错误方案对可恢复错误进行建模。 此方案使用函数返回值表示错误，类似于经典C整数错误代码或C ++的std :: error_code。 但是，Error类实际上是用户定义的错误类型的轻量级包装器，允许附加任意信息来描述错误。 这类似于C ++异常允许抛出用户定义类型的方式。
+
+成功值是通过调用`Error :: success（）`创建的，例如：
+
+```c++
+Error foo() {
+  // Do something.
+  // Return success.
+  return Error::success();
+}
+```
+
+构建和返回成功值非常便宜 - 它们对程序性能的影响很小。
+
+使用`make_error <T>`构造失败值，其中T是从`ErrorInfo`实用程序继承的任何类，例如：
+
+```c++
+class BadFileFormat : public ErrorInfo<BadFileFormat> {
+public:
+  static char ID;
+  std::string Path;
+
+  BadFileFormat(StringRef Path) : Path(Path.str()) {}
+
+  void log(raw_ostream &OS) const override {
+    OS << Path << " is malformed";
+  }
+
+  std::error_code convertToErrorCode() const override {
+    return make_error_code(object_error::parse_failed);
+  }
+};
+
+char BadFileFormat::ID; // This should be declared in the C++ file.
+
+Error printFormattedFile(StringRef Path) {
+  if (<check for valid format>)
+    return make_error<BadFileFormat>(Path);
+  // print file contents.
+  return Error::success();
+}
+```
+
+错误值可以隐式转换为bool：true表示错误，false表示成功，启用以下习语：
+
+```c++
+Error mayFail();
+
+Error foo() {
+  if (auto Err = mayFail())
+    return Err;
+  // Success! We can proceed.
+  ...
+```
+
+ 对于可能失败但需要返回值的函数，可以使用Expected <T>实用程序。 可以使用T或Error构造此类型的值。 预期的<T>值也可以隐式转换为布尔值，但使用与Error相反的约定：true表示成功，false表示错误。 如果成功，则可以通过解引用运算符访问T值。 如果失败，可以使用takeError（）方法提取Error值。 惯用法看起来像：
+
+```c++
+Expected<FormattedFile> openFormattedFile(StringRef Path) {
+  // If badly formatted, return an error.
+  if (auto Err = checkFormat(Path))
+    return std::move(Err);
+  // Otherwise return a FormattedFile instance.
+  return FormattedFile(Path);
+}
+
+Error processFormattedFile(StringRef Path) {
+  // Try to open a formatted file
+  if (auto FileOrErr = openFormattedFile(Path)) {
+    // On success, grab a reference to the file and continue.
+    auto &File = *FileOrErr;
+    ...
+  } else
+    // On error, extract the Error value and return it.
+    return FileOrErr.takeError();
+}
+```
+
+如果`Expected <T>`值处于成功模式，则`takeError（）`方法将返回成功值。 使用这个事实，上面的函数可以重写为：
+
+```c++
+Error processFormattedFile(StringRef Path) {
+  // Try to open a formatted file
+  auto FileOrErr = openFormattedFile(Path);
+  if (auto Err = FileOrErr.takeError())
+    // On error, extract the Error value and return it.
+    return Err;
+  // On success, grab a reference to the file and continue.
+  auto &File = *FileOrErr;
+  ...
+}
+```
+
+对于涉及多个Expected <T>值的函数，第二种形式通常更具可读性，因为它限制了所需的缩进。
+
+所有错误实例，无论是成功还是失败，必须在销毁之前检查或移动（通过std :: move或return）。 意外丢弃未经检查的错误将导致程序在运行未经检查的值的析构函数时中止，从而可以轻松识别并修复违反此规则的行为。
+
+一旦测试成功值（通过调用布尔转换运算符），就会将其视为已检查：
+
+```c++
+if (auto Err = mayFail(...))
+  return Err; // Failure value - move error to caller.
+
+// Safe to continue: Err was checked.
+```
+
+相反，即使mayFail返回成功值，以下代码也总是会导致中止：
+
+```c++
+mayFail();
+// Program will always abort here, even if mayFail() returns Success, since
+// the value is not checked. 
+```
+
+一旦激活了错误类型的处理程序，就会考虑检查失败值：
+
+```c++
+handleErrors(
+  processFormattedFile(...),
+  [](const BadFileFormat &BFF) {
+    report("Unable to process " + BFF.Path + ": bad format");
+  },
+  [](const FileNotFound &FNF) {
+    report("File not found " + FNF.Path);
+  });
+```
+
+`handleErrors`函数将错误作为其第一个参数，后跟可变列表“处理程序”，每个“处理程序”必须是带有一个参数的可调用类型（函数，`lambda`或带调用运算符的类）。 `handleErrors`函数将访问序列中的每个处理程序，并根据错误的动态类型检查其参数类型，运行匹配的第一个处理程序。 这与用于决定为C ++异常运行哪个catch子句的决策过程相同。
+
+由于传递给`handleErrors`的处理程序列表可能未涵盖可能发生的每种错误类型，因此handleErrors函数还会返回必须检查或传播的Error值。 如果传递给`handleErrors`的错误值与任何处理程序都不匹配，则它将从`handleErrors`返回。 因此，惯用法使用`handleErrors`看起来像：
+
+```c++
+if (auto Err =
+      handleErrors(
+        processFormattedFile(...),
+        [](const BadFileFormat &BFF) {
+          report("Unable to process " + BFF.Path + ": bad format");
+        },
+        [](const FileNotFound &FNF) {
+          report("File not found " + FNF.Path);
+        }))
+  return Err;
+```
+
+如果您确实知道处理程序列表是详尽的，则可以使用`handleAllErrors`函数。这与`handleErrors`相同，只是如果传入未处理的错误它将终止程序，因此可以返回void。通常应该避免使用`handleAllErrors`函数：在程序的其他地方引入新的错误类型可以很容易地将以前详尽的错误列表转换为非详尽的列表，从而有可能导致程序意外终止。在可能的情况下，使用`handleErrors`并将未知错误传播到堆栈中。
+
+对于工具代码，可以通过打印错误消息然后退出错误代码来处理错误，`ExitOnError`实用程序可能是一个比`handleErrors`更好的选择，因为它在调用易错函数时简化了控制流程。
+
+在已知对易错函数的特定调用将始终成功的情况下（例如，调用只能在已知安全的输入的输入子集上失败的函数），`cantFail`函数可以是用于删除错误类型，简化控制流程。
+
+##### StringError
+
+StringError许多类型的错误都没有恢复策略，可以采取的唯一操作是将它们报告给用户，以便用户可以尝试修复环境。 在这种情况下，将错误表示为字符串非常有意义。 LLVM为此提供StringError类。 它需要两个参数：字符串错误消息，以及用于互操作性的等效`std :: error_code`：
+
+```c++
+make_error<StringError>("Bad executable",
+                        make_error_code(errc::executable_format_error"));
+```
+
+如果你确定你正在构建的错误永远不需要转换为std :: error_code，你可以使用inconvertibleErrorCode（）函数：
+
+```c++
+make_error<StringError>("Bad executable", inconvertibleErrorCode());
+```
+
+这只应在仔细考虑后才能完成。 如果尝试将此错误转换为`std :: error_code`，则会立即触发程序终止。 除非您确定您的错误不需要互操作性，否则您应该查找可以转换为的现有`std :: error_code`，甚至（尽管很痛苦）考虑引入一个新的作为权宜之计。
+
+##### Interoperability with std::error_code and ErrorOr
+
+许多现有的LLVM API使用`std :: error_code`及其合作伙伴`ErrorOr <T>`（它扮演与`Expected <T>`相同的角色，但包装了`std :: error_code`而不是Error）。 错误类型的传染性本质意味着尝试更改其中一个函数以返回Error或`Expected <T>`通常会导致对调用者，调用者的调用者等进行大量更改。 （第一次这样的尝试，从`MachOObjectFile`的构造函数返回一个错误，在差异达到3000行之后被放弃，影响了六个库，并且仍然在增长）。
+
+为解决此问题，引入了`Error/std :: error_code`互操作性要求。 两对函数允许将任何Error值转换为std :: error_code，任何`Expected <T>`都将转换为`ErrorOr <T>`，反之亦然：
+
+```c++
+std::error_code errorToErrorCode(Error Err);
+Error errorCodeToError(std::error_code EC);
+
+template <typename T> ErrorOr<T> expectedToErrorOr(Expected<T> TOrErr);
+template <typename T> Expected<T> errorOrToExpected(ErrorOr<T> TOrEC);
+```
+
+使用这些API可以很容易地制作外科补丁，将各个函数从`std :: error_code`更新为Error，从`ErrorOr <T>`更新为`Expected <T>`。
+
+##### Returning Errors from error handlers
+
+错误恢复尝试本身可能会失败。 出于这个原因，handleErrors实际上识别三种不同形式的处理程序签名：
+
+```c++
+// Error must be handled, no new errors produced:
+void(UserDefinedError &E);
+
+// Error must be handled, new errors can be produced:
+Error(UserDefinedError &E);
+
+// Original error can be inspected, then re-wrapped and returned (or a new
+// error can be produced):
+Error(std::unique_ptr<UserDefinedError> E);
+```
+
+ 从处理程序返回的任何错误都将从handleErrors函数返回，以便可以自行处理，或者在堆栈中向上传播。
+
+##### Using ExitOnError to simplify tool code
+
+库代码永远不应该为可恢复的错误调用exit，但是在工具代码（尤其是命令行工具）中，这可能是一种合理的方法。 遇到错误时调用exit会大大简化控制流程，因为错误不再需要在堆栈中传播。 这允许代码以直线样式写入，只要每个错误的调用都包含在检查中并调用退出。 `ExitOnError`类通过提供检查Error值的调用操作符，在成功案例中删除错误并记录到stderr然后在失败情况下退出来支持此模式。
+
+要使用此类，请在程序中声明一个全局ExitOnError变量：
+
+```c++
+ExitOnError ExitOnErr;
+```
+
+然后可以通过调用ExitOnErr将对错误函数的调用包装起来，将它们转换为非失败调用：
+
+```c++
+Error mayFail();
+Expected<int> mayFail2();
+
+void foo() {
+  ExitOnErr(mayFail());
+  int X = ExitOnErr(mayFail2());
+}
+```
+
+失败时，错误的日志消息将写入stderr，可选地前面有一个字符串“banner”，可以通过调用setBanner方法来设置。 也可以使用setExitCodeMapper方法从Error值向退出代码提供映射：
+
+```c++
+int main(int argc, char *argv[]) {
+  ExitOnErr.setBanner(std::string(argv[0]) + " error:");
+  ExitOnErr.setExitCodeMapper(
+    [](const Error &Err) {
+      if (Err.isA<BadFileFormat>())
+        return 2;
+      return 1;
+    });
+```
+
+尽可能在工具代码中使用`ExitOnError`，因为它可以极大地提高可读性。
+
+##### Using cantFail to simplify safe callsites
+
+某些功能可能仅对其输入的子集失败，因此可以假定使用已知安全输入的调用成功。
+
+cantFail函数通过包装断言它们的参数是成功值来封装它，并且在`Expected <T>`的情况下，解包T值：
+
+```c++
+Error onlyFailsForSomeXValues(int X);
+Expected<int> onlyFailsForSomeXValues2(int X);
+
+void foo() {
+  cantFail(onlyFailsForSomeXValues(KnownSafeValue));
+  int Y = cantFail(onlyFailsForSomeXValues2(KnownSafeValue));
+  ...
+}
+```
+
+与ExitOnError实用程序一样，cantFail简化了控制流程。 然而，它们对错误情况的处理是非常不同的：在保证ExitOnError在错误输入上终止程序的情况下，cantFile只是断言结果是成功的。 在调试版本中，如果遇到错误，这将导致断言失败。 在发布版本中，未定义cantFail的失败值行为。 因此，必须注意cantFail的使用：客户必须确定cantFail包装的调用确实不能使用给定的参数失败。
+
+在库代码中使用cantFail函数应该很少，但它们可能在工具和单元测试代码中更有用，其中输入和/或模拟类或函数可能是安全的。
+
+##### Fallible constructors
+
+易错构造函数有些类需要资源获取或其他在构造期间可能失败的复杂初始化。 不幸的是，构造函数不能返回错误，并且客户端在构造之后测试对象以确保它们有效是容易出错的，因为它很容易忘记测试。 要解决此问题，请使用命名的构造函数idiom并返回`Expected <T>`：
+
+```c++
+class Foo {
+public:
+
+  static Expected<Foo> Create(Resource R1, Resource R2) {
+    Error Err;
+    Foo F(R1, R2, Err);
+    if (Err)
+      return std::move(Err);
+    return std::move(F);
+  }
+
+private:
+
+  Foo(Resource R1, Resource R2, Error &Err) {
+    ErrorAsOutParameter EAO(&Err);
+    if (auto Err2 = R1.acquire()) {
+      Err = std::move(Err2);
+      return;
+    }
+    Err = R2.acquire();
+  }
+};
+```
+
+这里，命名的构造函数通过引用将Error传递给实际的构造函数，然后构造函数可以使用它来返回错误。 `ErrorAsOutParameter`实用程序在构造函数的入口处设置Error值的checked标志，以便可以分配错误，然后在退出时重置它以强制客户端（命名构造函数）检查错误。
+
+通过使用这个习惯用法，尝试构造Foo的客户端接收格式良好的Foo或Error，而不是处于无效状态的对象。
+
+##### Propagating and consuming errors based on types
+
+在某些情况下，已知某些类型的错误是良性的。 例如，当走遍档案时，一些客户可能乐于跳过格式错误的目标文件，而不是立即终止行走。 使用复杂的处理程序方法可以实现跳过格式错误的对象，但Error.h标头提供了两个实用程序，使这个习惯用法更加清晰：类型检查方法isA和consumeError函数：
+
+```c++
+Error walkArchive(Archive A) {
+  for (unsigned I = 0; I != A.numMembers(); ++I) {
+    auto ChildOrErr = A.getMember(I);
+    if (auto Err = ChildOrErr.takeError()) {
+      if (Err.isA<BadFileFormat>())
+        consumeError(std::move(Err))
+      else
+        return Err;
+    }
+    auto &Child = *ChildOrErr;
+    // Use Child
+    ...
+  }
+  return Error::success();
+}
+```
+
+##### Concatenating Errors with joinErrors
+
+在上面的归档步骤示例中，BadFileFormat错误被简单地使用和忽略。 如果客户端希望在完成遍历存档后报告这些错误，则可以使用joinErrors实用程序：
+
+```c++
+Error walkArchive(Archive A) {
+  Error DeferredErrs = Error::success();
+  for (unsigned I = 0; I != A.numMembers(); ++I) {
+    auto ChildOrErr = A.getMember(I);
+    if (auto Err = ChildOrErr.takeError())
+      if (Err.isA<BadFileFormat>())
+        DeferredErrs = joinErrors(std::move(DeferredErrs), std::move(Err));
+      else
+        return Err;
+    auto &Child = *ChildOrErr;
+    // Use Child
+    ...
+  }
+  return DeferredErrs;
+}
+```
+
+joinErrors例程构建一个名为ErrorList的特殊错误类型，它包含用户定义错误的列表。 handleErrors例程识别此类型，并将尝试按顺序处理每个包含的错误。 如果可以处理所有包含的错误，handleErrors将返回`Error :: success（）`，否则handleErrors将连接剩余的错误并返回生成的ErrorList。 
+
+##### Building fallible iterators and iterator ranges
+
+上面的归档步骤示例通过索引检索归档成员，但是这需要相当多的样板来进行迭代和错误检查。 我们可以通过使用带有“易错迭代器”模式的Error来清理它。 通常的C ++迭代器模式不允许增量失败，但我们可以通过让迭代器持有一个Error引用来通过它来报告失败来加入对它的支持。 在此模式中，如果增量操作失败，则通过Error参考记录故障，并将迭代器值设置为范围的结尾以终止循环。 这确保了解除引用操作在普通迭代器解除引用是安全的任何地方都是安全的（即，当迭代器不等于结束时）。 在遵循这种模式的地方（如在llvm :: object :: Archive类中），结果是更清晰的迭代习语：
+
+```c++
+Error Err;
+for (auto &Child : Ar->children(Err)) {
+  // Use Child - we only enter the loop when it's valid
+  ...
+}
+// Check Err after the loop to ensure it didn't break due to an error.
+if (Err)
+  return Err;
+```
+
+有关错误及其相关实用程序的更多信息，请参见Error.h头文件。
+
+### Passing functions and other callable objects
+
+有时您可能希望函数传递回调对象。 为了支持lambda表达式和其他函数对象，您不应该使用传统的C方法来获取函数指针和不透明的cookie：
+
+```c++
+void takeCallback(bool (*Callback)(Function *, void *), void *Cookie);
+```
+
+相反，请使用以下方法之一：
+
+#### Function template
+
+如果您不介意将函数的定义放入头文件中，请将其设置为在可调用类型上模板化的函数模板。
+
+```c++
+template<typename Callable>
+void takeCallback(Callable Callback) {
+  Callback(1, 2, 3);
+}
+```
+
+#### The `function_ref `class template
+
+function_ref（[doxygen](http://llvm.org/doxygen/classllvm_1_1function__ref_3_01Ret_07Params_8_8_8_08_4.html)）类模板表示对可调用对象的引用，该可调用对象是在可调用类型上模板化的。 如果在函数返回后不需要保持回调，这是将回调传递给函数的一个很好的选择。 这样，function_ref是std :: function，因为StringRef是std :: string。
+
+`function_ref <Ret（Param1，Param2，...)>`可以从任何可调用对象隐式构造，该对象可以使用Param1，Param2，...类型的参数调用，并返回一个可以转换为Ret类型的值。 例如：
+
+```c++
+void visitBasicBlocks(Function *F, function_ref<bool (BasicBlock*)> Callback) {
+  for (BasicBlock &BB : *F)
+    if (Callback(&BB))
+      return;
+}
+```
+
+可以使用：
+
+```c++
+visitBasicBlocks(F, [&](BasicBlock *BB) {
+  if (process(BB))
+    return isEmpty(BB);
+  return false;
+});
+```
+
+请注意，function_ref对象包含指向外部存储器的指针，因此存储类的实例通常不安全（除非您知道不会释放外部存储器）。 如果您需要此功能，请考虑使用`std :: function`。 function_ref足够小，应始终按值传递。
+
+### The `LLVM_DEBUG()` macro and `-debug `option
+
+通常在处理你的通行证时，你会在你的通行证中放入一堆调试打印输出和其他代码。 在你使它工作之后，你想要删除它，但是你将来可能会再次需要它（以解决你遇到的新bug）。
+
+当然，正因为如此，您不希望删除调试打印输出，但您不希望它们总是嘈杂。 标准的妥协是将它们注释掉，允许您在将来需要时启用它们。
+
+`llvm/Support/Debug.h`（[doxygen](http://llvm.org/doxygen/Debug_8h_source.html)）文件提供了一个名为`LLVM_DEBUG（）`的宏，它是解决此问题的更好的解决方案。 基本上，您可以将任意代码放入LLVM_DEBUG宏的参数中，并且只有在使用'-debug'命令行参数运行'opt'（或任何其他工具）时才会执行它：
+
+```c++
+LLVM_DEBUG(dbgs() << "I am here!\n");
+```
+
+然后你就可以像这样运行你的pass：
+
+```
+$ opt < a.bc > /dev/null -mypass
+<no output>
+$ opt < a.bc > /dev/null -mypass -debug
+I am here!
+```
+
+使用`LLVM_DEBUG（）`宏而不是自制的解决方案，您无需为传递的调试输出创建“又一个”命令行选项。 请注意，对于非断言构建禁用`LLVM_DEBUG（）`宏，因此它们根本不会对性能产生影响（出于同样的原因，它们也不应包含副作用！）。
+
+关于`LLVM_DEBUG（）`宏的另一个好处是你可以直接在gdb中启用或禁用它。 如果程序正在运行，只需使用gdb中的“set DebugFlag = 0”或“set DebugFlag = 1”。 如果程序尚未启动，您可以随时使用-debug运行它。
+
+#### Fine grained debug info with `DEBUG_TYPE` and the `-debug-only` option
+
+有时您可能会发现自己处于启用-debug只会打开太多信息（例如在处理代码生成器时）的情况。 如果要使用更细粒度的控件启用调试信息，则应定义`DEBUG_TYPE`宏并使用`-debug-only`选项，如下所示：
+
+```c++
+#define DEBUG_TYPE "foo"
+LLVM_DEBUG(dbgs() << "'foo' debug type\n");
+#undef  DEBUG_TYPE
+#define DEBUG_TYPE "bar"
+LLVM_DEBUG(dbgs() << "'bar' debug type\n");
+#undef  DEBUG_TYPE
+```
+
+然后你就可以像这样运行你的pass：
+
+```
+$ opt < a.bc > /dev/null -mypass
+<no output>
+$ opt < a.bc > /dev/null -mypass -debug
+'foo' debug type
+'bar' debug type
+$ opt < a.bc > /dev/null -mypass -debug-only=foo
+'foo' debug type
+$ opt < a.bc > /dev/null -mypass -debug-only=bar
+'bar' debug type
+$ opt < a.bc > /dev/null -mypass -debug-only=foo,bar
+'foo' debug type
+'bar' debug type
+```
+
+当然，实际上，您只应在文件顶部设置`DEBUG_TYPE`，以指定整个模块的调试类型。请注意，只有在包含`Debug.h`后才能执行此操作，而不是在任何`#include`的头文件中执行此操作。此外，您应该使用比“foo”和“bar”更有意义的名称，因为没有适当的系统来确保名称不会发生冲突。如果两个不同的模块使用相同的字符串，则在指定名称时将全部打开它们。例如，这允许使用`-debug-only = InstrSched`启用指令调度的所有调试信息，即使源存在于多个文件中也是如此。该名称不得包含逗号（，），因为它用于分隔`-debug-only`选项的参数。
+
+出于性能原因，`-debug-only`在LLVM的优化构建（`--enable-optimized`）中不可用。
+
+`DEBUG_WITH_TYPE`宏也可用于您要设置DEBUG_TYPE的情况，但仅适用于一个特定的DEBUG语句。它需要一个额外的第一个参数，这是要使用的类型。例如，前面的示例可以写为：
+
+``` c++
+DEBUG_WITH_TYPE("foo", dbgs() << "'foo' debug type\n");
+DEBUG_WITH_TYPE("bar", dbgs() << "'bar' debug type\n");
+```
+
+### The `Statistic` class `& -stats` option
+
+`Statistic`类`＆-stats`选项`llvm/ADT/Statistic.h`（[doxygen](http://llvm.org/doxygen/Statistic_8h_source.html)）文件提供了一个名为Statistic的类，它用作跟踪LLVM编译器正在执行的操作以及各种优化的有效性的统一方式。 有必要了解哪些优化有助于使特定程序更快地运行。
+
+通常你可以在一些大型程序上运行你的传递，并且你有兴趣看看它进行了多少次转换。 虽然你可以通过手工检查或一些临时方法来做到这一点，但这对于大型程序来说真的很痛苦并不是很有用。 使用Statistic类可以很容易地跟踪这些信息，并且计算的信息以统一的方式呈现，其余的传递被执行。
+
+统计使用有很多例子，但使用它的基础知识如下：
+
+像这样定义你的统计数据：
+
+```c++
+#define DEBUG_TYPE "mypassname"   // This goes before any #includes.
+STATISTIC(NumXForms, "The # of times I did stuff");
+```
+
+`STATISTIC`宏定义了一个静态变量，其名称由第一个参数指定。 传递名称取自`DEBUG_TYPE`宏，描述取自第二个参数。 定义的变量（在本例中为“`NumXForms`”）的作用类似于无符号整数。
+
+每当你进行转换时，碰撞计数器：
+
+```c++
+++NumXForms;   // I did stuff!
+```
+
+这就是你要做的一切。 要“选择”打印收集的统计信息，请使用“-stats”选项：
+
+```
+$ opt -stats -mypassname < program.bc > /dev/null
+... statistics output ...
+```
+
+请注意，为了使用'-stats'选项，必须在启用断言的情况下编译LLVM。
+
+当从SPEC基准测试套件运行选择C文件时，它会提供如下所示的报告：
+
+```
+ 7646 bitcodewriter   - Number of normal instructions
+   725 bitcodewriter   - Number of oversized instructions
+129996 bitcodewriter   - Number of bitcode bytes written
+  2817 raise           - Number of insts DCEd or constprop'd
+  3213 raise           - Number of cast-of-self removed
+  5046 raise           - Number of expression trees converted
+    75 raise           - Number of other getelementptr's formed
+   138 raise           - Number of load/store peepholes
+    42 deadtypeelim    - Number of unused typenames removed from symtab
+   392 funcresolve     - Number of varargs functions resolved
+    27 globaldce       - Number of global variables removed
+     2 adce            - Number of basic blocks removed
+   134 cee             - Number of branches revectored
+    49 cee             - Number of setcc instruction eliminated
+   532 gcse            - Number of loads removed
+  2919 gcse            - Number of instructions removed
+    86 indvars         - Number of canonical indvars added
+    87 indvars         - Number of aux indvars removed
+    25 instcombine     - Number of dead inst eliminate
+   434 instcombine     - Number of insts combined
+   248 licm            - Number of load insts hoisted
+  1298 licm            - Number of insts hoisted to a loop pre-header
+     3 licm            - Number of insts hoisted to multiple loop preds (bad, no loop pre-header)
+    75 mem2reg         - Number of alloca's promoted
+  1444 cfgsimplify     - Number of blocks simplified
+```
+
+ 显然，有了这么多的优化，为这些东西建立一个统一的框架是非常好的。 使你的传递适合框架使其更易于维护和有用。
+
+### Adding debug counters to aid in debugging your code
+
+有时，在编写新的通行证或试图追踪错误时，能够控制通行证中是否发生某些事情是很有用的。 例如，有时最小化工具只能轻松为您提供大型测试用例。 您希望使用二分法自动将您的错误缩小到发生或不发生的特定转换。 这是调试计数器帮助的地方。 它们提供了一个框架，使您的代码部分只执行一定次数。
+
+`llvm/Support/DebugCounter.h`（[doxygen](http://llvm.org/doxygen/DebugCounter_8h_source.html)）文件提供了一个名为DebugCounter的类，可用于创建控制代码部分执行的命令行计数器选项。
+
+像这样定义DebugCounter：
+
+```c++
+DEBUG_COUNTER(DeleteAnInstruction, "passname-delete-instruction",
+              "Controls which instructions get delete");
+```
+
+DEBUG_COUNTER宏定义一个静态变量，其名称由第一个参数指定。 计数器的名称（在命令行中使用）由第二个参数指定，帮助中使用的描述由第三个参数指定。
+
+无论您想要哪种代码控制，都可以使用DebugCounter :: shouldExecute来控制它。
+
+```c++
+if (DebugCounter::shouldExecute(DeleteAnInstruction))
+  I->eraseFromParent();
+```
+
+这就是你要做的一切。 现在，使用opt，您可以使用'--debug-counter'选项控制此代码何时触发。 提供了两个计数器，跳过和计数。 skip是跳过代码路径执行的次数。 count是跳过后执行代码路径的次数。
+
+```
+opt --debug-counter=passname-delete-instruction-skip=1,passname-delete-instruction-count=2 -passname
+```
+
+这将在我们第一次点击它时跳过上面的代码，然后执行两次，然后跳过其余的执行。
+
+因此，如果在以下代码上执行：
+
+```
+%1 = add i32 %a, %b
+%2 = add i32 %a, %b
+%3 = add i32 %a, %b
+%4 = add i32 %a, %b
+```
+
+它会删除数字％2和％3。
+
+utils / bisect-skip-count中提供了一个实用程序，用于二进制搜索skip和count参数。 它可用于自动最小化调试计数器变量的跳过和计数。
+
+### Viewing graphs while debugging code
+
+LLVM中的一些重要数据结构是图形：例如，由LLVM [BasicBlocks](http://llvm.org/docs/ProgrammersManual.html#basicblock)构成的CFG，由LLVM [MachineBasicBlocks](http://llvm.org/docs/CodeGenerator.html#machinebasicblock)构成的CFG和[指令选择DAG](http://llvm.org/docs/CodeGenerator.html#selectiondag)。在许多情况下，在调试编译器的各个部分时，立即可视化这些图形是很好的。
+
+LLVM提供了几个在调试版本中可用的回调来完成。例如，如果调用`Function :: viewCFG（）`方法，当前的LLVM工具将弹出一个包含该函数的CFG的窗口，其中每个基本块是图中的节点，并且每个节点包含块中的指令。类似地，还存在`Function :: viewCFGOnly（）`（不包括指令），`MachineFunction :: viewCFG（）`和`MachineFunction :: viewCFGOnly（）`以及`SelectionDAG :: viewGraph（）`方法。例如，在GDB中，您通常可以使用调用`DAG.viewGraph（）`之类的东西来弹出窗口。或者，您可以在要调试的位置的代码中调用这些函数。
+
+要使其工作，需要进行少量设置。在使用X11的Unix系统上，安装graphviz工具包，并确保“dot”和“gv”在您的路径中。如果您在Mac OS X上运行，请下载并安装Mac OS X Graphviz程序，并将`/Applications/Graphviz.app/Contents/MacOS/`（或安装它的任何位置）添加到您的路径中。配置，构建或运行LLVM时，程序不需要存在，并且可以在活动的调试会话期间根据需要进行安装。
+
+`SelectionDAG`已经扩展，可以更容易地在大型复杂图形中定位有趣的节点。从gdb，如果你调用`DAG.setGraphColor`（节点，“颜色”），那么下一个调用`DAG.viewGraph（）`将突出显示指定颜色的节点（可以在颜色中找到颜色的选择。）更复杂的节点属性可以提供调用`DAG.setGraphAttrs`（节点，“属性”）（可以在[Graph属性](http://www.graphviz.org/doc/info/attrs.html)中找到选项。)如果要重新启动并清除所有当前图形属性，则可以调用`DAG.clearGraphAttrs()`。
+
+请注意，图形可视化功能是从发布版本中编译的，以减小文件大小。这意味着您需要`Debug + Asserts`或`Release + Asserts`构建才能使用这些功能。
+
+## Picking the Right Data Structure for a Task(null)
 
 
-
-
-## Picking the Right Data Structure for a Task
 
 ## Debugging
 

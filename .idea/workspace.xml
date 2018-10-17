@@ -179,8 +179,8 @@
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
-    <option name="x" value="412" />
-    <option name="y" value="81" />
+    <option name="x" value="254" />
+    <option name="y" value="24" />
     <option name="width" value="1400" />
     <option name="height" value="999" />
   </component>
@@ -483,7 +483,7 @@
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>' '</expression-string>
+        <expression-string />
         <language-id>ObjectiveC</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
