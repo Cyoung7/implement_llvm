@@ -8,69 +8,6 @@
 
 [TOC]
 
-   * [LLVM Programmer’s Manual](#llvm-programmers-manual)
-      * [Introduction](#introduction)
-      * [General Information](#general-information)
-         * [The C   Standard Template Library](#the-c-standard-template-library)
-         * [Other useful references](#other-useful-references)
-      * [Important and useful LLVM APIs](#important-and-useful-llvm-apis)
-         * [The isa&lt;&gt;, cast&lt;&gt; and dyn_cast&lt;&gt; templates](#the-isa-cast-and-dyn_cast-templates)
-         * [Passing strings (the StringRef and Twine classes)](#passing-strings-the-stringref-and-twine-classes)
-            * [The StringRef class](#the-stringref-class)
-            * [The Twine class](#the-twine-class)
-         * [Formatting strings (the formatv function)](#formatting-strings-the-formatv-function)
-            * [Simple formatting](#simple-formatting)
-            * [Custom formatting](#custom-formatting)
-            * [formatv Examples](#formatv-examples)
-         * [Error handling(null)](#error-handlingnull)
-      * [Picking the Right Data Structure for a Task](#picking-the-right-data-structure-for-a-task)
-      * [Debugging](#debugging)
-      * [Helpful Hints for Common Operations](#helpful-hints-for-common-operations)
-         * [Basic Inspection and Traversal Routines](#basic-inspection-and-traversal-routines)
-            * [Iterating over the BasicBlock in a Function](#iterating-over-the-basicblock-in-a-function)
-            * [Iterating over the Instruction in a BasicBlock](#iterating-over-the-instruction-in-a-basicblock)
-            * [Iterating over the Instruction in a Function](#iterating-over-the-instruction-in-a-function)
-            * [Turning an iterator into a class pointer (and vice-versa)](#turning-an-iterator-into-a-class-pointer-and-vice-versa)
-            * [Finding call sites: a slightly more complex example](#finding-call-sites-a-slightly-more-complex-example)
-            * [Treating calls and invokes the same way](#treating-calls-and-invokes-the-same-way)
-            * [Iterating over def-use &amp; use-def chains](#iterating-over-def-use--use-def-chains)
-            * [Iterating over predecessors &amp; successors of blocks](#iterating-over-predecessors--successors-of-blocks)
-         * [Making simple changes](#making-simple-changes)
-            * [Creating and inserting new Instructions](#creating-and-inserting-new-instructions)
-            * [Deleting Instructions](#deleting-instructions)
-            * [Replacing an Instruction with another Value](#replacing-an-instruction-with-another-value)
-               * [Replacing individual instructions](#replacing-individual-instructions)
-               * [Deleting Instructions](#deleting-instructions-1)
-               * [Replacing multiple uses of Users and Values](#replacing-multiple-uses-of-users-and-values)
-            * [Deleting GlobalVariables](#deleting-globalvariables)
-         * [How to Create Types](#how-to-create-types)
-      * [Threads and LLVM(null)](#threads-and-llvmnull)
-      * [Advanced Topics](#advanced-topics)
-      * [The Core LLVM Class Hierarchy Reference](#the-core-llvm-class-hierarchy-reference)
-         * [The Type class and Derived Types](#the-type-class-and-derived-types)
-            * [Important Public Methods](#important-public-methods)
-            * [Important Derived Types](#important-derived-types)
-         * [The Module class](#the-module-class)
-            * [Important Public Members of the Module class](#important-public-members-of-the-module-class)
-         * [The Value class](#the-value-class)
-            * [Important Public Members of the Value class](#important-public-members-of-the-value-class)
-         * [The User class](#the-user-class)
-            * [Important Public Members of the User class](#important-public-members-of-the-user-class)
-         * [The Instruction class](#the-instruction-class)
-            * [Important Subclasses of the Instruction class](#important-subclasses-of-the-instruction-class)
-            * [Important Public Members of the Instruction class](#important-public-members-of-the-instruction-class)
-         * [The Constant class and subclasses](#the-constant-class-and-subclasses)
-            * [Important Subclasses of Constant](#important-subclasses-of-constant)
-         * [The GlobalValue class](#the-globalvalue-class)
-            * [Important Public Members of the GlobalValue class](#important-public-members-of-the-globalvalue-class)
-         * [The Function class](#the-function-class)
-            * [Important Public Members of the Function](#important-public-members-of-the-function)
-         * [The GlobalVariable class](#the-globalvariable-class)
-            * [Important Public Members of the GlobalVariable class](#important-public-members-of-the-globalvariable-class)
-         * [The BasicBlock class](#the-basicblock-class)
-            * [Important Public Members of the BasicBlock class](#important-public-members-of-the-basicblock-class)
-         * [The Argument class](#the-argument-class)
-
 ## Introduction
 
 本文档旨在强调LLVM源代码库中可用的一些重要类和接口。本手册无意解释什么是LLVM，工作原理以及LLVM代码的外在。它假设您了解LLVM的基础知识，并且有兴趣编写转换(transformations)或以其他方式(analyzing)分析或操作代码。
@@ -286,7 +223,40 @@ S = formatv("{0:$[+]}", make_range(V.begin(), V.end())); // S == "8+9+10"
 S = formatv("{0:$[ + ]@[x]}", make_range(V.begin(), V.end())); // S == "0x8 + 0x9 + 0xA"
 ```
 
-### Error handling(null)
+### Error handling
+
+正确的错误处理有助于我们识别代码中的错误，并帮助最终用户了解其工具使用中的错误。 错误分为两大类：程序性和可恢复性，具有不同的处理和报告策略。
+
+#### Programmatic Errors
+
+程序错误是程序不变量或API契约的违反，并代表程序本身的错误。 我们的目标是记录不变量，并在运行时断开不变量时在故障点快速中止（提供一些基本诊断）。
+
+处理程序错误的基本工具是断言和llvm_unreachable函数。 断言用于表示不变条件，并应包含描述不变量的消息：
+
+```c++
+assert(isPhysReg(R) && "All virt regs should have been allocated already.");
+```
+
+llvm_unreachable函数可用于记录在程序不变量持有时不应输入的控制流区域：
+
+```c++
+enum { Foo, Bar, Baz } X = foo();
+
+switch (X) {
+  case Foo: /* Handle Foo */; break;
+  case Bar: /* Handle Bar */; break;
+  default:
+    llvm_unreachable("X should be Foo or Bar here");
+}
+```
+
+#### Recoverable Errors
+
+可恢复的错误表示程序环境中的错误，例如资源故障（丢失的文件，丢失的网络连接等）或格式错误的输入。 应检测这些错误并将其传达给程序级别，以便对其进行适当处理。 处理错误可能与向用户报告问题一样简单，也可能涉及恢复尝试。
+
+> 注意:虽然在整个LLVM中使用这种错误处理方案是理想的，但有些地方可能无法应用。 在绝对必须发出非编程错误且错误模型不可行的情况下，您可以调用report_fatal_error，它将调用已安装的错误处理程序，打印消息并退出程序。
+
+
 
 
 

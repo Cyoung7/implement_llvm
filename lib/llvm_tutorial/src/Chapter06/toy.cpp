@@ -378,6 +378,7 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
 }
 
 /// ifexpr ::= 'if' expression 'then' expression 'else' expression
+/// 仅仅作为 ParsePrimary 的一部分
 static std::unique_ptr<ExprAST> ParseIfExpr() {
     getNextToken(); // eat the if.
 
@@ -408,6 +409,7 @@ static std::unique_ptr<ExprAST> ParseIfExpr() {
 }
 
 /// forexpr ::= 'for' identifier '=' expr ',' expr (',' expr)? 'in' expression
+/// 仅仅作为 ParsePrimary 的一部分
 static std::unique_ptr<ExprAST> ParseForExpr() {
     getNextToken(); // eat the for.
 
@@ -536,7 +538,7 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
 
 /// expression
 ///   ::= unary binoprhs
-///
+/// 最顶层的表达式,ParseUnary其次,ParsePrimary次之
 static std::unique_ptr<ExprAST> ParseExpression() {
     auto LHS = ParseUnary();
     if (!LHS)
