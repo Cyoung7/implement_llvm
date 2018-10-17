@@ -8,6 +8,151 @@
 
 [TOC]
 
+   * [LLVM Programmer’s Manual](#llvm-programmers-manual)
+      * [Introduction](#introduction)
+      * [General Information](#general-information)
+         * [The C   Standard Template Library](#the-c-standard-template-library)
+         * [Other useful references](#other-useful-references)
+      * [Important and useful LLVM APIs](#important-and-useful-llvm-apis)
+         * [The isa&lt;&gt;, cast&lt;&gt; and dyn_cast&lt;&gt; templates](#the-isa-cast-and-dyn_cast-templates)
+         * [Passing strings (the StringRef and Twine classes)](#passing-strings-the-stringref-and-twine-classes)
+            * [The StringRef class](#the-stringref-class)
+            * [The Twine class](#the-twine-class)
+         * [Formatting strings (the formatv function)](#formatting-strings-the-formatv-function)
+            * [Simple formatting](#simple-formatting)
+            * [Custom formatting](#custom-formatting)
+            * [formatv Examples](#formatv-examples)
+         * [Error handling](#error-handling)
+            * [Programmatic Errors](#programmatic-errors)
+            * [Recoverable Errors](#recoverable-errors)
+               * [StringError](#stringerror)
+               * [Interoperability with std::error_code and ErrorOr](#interoperability-with-stderror_code-and-erroror)
+               * [Returning Errors from error handlers](#returning-errors-from-error-handlers)
+               * [Using ExitOnError to simplify tool code](#using-exitonerror-to-simplify-tool-code)
+               * [Using cantFail to simplify safe callsites](#using-cantfail-to-simplify-safe-callsites)
+               * [Fallible constructors](#fallible-constructors)
+               * [Propagating and consuming errors based on types](#propagating-and-consuming-errors-based-on-types)
+               * [Concatenating Errors with joinErrors](#concatenating-errors-with-joinerrors)
+               * [Building fallible iterators and iterator ranges](#building-fallible-iterators-and-iterator-ranges)
+         * [Passing functions and other callable objects](#passing-functions-and-other-callable-objects)
+            * [Function template](#function-template)
+            * [The function_refclass template](#the-function_refclass-template)
+         * [The LLVM_DEBUG() macro and <code>-debug</code>option](#the-llvm_debug-macro-and--debugoption)
+            * [Fine grained debug info with DEBUG_TYPE and the <code>-debug-only</code> option](#fine-grained-debug-info-with-debug_type-and-the--debug-only-option)
+         * [The Statistic class <code>&amp; -stats</code> option](#the-statistic-class---stats-option)
+         * [Adding debug counters to aid in debugging your code](#adding-debug-counters-to-aid-in-debugging-your-code)
+         * [Viewing graphs while debugging code](#viewing-graphs-while-debugging-code)
+      * [Picking the Right Data Structure for a Task](#picking-the-right-data-structure-for-a-task)
+         * [Sequential Containers (std::vector, std::list, etc)](#sequential-containers-stdvector-stdlist-etc)
+            * [llvm/ADT/ArrayRef.h](#llvmadtarrayrefh)
+            * [Fixed Size Arrays](#fixed-size-arrays)
+            * [Heap Allocated Arrays](#heap-allocated-arrays)
+            * [llvm/ADT/TinyPtrVector.h](#llvmadttinyptrvectorh)
+            * [llvm/ADT/SmallVector.h](#llvmadtsmallvectorh)
+            * [&lt;vector&gt;](#vector)
+            * [&lt;deque&gt;](#deque)
+            * [&lt;list&gt;](#list)
+            * [llvm/ADT/ilist.h](#llvmadtilisth)
+            * [llvm/ADT/PackedVector.h](#llvmadtpackedvectorh)
+            * [ilist_traits](#ilist_traits)
+            * [iplist](#iplist)
+            * [llvm/ADT/ilist_node.h](#llvmadtilist_nodeh)
+            * [Sentinel](#sentinel)
+            * [Other Sequential Container options](#other-sequential-container-options)
+         * [String-like containers](#string-like-containers)
+            * [llvm/ADT/StringRef.h`](#llvmadtstringrefh)
+            * [llvm/ADT/Twine.h](#llvmadttwineh)
+            * [llvm/ADT/SmallString.h](#llvmadtsmallstringh)
+            * [std::string](#stdstring)
+         * [Set-Like Containers (std::set, SmallSet, SetVector, etc)](#set-like-containers-stdset-smallset-setvector-etc)
+            * [A sorted ‘vector’](#a-sorted-vector)
+            * [llvm/ADT/SmallSet.h](#llvmadtsmallseth)
+            * [llvm/ADT/SmallPtrSet.h](#llvmadtsmallptrseth)
+            * [llvm/ADT/StringSet.h](#llvmadtstringseth)
+            * [llvm/ADT/DenseSet.h](#llvmadtdenseseth)
+            * [llvm/ADT/SparseSet.h](#llvmadtsparseseth)
+            * [llvm/ADT/SparseMultiSet.h](#llvmadtsparsemultiseth)
+            * [llvm/ADT/FoldingSet.h](#llvmadtfoldingseth)
+            * [&lt;set&gt;](#set)
+            * [llvm/ADT/SetVector.h](#llvmadtsetvectorh)
+            * [llvm/ADT/UniqueVector.h](#llvmadtuniquevectorh)
+            * [llvm/ADT/ImmutableSet.h](#llvmadtimmutableseth)
+            * [Other Set-Like Container Options](#other-set-like-container-options)
+         * [Map-Like Containers (std::map, DenseMap, etc)](#map-like-containers-stdmap-densemap-etc)
+            * [A sorted ‘vector’](#a-sorted-vector-1)
+            * [llvm/ADT/StringMap.h](#llvmadtstringmaph)
+            * [llvm/ADT/IndexedMap.h](#llvmadtindexedmaph)
+            * [llvm/ADT/DenseMap.h](#llvmadtdensemaph)
+            * [llvm/IR/ValueMap.h](#llvmirvaluemaph)
+            * [llvm/ADT/IntervalMap.h](#llvmadtintervalmaph)
+            * [&lt;map&gt;](#map)
+            * [llvm/ADT/MapVector.h](#llvmadtmapvectorh)
+            * [llvm/ADT/IntEqClasses.h](#llvmadtinteqclassesh)
+            * [llvm/ADT/ImmutableMap.h](#llvmadtimmutablemaph)
+            * [Other Map-Like Container Options](#other-map-like-container-options)
+         * [Bit storage containers (BitVector, SparseBitVector)](#bit-storage-containers-bitvector-sparsebitvector)
+            * [BitVector](#bitvector)
+            * [SmallBitVector](#smallbitvector)
+            * [SparseBitVector](#sparsebitvector)
+      * [Debugging](#debugging)
+      * [Helpful Hints for Common Operations](#helpful-hints-for-common-operations)
+         * [Basic Inspection and Traversal Routines](#basic-inspection-and-traversal-routines)
+            * [Iterating over the BasicBlock in a Function](#iterating-over-the-basicblock-in-a-function)
+            * [Iterating over the Instruction in a BasicBlock](#iterating-over-the-instruction-in-a-basicblock)
+            * [Iterating over the Instruction in a Function](#iterating-over-the-instruction-in-a-function)
+            * [Turning an iterator into a class pointer (and vice-versa)](#turning-an-iterator-into-a-class-pointer-and-vice-versa)
+            * [Finding call sites: a slightly more complex example](#finding-call-sites-a-slightly-more-complex-example)
+            * [Treating calls and invokes the same way](#treating-calls-and-invokes-the-same-way)
+            * [Iterating over def-use &amp; use-def chains](#iterating-over-def-use--use-def-chains)
+            * [Iterating over predecessors &amp; successors of blocks](#iterating-over-predecessors--successors-of-blocks)
+         * [Making simple changes](#making-simple-changes)
+            * [Creating and inserting new Instructions](#creating-and-inserting-new-instructions)
+            * [Deleting Instructions](#deleting-instructions)
+            * [Replacing an Instruction with another Value](#replacing-an-instruction-with-another-value)
+               * [Replacing individual instructions](#replacing-individual-instructions)
+               * [Deleting Instructions](#deleting-instructions-1)
+               * [Replacing multiple uses of Users and Values](#replacing-multiple-uses-of-users-and-values)
+            * [Deleting GlobalVariables](#deleting-globalvariables)
+         * [How to Create Types](#how-to-create-types)
+      * [Threads and LLVM](#threads-and-llvm)
+         * [Ending Execution with llvm_shutdown()](#ending-execution-with-llvm_shutdown)
+         * [Lazy Initialization with ManagedStatic](#lazy-initialization-with-managedstatic)
+         * [Achieving Isolation with LLVMContext](#achieving-isolation-with-llvmcontext)
+         * [Threads and the JIT](#threads-and-the-jit)
+      * [Advanced Topics](#advanced-topics)
+         * [The ValueSymbolTable class](#the-valuesymboltable-class)
+         * [The User and owned <code>Use</code> classes’ memory layout](#the-user-and-owned-use-classes-memory-layout)
+            * [Interaction and relationship between Userand <code>Use</code> objects](#interaction-and-relationship-between-userand-use-objects)
+            * [The waymarking algorithm](#the-waymarking-algorithm)
+            * [Reference implementation](#reference-implementation)
+            * [Tagging considerations](#tagging-considerations)
+         * [Designing Type Hiercharies and Polymorphic Interfaces](#designing-type-hiercharies-and-polymorphic-interfaces)
+         * [ABI Breaking Checks](#abi-breaking-checks)
+      * [The Core LLVM Class Hierarchy Reference](#the-core-llvm-class-hierarchy-reference)
+         * [The Type class and Derived Types](#the-type-class-and-derived-types)
+            * [Important Public Methods](#important-public-methods)
+            * [Important Derived Types](#important-derived-types)
+         * [The Module class](#the-module-class)
+            * [Important Public Members of the Module class](#important-public-members-of-the-module-class)
+         * [The Value class](#the-value-class)
+            * [Important Public Members of the Value class](#important-public-members-of-the-value-class)
+         * [The User class](#the-user-class)
+            * [Important Public Members of the User class](#important-public-members-of-the-user-class)
+         * [The Instruction class](#the-instruction-class)
+            * [Important Subclasses of the Instruction class](#important-subclasses-of-the-instruction-class)
+            * [Important Public Members of the Instruction class](#important-public-members-of-the-instruction-class)
+         * [The Constant class and subclasses](#the-constant-class-and-subclasses)
+            * [Important Subclasses of Constant](#important-subclasses-of-constant)
+         * [The GlobalValue class](#the-globalvalue-class)
+            * [Important Public Members of the GlobalValue class](#important-public-members-of-the-globalvalue-class)
+         * [The Function class](#the-function-class)
+            * [Important Public Members of the Function](#important-public-members-of-the-function)
+         * [The GlobalVariable class](#the-globalvariable-class)
+            * [Important Public Members of the GlobalVariable class](#important-public-members-of-the-globalvariable-class)
+         * [The BasicBlock class](#the-basicblock-class)
+            * [Important Public Members of the BasicBlock class](#important-public-members-of-the-basicblock-class)
+         * [The Argument class](#the-argument-class)
+
 ## Introduction
 
 本文档旨在强调LLVM源代码库中可用的一些重要类和接口。本手册无意解释什么是LLVM，工作原理以及LLVM代码的外在。它假设您了解LLVM的基础知识，并且有兴趣编写转换(transformations)或以其他方式(analyzing)分析或操作代码。
@@ -843,11 +988,443 @@ LLVM提供了几个在调试版本中可用的回调来完成。例如，如果�
 
 请注意，图形可视化功能是从发布版本中编译的，以减小文件大小。这意味着您需要`Debug + Asserts`或`Release + Asserts`构建才能使用这些功能。
 
-## Picking the Right Data Structure for a Task(null)
+## Picking the Right Data Structure for a Task
 
+*为任务选择正确的数据结构*
 
+LLVM在 `llvm/ADT/`目录中有大量的数据结构，我们通常使用STL数据结构。本节介绍了选择一个时应考虑的权衡。
+
+第一步是进行自己的尝试：你想要一个顺序容器，一个set-like的容器，还是一个map-like的容器？选择容器时最重要的是计划访问容器的算法属性。基于此，您应该使用：
+
+- 如果您需要基于另一个值高效查找值，则可以使用[map-like](http://llvm.org/docs/ProgrammersManual.html#ds-map)的容器。类似地图的容器还支持有效的包含查询（密钥是否在地图中）。类似地图的容器通常不支持有效的反向映射（键值）。如果需要，请使用两张地图。一些类似地图的容器还支持按排序顺序通过键进行有效迭代。类似地图的容器是最昂贵的类型，只有在需要这些功能之一时才使用它们。
+- 如果你需要将一堆东西放入一个自动消除重复的容器中，那就是一个 [set-like](http://llvm.org/docs/ProgrammersManual.html#ds-set)的容器。一些类似集合的容器支持按排序顺序对元素进行有效迭代。类似集合的容器比顺序容器更昂贵。
+-  [sequential](http://llvm.org/docs/ProgrammersManual.html#ds-sequential)容器提供了添加元素的最有效方法，并跟踪它们添加到集合中的顺序。它们允许重复并支持有效的迭代，但不支持基于密钥的高效查找。
+- [string](http://llvm.org/docs/ProgrammersManual.html#ds-string)容器是专用的顺序容器或引用结构，用于字符或字节数组。
+-  [bit](http://llvm.org/docs/ProgrammersManual.html#ds-bit)容器提供了一种在数字ID集上存储和执行集合操作的有效方法，同时自动消除重复项。对于要存储的每个标识符，位容器最多需要1位。
+
+确定适当的容器类别后，您可以通过智能选择类别成员来微调内存使用，常量因素和缓存访问行为。请注意，常量因素和缓存行为可能是一个大问题。例如，如果你的矢量通常只包含一些元素（但可能包含很多元素），那么使用[SmallVector](http://llvm.org/docs/ProgrammersManual.html#dss-smallvector)比使用[vector](http://llvm.org/docs/ProgrammersManual.html#dss-vector)要好得多。这样做可以避免（相对）昂贵的`malloc/free`调用，这使得将元素添加到容器的成本相形见绌。
+
+### Sequential Containers (std::vector, std::list, etc)
+
+根据您的需要，您可以使用各种顺序容器。 选择本节中的第一个可以执行您想要的操作。
+
+#### llvm/ADT/ArrayRef.h
+
+`llvm :: ArrayRef`类是在接口中使用的首选类，该接口接受内存中的元素的顺序列表，只读取它们。 通过使用`ArrayRef`，API可以传递固定大小的数组，`std :: vector`，`llvm :: SmallVector`以及内存中连续的任何其他内容。
+
+#### Fixed Size Arrays
+
+固定大小的数组非常简单且非常快。 如果你确切地知道你有多少元素，或者你有多少（低）上限就很好。
+
+#### Heap Allocated Arrays
+
+堆分配的数组（`new [] + delete []`）也很简单。 如果元素的数量是可变的，如果您知道在分配数组之前需要多少元素，并且如果数组通常很大（如果不是，请考虑SmallVector），它们是好的。 堆分配数组的成本是新/删除的成本（也就是`malloc/free`）。 另请注意，如果要使用构造函数分配类型的数组，则将为数组中的每个元素运行构造函数和析构函数（可重新调整大小的向量仅构造实际使用的元素）。
+
+#### llvm/ADT/TinyPtrVector.h
+
+`TinyPtrVector <Type>`是一个高度专业化的集合类，它被优化以避免在向量具有零个或一个元素的情况下进行分配。 它有两个主要限制：1）它只能保存指针类型的值，2）它不能保存空指针。
+
+由于这个容器是高度专业化的，因此很少使用。
+
+#### llvm/ADT/SmallVector.h
+
+`SmallVector <Type，N>`是一个简单的类，外观和气味就像`vector <Type>`：它支持高效的迭代，按内存顺序布局元素（所以你可以在元素之间进行指针运算），支持高效的push_back / pop_back操作，支持对其元素的有效随机访问等。
+
+SmallVector的主要优点是它为对象本身的一些元素（N）分配空间。因此，如果SmallVector动态地小于N，则不执行malloc。在`malloc/free`调用远比使用元素摆弄的代码昂贵得多的情况下，这可能是一个巨大的胜利。
+
+这对于“通常很小”的vector是有益的（例如，块的前驱/后继的数量通常小于8）。另一方面，这使得SmallVector本身的大小变大，因此您不希望分配大量的（这样做会浪费大量空间）。因此，SmallVectors在堆栈时最有用。
+
+SmallVector还为alloca提供了一个漂亮的便携式高效替代品。
+
+与`std :: vector`相比，SmallVector增加了一些其他小优势，导致`SmallVector <Type，0>`优于`std :: vector <Type>`。
+
+- `std :: vector`是异常安全的，并且一些实现具有在SmallVector移动它们时复制元素的悲观。
+- `SmallVector`了解`isPodLike <Type>`并积极使用realloc。
+- 许多LLVM API将SmallVectorImpl作为out参数（请参阅下面的注释）。
+- N等于0的SmallVector小于64位平台上的`std :: vector`，因为它的大小和容量使用无符号（而不是void *）。
+
+> 注意:更喜欢使用SmallVectorImpl <T>作为参数类型。
+>
+> 在不关心“小尺寸”（大多数？）的API中，更喜欢使用`SmallVectorImpl <T>`类，它基本上只是“矢量头”（和方法），而后面没有分配元素。 请注意，`SmallVector <T，N>`继承自`SmallVectorImpl <T>`，因此转换是隐式的，不需要任何费用。 例如:
+>
+> ```c++
+> // BAD: Clients cannot pass e.g. SmallVector<Foo, 4>.
+> hardcodedSmallSize(SmallVector<Foo, 2> &Out);
+> // GOOD: Clients can pass any SmallVector<Foo, N>.
+> allowsAnySmallSize(SmallVectorImpl<Foo> &Out);
+> 
+> void someFunc() {
+>   SmallVector<Foo, 8> Vec;
+>   hardcodedSmallSize(Vec); // Error.
+>   allowsAnySmallSize(Vec); // Works.
+> }
+> ```
+>
+> 虽然名称中有“Impl”，但它的使用范围非常广泛，以至于它实际上不再是“私有的”。 像`SmallVectorHeader`这样的名称会更合适。
+
+#### `<vector>`
+
+`std :: vector <T>`深受喜爱和尊重。 但是，由于上面列出的优点，`SmallVector <T，0>`通常是更好的选择。 当您需要存储多于UINT32_MAX元素或与需要向量的代码接口时，std :: vector仍然很有用。
+
+关于std :: vector的一个值得注意的事项：避免这样的代码：
+
+```c++
+for ( ... ) {
+   std::vector<foo> V;
+   // make use of V.
+}
+```
+
+相反，将其写为：
+
+```c++
+std::vector<foo> V;
+for ( ... ) {
+   // make use of V.
+   V.clear();
+}
+```
+
+这样做将保存（至少）一个堆分配并且每循环一次释放。
+
+#### `<deque>`
+
+从某种意义上说，`std :: deque`是`std :: vector`的通用版本。 与`std :: vector`一样，它提供了恒定时间随机访问和其他类似属性，但它也提供了对列表前端的高效访问。 它不保证内存中元素的连续性。
+
+为了获得这种额外的灵活性，`std :: deque`的常数因子成本明显高于std :: vector。 如果可能的话，使用`std :: vector`或更便宜的东西。
+
+#### `<list>`
+
+`std :: list`是一个非常低效的类，很少有用。 它为插入其中的每个元素执行堆分配，因此具有极高的常数因子，特别是对于小数据类型。 `std :: list`也只支持双向迭代，而不支持随机访问迭代。
+
+作为这种高成本的交换，`std :: list`支持对列表两端的高效访问（如std :: deque，但与std :: vector或SmallVector不同）。 此外，std :: list的迭代器失效特性比向量类强：在列表中插入或删除元素不会使迭代器无效或指向列表中其他元素的指针。
+
+#### llvm/ADT/ilist.h
+
+`ilist <T>`实现了一个“侵入式”双向链表。 它是侵入性的，因为它需要元素来存储并提供对列表的`prev/next`指针的访问。
+
+`ilist`与`std :: list`具有相同的缺点，并且还需要元素类型的`ilist_traits`实现，但它提供了一些新颖的特性。 特别是，它可以有效地存储多态对象，当从列表中插入或删除元素时通知traits类，并且保证ilists支持恒定时间拼接操作。
+
+这些属性正是我们想要的指令和基本块之类的东西，这就是为什么这些属性是用ilist实现的。
+
+以下小节将介绍相关的相关类别：
+
+- [ilist_traits](http://llvm.org/docs/ProgrammersManual.html#dss-ilist-traits)
+- [iplist](http://llvm.org/docs/ProgrammersManual.html#dss-iplist)
+- [llvm/ADT/ilist_node.h](http://llvm.org/docs/ProgrammersManual.html#dss-ilist-node)
+- [Sentinels](http://llvm.org/docs/ProgrammersManual.html#dss-ilist-sentinel)
+
+#### llvm/ADT/PackedVector.h
+
+用于存储每个值仅使用少量位的值向量。 除了类似矢量的容器的标准操作之外，它还可以执行'或'设置操作。
+
+例如：
+
+```c++
+enum State {
+    None = 0x0,
+    FirstCondition = 0x1,
+    SecondCondition = 0x2,
+    Both = 0x3
+};
+
+State get() {
+    PackedVector<State, 2> Vec1;
+    Vec1.push_back(FirstCondition);
+
+    PackedVector<State, 2> Vec2;
+    Vec2.push_back(SecondCondition);
+
+    Vec1 |= Vec2;
+    return Vec1[0]; // returns 'Both'.
+}
+```
+
+#### ilist_traits
+
+`ilist_traits <T>`是`ilist <T>`的自定义机制。 `iplist <T>`（以及因此`ilist <T>`）公开派生自此traits类。
+
+#### iplist
+
+`iplistiplist <T>`是`ilist <T>`的基础，因此支持稍窄的界面。 值得注意的是，来自T＆的插入者缺席。
+
+`ilist_traits <T>`是此类的公共基础，可用于各种自定义。
+
+#### llvm/ADT/ilist_node.h
+
+`ilist_node <T>`以默认方式实现`ilist <T>`（和类似容器）所期望的前向和后向链接。
+
+`ilist_node <T> `s意味着嵌入在节点类型T中，通常T公开来自`ilist_node <T>`。
+
+#### Sentinel
+
+`ilists`有另一个必须考虑的专业。要成为C++生态系统中的好公民，它需要支持标准的容器操作，例如开始和结束迭代器等。另外，运算符 - 在非空的`ilist`的情况下必须在最终迭代器上正常工作。
+
+解决这个问题的唯一合理的解决方案是分配一个所谓的`sentinel`和侵入列表，它作为结束迭代器，提供最后一个元素的反向链接。但是，遵循C++约定，操作符号超出哨兵是非法的，也不能解除引用。
+
+这些约束允许ilist的一些实现自由度如何分配和存储标记。相应的政策由`ilist_traits <T>`决定。默认情况下，只要出现对标记的需要，T就会进行堆分配。
+
+虽然默认策略在大多数情况下是足够的，但是当T不提供默认构造函数时，它可能会崩溃。此外，在许多ilists实例的情况下，相关联的标记的内存开销被浪费了。为了缓解大量和大量`T-sentinel`的情况，有时采用一种技巧，导致幽灵般的哨兵。
+
+幽灵哨兵是通过特制的`ilist_traits <T>`获得的，它将哨兵与ilist实例叠加在记忆中。指针算术用于获取相对于`ilist`的this指针的`sentinel`。 `ilist`由一个额外的指针增强，该指针用作哨兵的反向链接。这是幽灵哨兵中唯一可以合法进入的领域。
+
+#### Other Sequential Container options
+
+其他STL容器可用，例如`std :: string`。
+
+还有各种STL适配器类，例如`std :: queue`，`std :: priority_queue`，`std :: stack`等。这些类提供对底层容器的简化访问，但不影响容器本身的成本。
+
+### String-like containers
+
+有许多方法可以在C和C++中传递和使用字符串，LLVM添加了一些新选项供您选择。 选择此列表中的第一个选项，它将根据您的相对成本进行排序。
+
+请注意，通常不希望将字符串作为const char *传递。 这些问题存在许多问题，包括它们不能表示嵌入的nul（“0”）字符，并且没有有效的长度。 'const char *'的一般替换是StringRef。
+
+有关为API选择字符串容器的更多信息，请参阅[Passing Strings](http://llvm.org/docs/ProgrammersManual.html#string-apis).。
+
+#### llvm/ADT/StringRef.h`
+
+`StringRef`类是一个简单的值类，它包含指向字符和长度的指针，并且与`ArrayRef`类非常相关（但专门用于字符数组）。 因为`StringRef`带有长度，所以它可以安全地处理其中包含嵌入的nul字符的字符串，获得长度不需要strlen调用，甚至还有非常方便的API用于切片和切割它所代表的字符范围。
+
+`StringRef`非常适合传递已知为live的简单字符串，因为它们是C字符串文字，`std :: string`，C数组或`SmallVector`。 这些情况中的每一种都具有对`StringRef`的有效隐式转换，这不会导致执行动态strlen。
+
+`StringRef`有一些主要的限制，使更强大的字符串容器有用：
+
+- 1.你不能直接将StringRef转换为`const char *`，因为无法在各种更强的类上添加尾随nul（与`.c_str（）`方法不同）。
+- 2.`StringRef`不拥有或保持底层字符串字节。 因此，它很容易导致悬空指针，并且在大多数情况下不适合嵌入数据结构（相反，使用`std :: string`或类似的东西）。
+- 3.出于同样的原因，如果方法“计算”结果字符串，则StringRef不能用作方法的返回值。 相反，使用`std :: string`。
+- 4.`StringRef`不允许你改变指向的字符串字节，它不允许你插入或删除范围中的字节。 对于这样的编辑操作，它可以与 [Twine](http://llvm.org/docs/ProgrammersManual.html#dss-twine)类互操作。
+
+由于其优点和局限性，函数采用`StringRef`和对象上的方法返回指向它拥有的某个字符串的`StringRef`是很常见的。
+
+#### llvm/ADT/Twine.h
+
+Twine类用作API的中间数据类型，这些API希望获取可以使用一系列连接内联构造的字符串。 Twine通过在堆栈上形成Twine数据类型（一个简单的值对象）的递归实例作为临时对象，将它们连接在一起成为树，然后在使用Twine时将其线性化。 Twine只能安全地用作函数的参数，并且应该始终是一个const引用，例如：
+
+```c++
+void foo(const Twine &T);
+...
+StringRef X = ...
+unsigned i = ...
+foo(X + "." + Twine(i));
+```
+
+此示例通过将值连接在一起形成类似“blarg.42”的字符串，并且不形成包含“blarg”或“blarg。”的中间字符串。
+
+因为Twine是使用堆栈上的临时对象构造的，并且因为这些实例在当前语句的末尾被销毁，所以它本身就是一种危险的API。 例如，这个简单的变体包含未定义的行为，可能会崩溃：
+
+```c++
+void foo(const Twine &T);
+...
+StringRef X = ...
+unsigned i = ...
+const Twine &Tmp = X + "." + Twine(i);
+foo(Tmp);
+```
+
+......因为临时演员在通话前被摧毁了。 也就是说，Twine比中间`std :: string`临时更有效，而且它们与`StringRef`的效果非常好。 请注意他们的局限性。
+
+#### llvm/ADT/SmallString.h
+
+SmallString是[SmallVector](http://llvm.org/docs/ProgrammersManual.html#dss-smallvector)的一个子类，它添加了一些方便的API，比如+ =，它接受StringRef的。 SmallString避免在预分配空间足以容纳其数据的情况下分配内存，并在需要时回调一般堆分配。 由于它拥有自己的数据，因此使用并支持字符串的完全变异是非常安全的。
+
+像SmallVector一样，SmallString的最大缺点是它们的尺寸。 虽然它们针对小弦进行了优化，但它们本身并不是特别小。 这意味着它们适用于堆栈上的临时暂存缓冲区，但通常不应该放入堆中：很少将SmallString视为频繁分配的堆数据结构的成员或按值返回。
+
+#### std::string
+
+标准的C ++ std :: string类是一个非常通用的类（如SmallString）拥有其底层数据。` sizeof（std :: string）`非常合理，因此可以嵌入到堆数据结构中并按值返回。 另一方面，std :: string对于内联编辑非常低效（例如将一堆内容连接在一起），并且因为它是由标准库提供的，其性能特征取决于许多主机标准库（例如libc++和MSVC） 提供高度优化的字符串类，GCC包含一个非常慢的实现）。
+
+`std :: string`的主要缺点是几乎每个使它们变大的操作都可以分配内存，这很慢。 因此，最好使用SmallVector或Twine作为临时缓冲区，但是然后使用std :: string来保存结果。
+
+### Set-Like Containers (std::set, SmallSet, SetVector, etc)
+
+当您需要将多个值规范化为单个表示时，Set-like容器非常有用。 如何做到这一点有几种不同的选择，提供各种权衡。
+
+#### A sorted ‘vector’
+
+如果你打算插入很多元素，然后做很多查询，一个很好的方法是使用std :: vector（或其他顺序容器）与std :: sort + std :: unique来删除重复项。 如果您的使用模式具有这两个不同的阶段（插入然后查询），并且可以与[sequential container](http://llvm.org/docs/ProgrammersManual.html#ds-sequential)的良好选择相结合，则此方法非常有效。
+
+这种组合提供了几个不错的属性：结果数据在内存中是连续的（适用于缓存局部性），分配很少，很容易解决（最终向量中的迭代器只是索引或指针），并且可以用一个有效的查询 标准二进制搜索（例如std :: lower_bound;如果希望整个范围的元素比较相等，请使用std :: equal_range）。
+
+#### llvm/ADT/SmallSet.h
+
+如果你有一个通常很小且元素相当小的类似集合的数据结构，那么`SmallSet <Type，N>`是一个不错的选择。 该集合具有适用于N个元素的空间（因此，如果该集合动态地小于N，则不需要malloc流量）并且通过简单的线性搜索来访问它们。 当集合超出N个元素时，它会分配一个更昂贵的表示来保证有效的访问（对于大多数类型，它会回退到 [std::set](http://llvm.org/docs/ProgrammersManual.html#dss-set)，但对于指针，它使用了更好的东西，[SmallPtrSet](http://llvm.org/docs/ProgrammersManual.html#dss-smallptrset)。
+
+这个类的神奇之处在于它可以非常有效地处理小集，但是在不损失效率的情况下优雅地处理非常大的集合。
+
+#### llvm/ADT/SmallPtrSet.h
+
+`SmallPtrSet`具有`SmallSet`的所有优点（`SmallSet`指针通过`SmallPtrSet`透明地实现）。 如果执行多于N次插入，则分配单个二次探测的散列表并根据需要增长，从而提供极其有效的访问（恒定时间插入/删除/具有低常数因子的查询）并且对于malloc流量非常小气。
+
+请注意，与 [std::set](http://llvm.org/docs/ProgrammersManual.html#dss-set)不同，只要发生插入，SmallPtrSet的迭代器就会失效。 此外，迭代器访问的值不按排序顺序访问。
+
+#### llvm/ADT/StringSet.h
+
+`StringSet`是`StringMap <char>`的一个瘦包装器，它允许有效存储和检索唯一字符串。
+
+在功能上类似于`SmallSet <StringRef>`，`StringSet`也支持迭代。 （迭代器取消引用`StringMapEntry <char>`，因此您需要调用`i-> getKey（）`来访问`StringSet`的项。）另一方面，`StringSet`不支持范围插入和复制构造， [SmallSet](http://llvm.org/docs/ProgrammersManual.html#dss-smallset) 和[SmallPtrSet](http://llvm.org/docs/ProgrammersManual.html#dss-smallptrset) 支持。
+
+#### llvm/ADT/DenseSet.h
+
+DenseSet是一个简单的二次探测哈希表。 它擅长支持小值：它使用单个分配来保存当前插入集合中的所有对。 DenseSet是一种很好的方法来获取非简单指针的独特小值（使用[SmallPtrSet](http://llvm.org/docs/ProgrammersManual.html#dss-smallptrset)作为指针）。 请注意，DenseSet对[DenseMap](http://llvm.org/docs/ProgrammersManual.html#dss-densemap) 具有的值类型具有相同的要求。
+
+#### llvm/ADT/SparseSet.h
+
+`SparseSet`包含由中等大小的无符号键标识的少量对象。 它使用大量内存，但提供的操作几乎与矢量一样快。 典型的密钥是物理寄存器，虚拟寄存器或编号的基本块。
+
+`SparseSet`对于需要非常快速清除/查找/插入/擦除以及快速迭代小集合的算法非常有用。 它不用于构建复合数据结构。
+
+#### llvm/ADT/SparseMultiSet.h
+
+`SparseMultiSet`将多集行为添加到`SparseSet`，同时保留`SparseSet`的所需属性。 与`SparseSet`一样，它通常使用大量内存，但提供的操作几乎与向量一样快。 典型的密钥是物理寄存器，虚拟寄存器或编号的基本块。
+
+`SparseMultiSet`对于需要对整个集合进行非常快速清除/查找/插入/擦除的算法以及对共享密钥的元素集进行迭代非常有用。 与使用复合数据结构（例如矢量矢量，矢量图）相比，它通常是更有效的选择。 它不用于构建复合数据结构。
+
+#### llvm/ADT/FoldingSet.h
+
+`FoldingSet`是一个聚合类，它非常擅长于创建昂贵的创建或多态对象。它是一个链式哈希表与侵入式链接（从`FoldingSetNode`继承所需的单一对象）的组合，它使用[SmallVector](http://llvm.org/docs/ProgrammersManual.html#dss-smallvector) 作为其ID进程的一部分。
+
+考虑一种情况，您希望为复杂对象（例如，代码生成器中的节点）实现“getOrCreateFoo”方法。客户端描述了它想要生成的内容（它知道操作码和所有操作数），但是我们不想“新建”一个节点，然后尝试将其插入到集合中以发现它已经存在，此时我们必须删除它并返回已存在的节点。
+
+为了支持这种类型的客户端，`FoldingSet`使用`FoldingSetNodeID`（包装`SmallVector`）执行查询，该查询可用于描述我们要查询的元素。查询要么返回与ID匹配的元素，要么返回一个不透明的ID，指示应该在何处进行插入。构造ID通常不需要堆流量。
+
+因为FoldingSet使用侵入式链接，所以它可以支持集合中的多态对象（例如，您可以将SDNode实例与LoadSDNode混合）。因为元素是单独分配的，所以指向元素的指针是稳定的：插入或删除元素不会使任何指向其他元素的指针无效。
+
+#### `<set>`
+
+`std :: set`是一个合理的全方位集合类，它在许多方面都很不错，但却无所不能。 `std :: set`为插入的每个元素分配内存（因此它非常集成malloc），并且通常在集合中为每个元素存储三个指针（从而增加了大量的每元素空间开销）。它提供了有保证的log（n）性能，从复杂性的角度来看并不是特别快（特别是如果集合的元素比较昂贵，比如字符串），并且具有极高的查找，插入和删除的常数因子。
+
+`std :: set`的优点是它的迭代器是稳定的（从集合中删除或插入一个元素不会影响迭代器或指向其他元素的指针），并且保证集合上的迭代按排序顺序。如果集合中的元素很大，那么指针和malloc流量的相对开销不是很大，但如果集合的元素很小，std :: set几乎不是一个好的选择。
+
+#### llvm/ADT/SetVector.h
+
+LLVM的`SetVector <Type>`是一个适配器类，它结合了您对set-like的容器的选择以及 [Sequential Container](http://llvm.org/docs/ProgrammersManual.html#ds-sequential) 这提供的重要属性是通过迭代支持进行有效插入（忽略重复元素）。它通过将元素插入到类似集合的容器和顺序容器中来实现这一点，使用类似集合的容器进行单向化，并使用顺序容器进行迭代。
+
+SetVector和其他集之间的区别在于，迭代的顺序保证与插入SetVector的顺序相匹配。这个属性对于诸如指针集之类的东西非常重要。因为指针值是非确定性的（例如，在不同机器上的程序运行之间变化），迭代集合中的指针将不会以明确定义的顺序。
+
+SetVector的缺点是它需要两倍于普通集合的空间，并且具有来自类似集合的容器和它使用的顺序容器的常量因子之和。仅在需要以确定性顺序迭代元素时才使用它。除非你使用更快的“pop_back”方法，否则SetVector除了（线性时间）之外的元素也很昂贵。
+
+SetVector是一个适配器类，默认使用std :: vector和底层容器的大小为16的`SmallSet`，所以它非常昂贵。但是，`llvm/ADT/SetVector.h`还提供了一个`SmallSetVector`类，默认使用指定大小的`SmallVector`和`SmallSet`。如果您使用此项，并且您的集合动态地小于N，则将节省大量堆流量。
+
+#### llvm/ADT/UniqueVector.h
+
+`UniqueVector`与[SetVector](http://llvm.org/docs/ProgrammersManual.html#dss-setvector) 类似，但它为插入到集合中的每个元素保留唯一的ID。 它内部包含一个map和一个向量，它为插入到集合中的每个值分配一个唯一的ID。
+
+UniqueVector非常昂贵：它的成本是维护地图和矢量的成本之和，它具有高复杂性，高常数因子，并产生大量的malloc流量。 应该避免。
+
+#### llvm/ADT/ImmutableSet.h
+
+`ImmutableSet`是基于`AVL树`的不可变（功能）集合实现。 添加或删除元素是通过Factory对象完成的，并导致创建新的`ImmutableSet`对象。 如果已存在具有给定内容的`ImmutableSet`，则返回现有的; 将相等性与`FoldingSetNodeID`进行比较。 添加或删除操作的时间和空间复杂性是原始集大小的对数。
+
+没有返回集合元素的方法，您只能检查成员资格。
+
+#### Other Set-Like Container Options
+
+STL提供了其他几个选项，例如`std :: multiset`和各种`hash_set`类容器（无论是来自C++ TR1还是来自SGI库）。 我们从不使用`hash_set`和`unordered_set`，因为它们通常非常昂贵（每次插入都需要malloc）并且非常不便携。
+
+如果你对消除重复项不感兴趣，`std :: multiset`很有用，但是它有`std :: set`的所有缺点。 排序的向量（您不删除重复的条目）或其他方法几乎总是更好。
+
+### Map-Like Containers (std::map, DenseMap, etc)
+
+当您想要将数据与键相关联时，Map-like容器非常有用。 像往常一样，有很多不同的方法可以做到这一点。:)
+
+#### A sorted ‘vector’
+
+排序的“向量”如果您的使用模式遵循严格的插入 - 然后 - 查询方法，您可以使用相同的方法像 [sorted vectors for set-like containers](http://llvm.org/docs/ProgrammersManual.html#dss-sortedvectorset)。 唯一的区别是你的查询函数（使用`std :: lower_bound`来获得有效的log（n）查找）应该只比较密钥，而不是密钥和值。 这产生与集合的排序向量相同的优点。
+
+#### llvm/ADT/StringMap.h
+
+字符串通常用作映射中的键，并且它们难以有效支持：它们是可变长度的，长时间散列和比较效率低，复制成本高等等。字符串映射是专门用于处理这些问题的容器。它支持将任意范围的字节映射到任意其他对象。
+
+StringMap实现使用经二次探测的哈希表，其中存储桶存储指向堆分配条目（以及其他一些东西）的指针。映射中的条目必须是堆分配的，因为字符串是可变长度的。字符串数据（键）和元素对象（值）存储在相同的分配中，字符串数据紧跟在元素对象之后。此容器保证“（char *）（＆Value + 1）”指向值的键字符串。
+
+StringMap的速度非常快，原因如下：二次探测对于查找非常有效，在查找元素时不会重新计算存储桶中字符串的哈希值，在查找值时，StringMap很少需要触及内存中的无关对象（即使发生哈希冲突），哈希表增长也不会重新计算表中已有字符串的哈希值，并且映射中的每个对都存储在单个分配中（字符串数据存储在与值相同的分配中）对）。
+
+StringMap还提供了采用字节范围的查询方法，因此只有在将值插入表中时才会复制字符串。
+
+但是，StringMap迭代顺序不能保证是确定性的，因此任何需要它的用法都应该使用`std :: map`。
+
+#### llvm/ADT/IndexedMap.h
+
+IndexedMap是一个专用容器，用于将小密集整数（或可映射到小密集整数的值）映射到其他类型。 它在内部实现为具有映射功能的向量，该功能将键映射到密集整数范围。
+
+这对于LLVM代码生成器中的虚拟寄存器等情况很有用：它们具有密集映射，该映射由编译时常量（第一个虚拟寄存器ID）抵消。
+
+#### llvm/ADT/DenseMap.h
+
+DenseMap是一个简单的二次探测哈希表。它擅长支持小键和值：它使用单个分配来保存当前插入地图中的所有对。 DenseMap是一种将指针映射到指针或将其他小类型映射到彼此的好方法。
+
+但是，您应该注意DenseMap的几个方面。只要插入发生，DenseMap中的迭代器就会失效，这与map不同。此外，由于DenseMap为大量键/值对分配空间（默认情况下以64开头），如果键或值很大，则会浪费大量空间。最后，如果尚未支持，则必须为所需的密钥实现DenseMapInfo的部分特化。这需要告诉DenseMap内部需要的两个特殊标记值（永远不能插入到地图中）。
+
+DenseMap的find_as（）方法支持使用备用密钥类型的查找操作。这在正常密钥类型构造昂贵但比较便宜的情况下很有用。 DenseMapInfo负责为所使用的每个备用密钥类型定义适当的比较和散列方法。
+
+#### llvm/IR/ValueMap.h
+
+ValueMap是[DenseMap](http://llvm.org/docs/ProgrammersManual.html#dss-densemap)映射Value * s（或子类）到另一种类型的包装器。 删除值或RAUW时，ValueMap将自行更新，以便将新版本的密钥映射到相同的值，就像密钥是WeakVH一样。 您可以通过将Config参数传递给ValueMap模板来准确配置这种情况以及这两个事件还会发生什么。
+
+#### llvm/ADT/IntervalMap.h
+
+IntervalMap是小键和值的紧凑映射。 它映射键间隔而不是单个键，它将自动合并相邻的间隔。 当地图仅包含几个间隔时，它们将存储在地图对象本身中以避免分配。
+
+IntervalMap迭代器非常大，因此它们不应作为STL迭代器传递。 重量级迭代器允许更小的数据结构。
+
+#### `<map>`
+
+`std :: map`具有与`std :: set`类似的特性：它使用插入到映射中的每对的单个分配，它提供具有极大常量因子的log（n）查找，在每对中强加3对指针的空间惩罚。 地图等
+
+当你的键或值非常大时，`std :: map`最有用，如果你需要按排序顺序迭代集合，或者你需要在地图中使用稳定的迭代器（即如果插入或删除它们就不会失效） 发生了另一个因素）。
+
+#### llvm/ADT/MapVector.h
+
+`MapVector <KeyT，ValueT>`提供DenseMap接口的子集。 主要区别在于迭代顺序保证是插入顺序，使其成为一种简单（但有些昂贵）的解决方案，用于指针映射的非确定性迭代。
+
+它通过在键，值对的向量中从键映射到索引来实现。 这提供了快速查找和迭代，但有两个主要缺点：密钥存储两次，删除元素需要线性时间。 如果需要删除元素，最好使用remove_if（）批量删除它们。
+
+#### llvm/ADT/IntEqClasses.h
+
+IntEqClasses提供了小整数等价类的紧凑表示。 最初，0..n-1范围内的每个整数都有自己的等价类。 可以通过将两个类代表传递给join（a，b）方法来连接类。 当findLeader（）返回相同的代表时，两个整数在同一个类中。
+
+一旦形成所有等价类，就可以压缩映射，因此每个整数0..n-1映射到0..m-1范围内的等价类号，其中m是等价类的总数。 必须先解压缩地图，然后才能再次编辑。
+
+#### llvm/ADT/ImmutableMap.h
+
+ImmutableMap是基于AVL树的不可变（功能）地图实现。 添加或删除元素是通过Factory对象完成的，并导致创建新的ImmutableMap对象。 如果已存在具有给定键集的ImmutableMap，则返回现有的键。 将相等性与FoldingSetNodeID进行比较。 添加或删除操作的时间和空间复杂性是原始地图大小的对数。
+
+#### Other Map-Like Container Options
+
+STL提供了其他几个选项，例如`std :: multimap`和各种“hash_map”类容器（无论是来自C ++ TR1还是来自SGI库）。 我们从不使用hash_set和unordered_set，因为它们通常非常昂贵（每次插入都需要malloc）并且非常不便携。
+
+如果要将键映射到多个值，`std :: multimap`很有用，但是它具有std :: map的所有缺点。 有序矢量或其他方法几乎总是更好。
+
+### Bit storage containers (BitVector, SparseBitVector)
+
+与其他容器不同，只有两个位存储容器，选择何时使用每个容器相对简单。
+
+另外一个选项是`std :: vector <bool>`：我们不鼓励使用它有两个原因：1）许多常见编译器（例如常用的GCC版本）的实现效率极低; 2）C++标准委员会可能会弃用这个 容器和/或以某种方式显着改变它。 无论如何，请不要使用它。
+
+#### BitVector
+
+BitVector容器提供动态大小的位集以进行操作。 它支持单个位设置/测试以及设置操作。 设置操作需要时间O（位向量的大小），但操作一次执行一个字，而不是一次一个字。 与其他容器相比，这使得BitVector的设置操作非常快。 当您期望设置位数高时（即密集），请使用BitVector。
+
+#### SmallBitVector
+
+SmallBitVector容器提供与BitVector相同的接口，但它针对仅需要少量位数（小于25个）的情况进行了优化。 它还透明地支持更大的位数，但效率略低于普通的BitVector，因此只有在较大的计数很少时才应使用SmallBitVector。
+
+此时，SmallBitVector不支持set操作（和，或，xor），并且其operator []不提供可赋值的左值。
+
+#### SparseBitVector
+
+`SparseBitVector`容器与`BitVector`非常相似，只有一个主要区别：只存储设置的位。 这使得当集合稀疏时，`SparseBitVector`比`BitVector`更加节省空间，并且使集合操作O（设置位数）代替O（宇宙大小）。 `SparseBitVector`的缺点是随机位的设置和测试是O（N），而在大型SparseBitVectors上，这可能比BitVector慢。 在我们的实现中，按排序顺序（向前或向后）设置或测试位是O（1）最坏情况。 在当前位的128位（取决于大小）内测试和设置位也是O（1）。 作为一般声明，SparseBitVector中的测试/设置位是O（距离上一个设置位的距离）。
 
 ## Debugging
+
+为一些核心LLVM库提供了一些[GDB pretty printers](https://sourceware.org/gdb/onlinedocs/gdb/Pretty-Printing.html)。 要使用它们，请执行以下操作（或将其添加到`~/ .gdbinit`）：
+
+```shell
+source /path/to/llvm/src/utils/gdb-scripts/prettyprinters.py
+```
+
+启用[print pretty](http://ftp.gnu.org/old-gnu/Manuals/gdb/html_node/gdb_57.html)选项以避免将数据结构打印为大块文本也可能很方便。
 
 ## Helpful Hints for Common Operations
 
@@ -1221,9 +1798,220 @@ FunctionType *ft = FunctionType::get(Type::Int8Ty, params, false);
 
 
 
-## Threads and LLVM(null)
+## Threads and LLVM
+
+本节描述LLVM API与客户端应用程序的多线程以及托管应用程序中的JIT之间的交互。
+
+请注意，LLVM对多线程的支持仍然相对年轻。 从版本2.5开始，支持线程托管应用程序的执行，但不支持对API的线程客户端访问。 虽然现在支持此用例，但客户端必须遵守下面指定的准则，以确保在多线程模式下正常运行。
+
+请注意，在类Unix平台上，LLVM需要存在GCC的原子内在函数才能支持线程操作。 如果在没有适当的现代系统编译器的平台上需要支持多线程的LLVM，请考虑在单线程模式下编译LLVM和LLVM-GCC，并使用生成的编译器构建具有多线程支持的LLVM副本。
+
+### Ending Execution with `llvm_shutdown()`
+
+使用LLVM API完成后，应调用`llvm_shutdown（）`来释放用于内部结构的内存。
+
+### Lazy Initialization with `ManagedStatic`
+
+ManagedStatic是LLVM中的实用程序类，用于实现静态资源的静态初始化，例如全局类型表。 在单线程环境中，它实现了一个简单的延迟初始化方案。 但是，在编译LLVM时支持多线程时，它使用双重检查锁定来实现线程安全的延迟初始化。
+
+### Achieving Isolation with `LLVMContext`
+
+LLVMContext是LLVM API中的一个不透明类，客户端可以使用它在同一地址空间内同时操作多个独立的LLVM实例。例如，在假设的编译服务器中，单个翻译单元的编译在概念上独立于所有其他翻译单元，并且希望能够在独立的服务器线程上同时编译传入的翻译单元。幸运的是，存在LLVMContext以实现这种情况！
+
+从概念上讲，LLVMContext提供隔离。 LLVM的内存中IR中的每个LLVM实体（`Module`s，`Value`s，`Type`s，`Constant`s等）都属于LLVMContext。不同上下文中的实体不能相互交互：不同上下文中的模块不能链接在一起，函数不能添加到不同上下文中的模块等。这意味着可以安全地在多个线程上同时编译，只要没有两个线程在同一上下文中的实体上运行。
+
+实际上，API中很少有地方需要明确指定LLVMContext，而不是Type创建/查找API。因为每个Type都带有对其拥有的上下文的引用，所以大多数其他实体可以通过查看它们自己的Type来确定它们属于哪个上下文。如果要向LLVM IR添加新实体，请尝试维护此接口设计。
+
+### Threads and the JIT
+
+LLVM的“eager”JIT编译器可以安全地用于线程程序。多个线程可以同时调用`ExecutionEngine :: getPointerToFunction（）`或`ExecutionEngine :: runFunction（）`，多个线程可以同时运行JIT的代码输出。用户必须仍然确保只有一个线程访问给定LLVMContext中的IR，而另一个线程可能正在修改它。一种方法是在访问JIT外部的IR时始终保持JIT锁定（JIT通过添加CallbackVH来修改IR）。另一种方法是只从LLVMContext的线程调用getPointerToFunction（）。
+
+当JIT配置为懒惰编译时（使用`ExecutionEngine :: DisableLazyCompilation`（false）），在函数延迟jit后，当前存在更新调用站点的竞争条件。如果你确保一次只有一个线程可以调用任何特定的惰性存根并且JIT锁保护任何IR访问，那么仍然可以在线程程序中使用惰性JIT，但我们建议在线程程序中仅使用急切的JIT。
 
 ## Advanced Topics
+
+本节介绍了大多数客户不需要注意的一些高级或模糊的API。 这些API倾向于管理LLVM系统的内部工作，只需要在异常情况下访问。
+
+### The `ValueSymbolTable` class
+
+`ValueSymbolTable`（[doxygen](http://llvm.org/doxygen/classllvm_1_1ValueSymbolTable.html)）类提供了一个符号表，[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)和 [Module](http://llvm.org/docs/ProgrammersManual.html#module)类用于命名值定义。 符号表可以为任何 [Value](http://llvm.org/docs/ProgrammersManual.html#value)提供名称。
+
+请注意，大多数客户端不应直接访问SymbolTable类。 它只应在需要对符号表名称本身进行迭代时使用，这是非常特殊的目的。 请注意，并非所有LLVM值都具有名称，并且符号表中不存在没有名称的那些（即它们具有空名称）。
+
+符号表支持使用`begin/end/iterator`迭代符号表中的值，并支持查询以查看特定名称是否在符号表中（带有查找）。 ValueSymbolTable类不公开任何公共mutator方法，而只是在一个值上调用setName，该值将自动插入到相应的符号表中。
+
+### The `User` and owned `Use` classes’ memory layout
+
+`User`（[doxygen](http://llvm.org/doxygen/classllvm_1_1User.html)）类为向其他Value实例表达User的所有权提供了基础。 `Use`（[doxygen](http://llvm.org/doxygen/classllvm_1_1Use.html)）辅助类来进行簿记并促进O(1)的添加和删除。
+
+#### Interaction and relationship between `User `and `Use` objects
+
+`User`的子类可以选择合并其`Use`对象还是通过指针引用它们。 混合变体（一些使用内联其他挂起）是不切实际的，并且打破了属于同一用户的`Use`对象形成连续数组的不变量。
+
+我们在User（sub）类中有两种不同的布局：
+
+- 布局a）
+
+  Use对象位于User对象的内部（相应于固定偏移量），并且有固定数量的对象。
+
+- 布局b）
+
+  Use对象由User对象中指向数组的指针引用，并且可能有可变数量的对象。
+
+从v2.4开始，每个布局仍然拥有一个指向Uses数组开始的直接指针。 虽然布局a）不是强制性的，但为了简单起见，我们坚持这种冗余。 User对象还存储它具有的Use对象的数量。 （理论上，这些信息也可以根据下面给出的方案计算。）
+
+特殊形式的分配运算符（operator new）强制执行以下内存布局：
+
+- 布局a）通过Use []数组前置User对象来建模。
+
+  ```
+  ...---.---.---.---.-------...
+    | P | P | P | P | User
+  '''---'---'---'---'-------'''
+  ```
+
+- 布局b）通过指向Use []数组来建模。
+
+  ```
+  .-------...
+  | User
+  '-------'''
+      |
+      v
+      .---.---.---.---...
+      | P | P | P | P |
+      '---'---'---'---'''
+  ```
+
+（在上面的图中，'P'代表存储在成员Use :: Prev中的每个Use对象中的Use **）
+
+#### The waymarking algorithm
+
+由于Use对象被剥夺了指向User对象的直接（后退）指针，因此必须有一种快速而准确的方法来恢复它。 这是通过以下方案完成的：
+
+Use :: Prev的2个LSBits（最低有效位）中的位编码允许查找User对象的开头：
+
+- `00` — binary digit 0
+- `01` — binary digit 1
+- `10` — stop and calculate (`s`)
+- `11` — full stop (`S`)
+
+给定一个Use *，我们所要做的就是走路直到我们停下来，我们要么立即有一个用户，要么我们必须走到下一站拿起数字并计算偏移量：
+
+```
+.---.---.---.---.---.---.---.---.---.---.---.---.---.---.---.---.----------------
+| 1 | s | 1 | 0 | 1 | 0 | s | 1 | 1 | 0 | s | 1 | 1 | s | 1 | S | User (or User*)
+'---'---'---'---'---'---'---'---'---'---'---'---'---'---'---'---'----------------
+    |+15                |+10            |+6         |+3     |+1
+    |                   |               |           |       | __>
+    |                   |               |           | __________>
+    |                   |               | ______________________>
+    |                   | ______________________________________>
+    | __________________________________________________________>
+```
+
+在停靠点之间只需要存储大量的位，因此当存在1000个与User关联的对象时，最坏的情况是20次存储器访问。
+
+#### Reference implementation
+
+以下有文化的Haskell片段演示了这个概念：
+
+```haskell
+> import Test.QuickCheck
+>
+> digits :: Int -> [Char] -> [Char]
+> digits 0 acc = '0' : acc
+> digits 1 acc = '1' : acc
+> digits n acc = digits (n `div` 2) $ digits (n `mod` 2) acc
+>
+> dist :: Int -> [Char] -> [Char]
+> dist 0 [] = ['S']
+> dist 0 acc = acc
+> dist 1 acc = let r = dist 0 acc in 's' : digits (length r) r
+> dist n acc = dist (n - 1) $ dist 1 acc
+>
+> takeLast n ss = reverse $ take n $ reverse ss
+>
+> test = takeLast 40 $ dist 20 []
+>
+```
+
+打印`<test>`给出：“1s100000s11010s10100s1111s1010s110s11s1S”
+
+反向算法仅通过检查某个前缀来计算字符串的长度：
+
+```haskell
+> pref :: [Char] -> Int
+> pref "S" = 1
+> pref ('s':'1':rest) = decode 2 1 rest
+> pref (_:rest) = 1 + pref rest
+>
+> decode walk acc ('0':rest) = decode (walk + 1) (acc * 2) rest
+> decode walk acc ('1':rest) = decode (walk + 1) (acc * 2 + 1) rest
+> decode walk acc _ = walk + acc
+>
+```
+
+ 现在，正如预期的那样，打印`<pref test>`给出40。
+
+我们可以使用以下属性快速检查：
+
+```haskell
+> testcase = dist 2000 []
+> testcaseLength = length testcase
+>
+> identityProp n = n > 0 && n <= testcaseLength ==> length arr == pref arr
+>     where arr = takeLast n testcase
+>
+```
+
+正如预期的那样，`<quickCheck identityProp>`给出：
+
+```haskell
+*Main> quickCheck identityProp
+OK, passed 100 tests.
+```
+
+让我们更详尽一点：
+
+```haskell
+>
+> deepCheck p = check (defaultConfig { configMaxTest = 500 }) p
+> 
+```
+
+这是`<deepCheck identityProp>`的结果：
+
+```haskell
+*Main> deepCheck identityProp
+OK, passed 500 tests.
+```
+
+#### Tagging considerations
+
+为了保持每个`Use**` in in 2的2个LSBits在设置后永远不会改变的不变量，Use :: Prev的setter必须在每次修改时重新标记新的`Use**`。 因此，getter必须剥离标记位。
+
+对于布局b）而不是User，我们找到一个指针（设置了LSBit的User*）。 按照此指针将我们带到用户。 便携技巧确保User的第一个字节（如果被解释为指针）从不设置LSBit。 （可移植性依赖于所有已知编译器将vptr放在实例的第一个单词中的事实。）
+
+### Designing Type Hiercharies and Polymorphic Interfaces
+
+有两种不同的设计模式倾向于导致在C++程序中的类型层次结构中使用虚拟分派。第一种是真正的类型层次结构，其中层次结构中的不同类型模拟功能和语义的特定子集，并且这些类型严格地嵌套在彼此之内。在Value或Type类型层次结构中可以看到这方面的好例子。
+
+第二个是希望在多态接口实现的集合中动态分派。后一种用例可以通过定义一个抽象接口基类来建模，虚拟调度和继承是所有实现派生和覆盖的。但是，这种实施策略强制存在一种实际上没有意义的“is-a”关系。通常没有一些嵌套的有用概括层次结构，代码可以与之交互并上下移动。相反，有一个单一的接口可以在一系列实现中进行调度。
+
+第二个用例的首选实现策略是泛型编程（有时称为“编译时鸭子类型”或“静态多态性”）。例如，可以在符合接口或概念的任何特定实现上实例化某个类型参数T上的模板。这里一个很好的例子是任何类型的高度通用属性，它为有向图中的节点建模。 LLVM主要通过模板和通用编程对这些进行建模。这些模板包括LoopInfoBase和DominatorTreeBase。当这种类型的多态实际需要动态调度时，您可以使用一种称为基于概念的多态的技术来推广它。此模式使用非常有限的虚拟调度形式模拟模板的接口和行为，以便在其实现中进行类型擦除。你可以在PassManager.h系统中找到这种技术的例子，Sean Parent在他的几个演讲和论文中有一个更详细的介绍：
+
+- 1.[Inheritance Is The Base Class of Evil](http://channel9.msdn.com/Events/GoingNative/2013/Inheritance-Is-The-Base-Class-of-Evil) -2013年的GoingNative演讲描述了这种技术，可能是最好的起点。
+- 2.[Value Semantics and Concepts-based Polymorphism](http://www.youtube.com/watch?v=_BpMYeUFXv8) - C ++现在！ 2012年更详细地描述了这种技术。
+- 3.[Sean Parent’s Papers and Presentations](http://github.com/sean-parent/sean-parent.github.com/wiki/Papers-and-Presentations) - 一个Github项目，其中包含幻灯片，视频和有时代码的链接。
+
+在决定创建类型层次结构（使用标记或虚拟分派）和使用模板或基于概念的多态时，请考虑是否对接口边界上的语义有意义的抽象基类进行了一些改进。如果比根抽象接口更精细的东西作为语义模型的部分扩展无意义，那么你的用例可能更适合多态，你应该避免使用虚拟调度。然而，可能存在一些需要使用一种技术或另一种技术的紧急情况。
+
+如果确实需要引入类型层次结构，我们更倾向于使用带有手动标记的调度和/或RTTI的显式闭合类型层次结构，而不是在C++代码中更常见的开放继承模型和虚拟调度。这是因为LLVM很少鼓励库消费者扩展其核心类型，并利用其层次结构的封闭和标记分派特性来生成更高效的代码。我们还发现，我们对类型层次结构的大量使用更适合基于标记的模式匹配，而不是通过公共接口进行动态调度。在LLVM中，我们已经构建了自定义帮助程序以促进此设计。请参阅本文档中有关i[isa and dyn_cast](http://llvm.org/docs/ProgrammersManual.html#isa)的部分以及我们的[detailed document](http://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html)，该文档描述了如何实现此模式以与LLVM帮助程序一起使用。
+
+### ABI Breaking Checks
+
+更改LLVM C++ ABI的检查和断言基于预处理器符号`LLVM_ENABLE_ABI_BREAKING_CHECKS `- 使用LLVM_ENABLE_ABI_BREAKING_CHECKS构建的LLVM库不是ABI兼容的LLVM库，没有定义它。 默认情况下，打开断言也会打开`LLVM_ENABLE_ABI_BREAKING_CHECKS`，因此默认`+Asserts`构建与ABI不兼容，默认为`-Asserts`构建。 希望`+Asserts`和`-Asserts`构建之间具有ABI兼容性的客户端应使用CMake或autoconf构建系统来独立于`LLVM_ENABLE_ASSERTIONS`设置`LLVM_ENABLE_ABI_BREAKING_CHECKS`。
 
 ## The Core LLVM Class Hierarchy Reference
 

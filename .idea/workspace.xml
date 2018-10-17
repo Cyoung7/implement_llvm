@@ -18,12 +18,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/doc/LLVM Programmer’s Manual.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/LLVM Programmer’s Manual.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" afterDir="false" />
-    </list>
+    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -47,8 +42,8 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="458">
-              <caret line="1002" column="23" selection-start-line="1002" selection-start-column="23" selection-end-line="1002" selection-end-column="23" />
+            <state relative-caret-position="62">
+              <caret line="980" column="50" lean-forward="true" selection-start-line="980" selection-start-column="50" selection-end-line="980" selection-end-column="50" />
               <folding>
                 <element signature="e#40#82#0" expanded="true" />
               </folding>
@@ -337,15 +332,15 @@
       <workItem from="1538102358409" duration="20008000" />
       <workItem from="1538277160835" duration="3593000" />
       <workItem from="1539059894010" duration="25113000" />
-      <workItem from="1539245461234" duration="10036000" />
+      <workItem from="1539245461234" duration="11331000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="181940000" />
+    <option name="totallyTimeSpent" value="183235000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="412" y="81" width="1400" height="999" extended-state="0" />
+    <frame x="254" y="24" width="1400" height="999" extended-state="0" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.80608976" visible="true" weight="0.22480059" />
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -483,7 +478,7 @@
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string />
+        <expression-string>' '</expression-string>
         <language-id>ObjectiveC</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
@@ -804,8 +799,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="458">
-          <caret line="1002" column="23" selection-start-line="1002" selection-start-column="23" selection-end-line="1002" selection-end-column="23" />
+        <state relative-caret-position="62">
+          <caret line="980" column="50" lean-forward="true" selection-start-line="980" selection-start-column="50" selection-end-line="980" selection-end-column="50" />
           <folding>
             <element signature="e#40#82#0" expanded="true" />
           </folding>
