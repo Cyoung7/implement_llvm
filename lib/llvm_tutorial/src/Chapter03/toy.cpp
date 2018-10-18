@@ -476,6 +476,7 @@ Value *CallExprAST::codegen() {
 Function *PrototypeAST::codegen() {
     // Make the function type:  double(double,double) etc.
     std::vector<Type *> Doubles(Args.size(), Type::getDoubleTy(TheContext));
+    //函数类型也是一个常量
     FunctionType *FT =
             FunctionType::get(Type::getDoubleTy(TheContext), Doubles, false);
     //要使用的类型，链接和名称，以及要插入的模块(module)。

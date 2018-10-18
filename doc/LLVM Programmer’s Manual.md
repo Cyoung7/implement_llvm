@@ -157,28 +157,28 @@
 
 本文档旨在强调LLVM源代码库中可用的一些重要类和接口。本手册无意解释什么是LLVM，工作原理以及LLVM代码的外在。它假设您了解LLVM的基础知识，并且有兴趣编写转换(transformations)或以其他方式(analyzing)分析或操作代码。
 
-本文档应该让您了解，在LLVM基础结构的不断增长的源代码中,以便找到自己的学习方式。请注意，本手册并非用于替代源代码阅读，因此如果您认为其中一个类中应该有一个方法可以执行某些操作但未列出，请检查源代码。提供了与[doxygen](http://llvm.org/doxygen/)源的链接，以使其尽可能方便。
+本文档会让您了解，在LLVM基础结构不断增长的源代码中,找到自己的学习方式。请注意，本手册并非用于替代源代码阅读，因此如果您认为其中一个类中应该有一个方法可以执行某些操作但未列出，请检查源代码。提供了与[doxygen](http://llvm.org/doxygen/)源的链接，以使其尽可能方便。
 
-本文档的第一部分描述了在LLVM基础结构中工作时有用的一般信息，第二部分描述了Core LLVM类。将来本手册将扩展，其中包含描述如何使用扩展库的信息，例如支配者(dominator)信息，CFG遍历过程以及InstVisitor（doxygen）模板等有用的实用程序。
+本文档的第一部分描述了在工作时LLVM基础结构中有用的通用信息，第二部分描述了Core LLVM类。将来本手册将扩展，其中包含描述如何使用扩展库，例如支配者(dominator)信息，CFG遍历过程以及InstVisitor（[doxygen](http://llvm.org/doxygen/InstVisitor_8h_source.html)）模板等有用的实用程序。
 
 ## General Information
 
-本节包含在LLVM源代码库中工作时非常有用的一般信息，但这并非针对任何特定API。
+本节包含在LLVM源代码库中工作时非常有用的通用信息，所以这并非针对任何特定API。
 
 ### The C++ Standard Template Library
 
-LLVM大量使用C ++标准模板库（STL），可能比您以前或之前看到的要多得多。 因此，您可能希望对所使用的技术和库的功能进行一些背景阅读。 有许多讨论STL的好网页，以及关于这个主题的几本书，它将不会在本文中讨论。
+LLVM大量使用C++标准模板库（STL），可能比您以前或之前看到的要多得多。 因此，您可能希望对所使用的技术和库的功能进行一些背景阅读。 有许多讨论STL的好网页，以及关于这个主题的几本书，它将不会在本文中讨论。
 
 以下是一些有用的链接：
 
-- [cppreference.com](http://en.cppreference.com/w/) - STL和标准C ++库其他部分的出色参考。
-- [C++ In a Nutshell](http://www.tempest-sw.com/cpp/) - 这是一本正在制作的O'Reilly书。 它有一个体面的标准库参考，可以与Dinkumware相媲美，但遗憾的是，自该书出版以来，它已不再免费。
+- [cppreference.com](http://en.cppreference.com/w/) - STL及标准C++库其他部分的优秀参考。
+- [C++ In a Nutshell](http://www.tempest-sw.com/cpp/) - 这是一本正在制作的O'Reilly书。 它有一个合适的标准库参考，可以与Dinkumware相媲美，但遗憾的是，自该书出版以来，它已不再免费。
 - [C++ Frequently Asked Questions](http://www.parashift.com/c++-faq-lite/)
 - [SGI’s STL Programmer’s Guide](http://www.sgi.com/tech/stl/) - 包含有用的[STL简介](http://www.sgi.com/tech/stl/stl_introduction.html)。
 - [Bjarne Stroustrup’s C++ Page](http://www.research.att.com/~bs/C++.html)
 - [Bruce Eckel’s Thinking in C++, 2nd ed. Volume 2 Revision 4.0 (even better, get the book)](http://www.mindview.net/Books/TICPP/ThinkingInCPP2e.html)
 
-我们还鼓励您查看[LLVM编码标准指南](http://llvm.org/docs/CodingStandards.html)，该指南侧重于如何编写可维护代码而不是如何放置花括号的位置。
+我们还鼓励您查看[LLVM编码标准指南](http://llvm.org/docs/CodingStandards.html)，该指南侧重于如何编写可维护代码而不是教你如何放置花括号的位置。
 
 ### Other useful references
 
@@ -2021,13 +2021,13 @@ header source：[Type.h](http://llvm.org/doxygen/Type_8h_source.html)
 
 doxygen info：[Type Clases](http://llvm.org/doxygen/classllvm_1_1Type.html)
 
-核心LLVM类是表示正在核查(inspected)或转换的程序的主要方法。 核心LLVM类在`include/llvm/IR`目录的头文件中定义，并在`lib/IR`目录中实现。 值得注意的是，由于历史原因，这个库被称为`libLLVMCore.so`，而不是`libLLVMIR.so`，正如您所料。
+核心LLVM类是表示正在核查(inspected)或转换的程序的主要方式。 核心LLVM类在`include/llvm/IR`目录的头文件中定义，并在`lib/IR`目录中实现。 值得注意的是，由于历史原因，这个库被称为`libLLVMCore.so`，而不是`libLLVMIR.so`，正如您所料。
 
-### The Type class and Derived Types
+### The Type class and Derived Types(派生类型)
 
-Type是所有类型类的父类。 每个值都有一个类型。 Type不能直接实例化，只能通过其子类实例化。 某些基本类型（VoidType，LabelType，FloatType和DoubleType）具有隐藏的子类。 它们是隐藏的，是因为它们提供的功能超出了Type类提供的功能，为了区别于Type的其他子类。
+Type是所有类型类的父类。 每个值都有一个类型。 Type不能直接实例化，只能通过其子类实例化。 某些基本类型（VoidType，LabelType，FloatType和DoubleType）是其隐藏的子类。 它们是隐藏的，是因为它们提供的功能超出了Type类提供的功能，为了区别于Type的其他子类。
 
-所有其他类型都是`DerivedType`的子类。 可以命名类型，但这不是必需的。 任何时候都只存在一个给定形状的实例。 这允许使用Type Instance的地址相等性来执行类型相等。 也就是说，给定两个Type *值，如果指针相同，则类型相同。
+所有其他类型都是`DerivedType`的子类。 `Types`可以被命名，但这不是必需的。 任何时候都只存在一个给定形状的实例。 这允许使用Type Instance的地址相等性来执行类型相等。 也就是说，给定两个Type *值，如果指针相同，则类型相同。
 
 #### Important Public Methods
 
@@ -2045,33 +2045,33 @@ Type是所有类型类的父类。 每个值都有一个类型。 Type不能直�
 
 `SequentialType` :
 
-- 这由ArrayType和VectorType子类化。
-  - `const Type * getElementType（）const`：返回顺序类型中每个元素的类型。
-  - `uint64_t getNumElements（）const`：返回顺序类型中的元素数。
+- 这是通过ArrayType和VectorType实现的子类。
+  - `const Type * getElementType（）const`：返回序列中每个元素的类型。
+  - `uint64_t getNumElements（）const`：返回序列中的元素数。
 
 `ArrayType`:
 
-- 这是SequentialType的子类，并定义了数组类型的接口。
+- 这是SequentialType的子类，并定义了数组的接口。
 
 `PointerType`:
 
-- 指针类型的类的子类。
+- `Type`的指针类型子类。
 
 `VectorType`:
 
-- 用于矢量类型的SequentialType的子类。 向量类型类似于ArrayType但是区分因为它是第一类类型而ArrayType不是。 向量类型用于向量运算，通常是整数或浮点类型的小向量。
+- 用于向量的`SequentialType`子类。 向量类型类似于`ArrayType`,但是要区分他们因为它是 first class type 而ArrayType不是。 向量用于向量运算，通常是整数或浮点类型的小向量。
 
 `StructType`:
 
-- 结构类型的DerivedTypes的子类。
+- DerivedTypes的结构类型子类。
 
 `FunctionType`:
 
-- 函数类型的DerivedTypes的子类。
-  - `bool isVarArg（）const`：如果是vararg函数，则返回true。
+- DerivedTypes的函数类型子类。
+  - `bool isVarArg（）const`：如果是vararg(可变参数)函数，则返回true。
   - `const Type * getReturnType（）const`：返回函数的返回类型。 
   - `const Type * getParamType（unsigned i）`：返回第i个参数的类型。
-  - `const unsigned getNumParams（）const`：返回形式参数的数量。
+  - `const unsigned getNumParams（）const`：返回形参的数量。
 
 ### The Module class
 
@@ -2081,45 +2081,47 @@ header source: [Module.h](http://llvm.org/doxygen/Module_8h_source.html)
 
 doxygen info: [Module Class](http://llvm.org/doxygen/classllvm_1_1Module.html)
 
-`Module`类表示LLVM程序中存在的顶层结构。 LLVM `Module`实际上是原始程序的转换单元或由链接器合并的若干转换单元的组合。 Module类跟踪[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)列表，[GlobalVariables](http://llvm.org/docs/ProgrammersManual.html#globalvariable)列表和[SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable)。 此外，它还包含一些有用的成员函数，可以使常见操作变得简单。 
+`Module`类表示LLVM程序中存在的顶层结构。 LLVM `Module`实际上是原始程序的转换单元(translation unit)或由链接器合并的若干转换单元的组合。 Module类会跟踪[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)列表，[GlobalVariables](http://llvm.org/docs/ProgrammersManual.html#globalvariable)列表和[SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable)。 此外，它包含一些有用的成员函数，可以使常见操作变得简单。 
 
 #### Important Public Members of the Module class
 
+*重要的公共成员*
+
 - `Module::Module(std::string name = "")`
 
-  构建 [Module](http://llvm.org/docs/ProgrammersManual.html#module)很容易。 您可以选择为其提供名称（可能基于转换单元的名称）。
+  创建一个 [Module](http://llvm.org/docs/ProgrammersManual.html#module)很容易。 您可以选择为其提供一个名称（可能基于转换单元的名称）。
 
-- `Module::iterator`- 函数列表迭代器的Typedef
+- `Module::iterator`- 类型定义(Typedef)的函数列表迭代器
 
-  `Module::const_iterator` - const_iterator的Typedef。
+  `Module::const_iterator` - 类型定义的常量迭代器()。
 
   `begin()`, `end()`, `size()`, `empty()`
 
-  const_iteraThese的Typedef是转发方法，可以轻松访问Module对象的Function list的内容。
+  前面这些方法可以轻松访问Module对象的[Function](http://llvm.org/docs/ProgrammersManual.html#c-function) list的内容。
 
 - Module::FunctionListType &getFunctionList()
 
-  返回[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)列表。 当您需要更新列表或执行没有转发方法的复杂操作时，必须使用此选项
+  返回[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)列表。 当您需要更新列表或执行前面没有的复杂操作时，必须使用这个方法
 
 ***
 
-- `Module::global_iterator` - Typedef用于全局变量列表迭代器
+- `Module::global_iterator` - 类型定义的全局变量列表的迭代器
 
-  `Module::const_global_iterator` - const_iterator的Typedef。
+  `Module::const_global_iterator` - 类型定义的常量迭代器。
 
   `global_begin()`, `global_end()`, `global_size()`, `global_empty()`
 
-  返回函数列表。 当您需要更新列表或执行不具有的复杂操作时，必须使用这些转发方法，以便于访问Module对象的[GlobalVariable](http://llvm.org/docs/ProgrammersManual.html#globalvariable)列表的内容。转发方法...
+  前面这些方法可以轻松访问Module对象的[GlobalVariable](http://llvm.org/docs/ProgrammersManual.html#globalvariable)列表的内容。
 
 - `Module::GlobalListType &getGlobalList()`
 
-  返回GlobalVariables列表。 当您需要更新列表或执行没有转发方法的复杂操作时，必须使用此选项。
+  返回GlobalVariables列表。 当您需要更新列表或执行前面没有的复杂操作时，必须使用这个方法
 
 ***
 
 - `SymbolTable *getSymbolTable()`
 
-  返回对此模块的[SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable)的引用。
+  返回对此模块[SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable)(符号表)的引用。
 
 ***
 
@@ -2133,11 +2135,11 @@ doxygen info: [Module Class](http://llvm.org/doxygen/classllvm_1_1Module.html)
 
 - `std::string getTypeName(const Type *Ty)`
 
-  如果SymbolTable中至少有一个指定Type的条目，则返回该条目。 否则返回空字符串。
+  如果SymbolTable中至少有一个指定Type的条目(entry)，则返回该条目。 否则返回空字符串。
 
 - `bool addTypeName(const std::string &Name, const Type *Ty)`
 
-  在SymbolTable映射名称中插入一个条目到Ty。 如果此名称已有条目，则返回true并且不修改SymbolTable。
+  在SymbolTable插入一个条目,其名称映射到Ty。 如果此名称已有条目，则返回true并且不修改SymbolTable。
 
 ### The Value class
 
@@ -2147,31 +2149,31 @@ header source: [Value.h](http://llvm.org/doxygen/Value_8h_source.html)
 
 doxygen info: [Value Class](http://llvm.org/doxygen/classllvm_1_1Value.html)
 
-Value类是LLVM源代码库中最重要的类。 它表示一个类型值，可以用作（除其他外）作为指令的操作数。 有许多不同类型的值，例如[常量](http://llvm.org/docs/ProgrammersManual.html#constant)，[参数](http://llvm.org/docs/ProgrammersManual.html#argument)。 甚至[指令](http://llvm.org/docs/ProgrammersManual.html#instruction)和[函数](http://llvm.org/docs/ProgrammersManual.html#c-function)都是值。
+Value类是LLVM源代码库中最重要的类。 它表示一个已有类型的值(value)，可以用作指令的操作数。 有许多不同类型的值，例如[Constant](http://llvm.org/docs/ProgrammersManual.html#constant)，[Argument](http://llvm.org/docs/ProgrammersManual.html#argument)s。 甚至[Instruction](http://llvm.org/docs/ProgrammersManual.html#instruction)s 和 [Function](http://llvm.org/docs/ProgrammersManual.html#c-function)s 都是值。
 
-对于程序，可以在LLVM表示中多次使用特定值。 例如，函数的传入参数（用Argument类的实例表示）被引用该参数的函数中的每个指令“使用”。 为了跟踪这种关系，Value类保留了使用它的所有用户的列表（User类是LLVM图中可以引用值的所有节点的基类）。 此使用列表是LLVM如何表示程序中的def-use信息，可通过use_ *方法访问，如下所示。
+对于程序来说，可以在LLVM表示中多次使用特定值。 例如，函数的传入参数（用Argument类的实例表示:实参）被引用到函数中每个使用该参数的指令。 为了跟踪这种关系，Value类保存了使用它所有用户的列表（User类是LLVM图中可以引用值的所有节点的基类）。 此使用列表是LLVM如何表示程序中的def-use信息，可通过use_ *方法访问，如下所示。
 
-因为LLVM是类型化表示，所以每个LLVM值都是类型化的，并且此[类型](http://llvm.org/docs/ProgrammersManual.html#type)可通过getType（）方法获得。 此外，可以命名所有LLVM值。 Value的“名称”是在LLVM代码中打印的符号字符串：
+因为LLVM是类型化的表示，所以每个LLVM值都是类型化的，并且此 [Type](http://llvm.org/docs/ProgrammersManual.html#type)可通过getType()方法获得。 此外，可以对所有LLVM值命名。 Value的“名称”是在LLVM代码中打印的符号字符串：
 
 ```
 %foo = add i32 1, 2
 ```
 
-该指令的名称是“foo”。 请注意，可能缺少任何值的名称（空字符串），因此名称应仅用于调试（使源代码更易于阅读，调试打印输出），不应使用它们来跟踪值或在 他们。 为此，请使用指向Value本身的std :: map指针。
+该指令的名称是“foo”。 请注意，任何值的命名都可能缺失（空字符串），因此名称应仅用于调试（使源代码更易于阅读，调试打印输出），不应使用它们来跟踪值或在他们之间做映射。 为此，请使用指向Value本身的std :: map指针。
 
-LLVM的一个重要方面是SSA变量与产生它的操作之间没有区别。 因此，对指令生成的值的任何引用（或者可用作传入参数的值）都表示为指向表示此值的类的实例的直接指针。 虽然这可能需要一些时间来习惯，但它简化了表示并使其更容易操作。
+**LLVM的一个重要方面是SSA变量与产生它(SSA变量)的操作之间没有区别**。 因此，对指令生成的值的任何引用（或者可用作传入参数的值）都表示为指向表示此值的类的实例的直接指针。 虽然这可能需要一些时间来习惯，但它简化了表示并使其更容易操作。
 
 #### Important Public Members of the Value class
 
-- `Value::use_iterator` - 在use-list上使用Typedef作为迭代器
+- `Value::use_iterator` - 在use-list上,返回类型定义的迭代器
 
-  `Value::const_use_iterator` - 使用列表中的const_iterator的typedef
+  `Value::const_use_iterator` - 在use-list上,返回类型定义的常量迭代器
 
-  `unsigned use_size()` - 返回值的用户数。
+  `unsigned use_size()` - 返回value的用户数。
 
-  `bool use_empty()` - 如果没有用户，则返回true。
+  `bool use_empty()` - 如果没有User，则返回true。
 
-  `use_iterator use_begin()` - 获取use-list开头的迭代器。
+  `use_iterator use_begin()` - 获取使用列表开头的迭代器。
 
   `use_iterator use_end()` - 获取使用列表末尾的迭代器。
 
@@ -2179,7 +2181,7 @@ LLVM的一个重要方面是SSA变量与产生它的操作之间没有区别。 
 
   这些方法是访问LLVM中的def-use信息的接口。 与LLVM中的所有其他迭代器一样，命名约定遵循[STL](http://llvm.org/docs/ProgrammersManual.html#stl)定义的约定。
 
-- `Type *getType() const` 此方法返回值的类型。
+- `Type *getType() const` 此方法返回value的类型。
 
 - `bool hasName() const`
 
@@ -2187,7 +2189,7 @@ LLVM的一个重要方面是SSA变量与产生它的操作之间没有区别。 
 
   `void setName(const std::string &Name)`
 
-  此系列方法用于访问并为Value指定名称，请注意[上述预防措施](http://llvm.org/docs/ProgrammersManual.html#namewarning)。
+  此系列方法用于访问并为Value指定名称,知道上面的注意事项
 
 - `void replaceAllUsesWith(Value *V)`
 
@@ -2207,9 +2209,9 @@ doxygen info: [User Class](http://llvm.org/doxygen/classllvm_1_1User.html)
 
 Superclass: [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
- User类是可以引用Values的所有LLVM节点的公共基类。 它公开了一个“操作数”列表，它是用户所指的所有值。 User类本身是Value的子类。
+ User类是所有可以引用Values的LLVM节点的公共基类。 它暴露了一个“操作数”列表，它是用户引用的所有value。 User类本身是Value的子类。
 
-用户的操作数直接指向它所引用的LLVM值。 因为LLVM使用静态单一分配（SSA）形式，所以只能引用一个定义，允许这种直接连接。 此连接在LLVM中提供use-def信息。
+用户的操作数直接指向它所引用的LLVM值。 因为LLVM使用静态单一分配（SSA）形式，所以只能引用一个定义，允许这种直接连接。 此连接在LLVM中提供用户定义信息。
 
 #### Important Public Members of the User class
 
@@ -2219,13 +2221,13 @@ User类以两种方式公开操作数列表：通过索引访问接口和基于�
 
   `unsigned getNumOperands()`
 
-  这两种方法以方便的形式公开用户的操作数以便直接访问。
+  这两种方法以方便的形式暴露用户的操作数以便直接访问。
 
-- `User::op_iterator` - 在操作数列表上输入itdef作为迭代器
+- `User::op_iterator` - 在操作数列表上,类型定义的迭代器
 
-  `op_iterator op_begin()` - 获取操作数列表开头的迭代器。
+  `op_iterator op_begin()` - 获取指向操作数列表开头的迭代器。
 
-  `op_iterator op_end()` - 获取操作数列表末尾的迭代器。
+  `op_iterator op_end()` - 获取指向操作数列表末尾的迭代器。
 
   这些方法一起构成了基于迭代器的用户操作数界面。
 
@@ -2239,33 +2241,33 @@ doxygen info: [Instruction Class](http://llvm.org/doxygen/classllvm_1_1Instructi
 
 Superclasses: [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
-`Instruction`类是所有LLVM指令的公共基类。它只提供了一些方法，但却是一个非常常用的类。由指令类本身跟踪的主要数据是操作码（指令类型）和嵌入指令的父BasicBlock。为了表示特定类型的指令，使用了许多指令子类之一。
+`Instruction`类是所有LLVM指令的公共基类。它只提供了少许方法，但却是一个非常常用的类。由指令类本身跟踪的原数据(primary data)是一个操作码（一个指令),该指令被嵌入到上级的BasicBlock。为了表示特定类型的指令，使用了Instruction的多个之类来表示。
 
-因为Instruction类是[User](http://llvm.org/docs/ProgrammersManual.html#user)类的子类，所以可以以与其他Users相同的方式访问其操作数（使用`getOperand()/ getNumOperands()和op_begin()/op_end()方法`）。 Instruction类的一个重要文件是`llvm / Instruction.def`文件。此文件包含有关LLVM中各种不同类型指令的一些元数据。它描述了用作操作码的枚举值（例如，`Instruction :: Add和Instruction :: ICmp`），以及实现指令的具体子类（例如[BinaryOperator](http://llvm.org/docs/ProgrammersManual.html#binaryoperator)和[CmpInst](http://llvm.org/docs/ProgrammersManual.html#cmpinst))。不幸的是，在这个文件中使用宏会混淆doxygen，所以这些枚举值在[doxygen](http://llvm.org/doxygen/classllvm_1_1Instruction.html)中没有正确显示。
+因为Instruction类是[User](http://llvm.org/docs/ProgrammersManual.html#user)类的子类，所以可以以与其他Users一样,采用同样的方式访问其操作数（使用`getOperand()/ getNumOperands()和op_begin()/op_end()方法`）。 Instruction类的一个重要文件是`llvm / Instruction.def`文件。此文件包含有关LLVM中各种不同类型指令的一些元数据。它描述了用作操作码的枚举值（例如，`Instruction :: Add和Instruction :: ICmp`），以及实现指令的具体子类（例如[BinaryOperator](http://llvm.org/docs/ProgrammersManual.html#binaryoperator)和[CmpInst](http://llvm.org/docs/ProgrammersManual.html#cmpinst))。不幸的是，在这个文件中使用宏会混淆doxygen，所以这些枚举值在[doxygen](http://llvm.org/doxygen/classllvm_1_1Instruction.html)中没有正确显示。
 
 #### Important Subclasses of the Instruction class
 
 - `BinaryOperator`
 
-  此子类表示所有两个操作数指令，其操作数必须是相同类型，但比较指令除外。
+  此子类表示所有两个操作数的指令，其操作数必须是相同类型，但比较指令除外。
 
-- `CastInst` 此子类是12个转换指令的父级。 它提供了关于演员说明的常见操作。
+- `CastInst` 此子类是12个转换指令的父级。 它提供了转换指令的常见操作。
 
 - `CmpInst` 此子类表示两个比较指令ICmpInst（整数opreands）和FCmpInst（浮点操作数）。
 
 - `TerminatorInst`
 
-  此子类是所有终止符指令（可以终止块的指令）的父节点。
+  此子类是所有终止符指令（该指令可以结束一个block）的父节点。
 
 #### Important Public Members of the Instruction class
 
 - `BasicBlock *getParent()`
 
-  返回嵌入此指令的[BasicBlock](http://llvm.org/docs/ProgrammersManual.html#basicblock)。
+  返回嵌入该指令的[BasicBlock](http://llvm.org/docs/ProgrammersManual.html#basicblock)。
 
 - `bool mayWriteToMemory()`
 
-  如果指令写入内存，则返回true，即它是一个调用，空闲，调用或存储。
+  如果指令写入内存，则返回true，即它是一个call，free，invoke或store。
 
 - `unsigned getOpcode()`
 
@@ -2277,16 +2279,16 @@ Superclasses: [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](
 
 ### The Constant class and subclasses
 
-`Constant`类和`subclassesConstant`表示不同类型常量的基类。 它由`ConstantInt`，`ConstantArray`等子类表示，用于表示各种类型的常量。 [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)也是一个子类，表示全局变量或函数的地址。
+`Constant`类和`subclassesConstant`表示不同类型常量的基类。 它由`ConstantInt`，`ConstantArray`等子类表示，用于表示各种类型的常量。 [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)也是其一个子类，表示全局变量或函数 的地址。
 
 #### Important Subclasses of Constant
 
-- `ConstantInt`:Constant的重要子类Constant的这个子类表示任何宽度的整数常量。
+- `ConstantInt`:这个子类Constant表示任何宽度的整数常量。
   - `const APInt& getValue() const`: 返回此常量的基础值，即APInt值。
   - `int64_t getSExtValue() const`: 通过符号扩展将基础APInt值转换为int64_t。 如果APInt的值（不是位宽）太大而不适合int64_t，则会产生断言。 因此，不鼓励使用此方法。
   - `uint64_t getZExtValue() const`: 通过零扩展将基础APInt值转换为uint64_t。 如果APInt的值（不是位宽）太大而不适合uint64_t，则会产生断言。 因此，不鼓励使用此方法。
   - `static ConstantInt* get(const APInt& Val)`: 返回表示Val提供的值的ConstantInt对象。 该类型隐含为与Val的位宽对应的IntegerType。
-  - `static ConstantInt* get(const Type *Ty, uint64_t Val)`: 返回ConstantInt对象，该对象表示Val为整数类型Ty提供的值。
+  - `static ConstantInt* get(const Type *Ty, uint64_t Val)`: 返回ConstantInt对象，该对象表示Val为整数类型Ty的值。
 - `ConstantFP` : 此类表示浮点常量。
   - `double getValue() const`: 返回此常量的基础值。
 - `ConstantArray` : 这代表一个常数数组。
@@ -2305,11 +2307,11 @@ doxygen info: [GlobalValue Class](http://llvm.org/doxygen/classllvm_1_1GlobalVal
 
 Superclasses: [Constant](http://llvm.org/docs/ProgrammersManual.html#constant), [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
-Global values（[GlobalVariables](http://llvm.org/docs/ProgrammersManual.html#globalvariable)或[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)）是在所有函数体(body)中,唯一可见的LLVM值。因为它们在全局范围内可见，所以它们还在不同转换单元中,与定义其他全局变量相关联。为了控制链接过程，GlobalValues知道它们的链接规则。具体来说，GlobalValues知道它们是否具有内部链接或外部链接，如LinkageTypes枚举所定义。
+Global values（[GlobalVariables](http://llvm.org/docs/ProgrammersManual.html#globalvariable)或[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)）是在所有函数(Function)体(body)中,唯一可访问的LLVM值。因为它们在全局范围内可见，所以它们还在不同转换单元中,与定义其他全局变量相关联。为了控制链接过程，GlobalValues知道它们的链接规则。具体来说，GlobalValues知道它们是否具有内部链接或外部链接，由LinkageTypes枚举所定义。
 
-如果GlobalValue具有内部链接（相当于C中的静态链接），则当前转换单元外部的代码不可见，并且不参与链接。如果它具有外部链接，则外部代码可以看到它，并且确实参与链接。除了链接信息，GlobalValues还会跟踪它们当前所属的模块。
+如果GlobalValue具有内部链接（相当于C中的静态链接），则当前转换单元外部的代码不可见，并且不参与链接。如果它具有外部链接，则外部代码可以看到它，并且确实参与链接。除了链接信息，GlobalValues还会跟踪它们当前所属的[Module](http://llvm.org/docs/ProgrammersManual.html#module)。
 
-因为GlobalValues是内存对象，所以它们总是由它们的地址引用。因此，全局类型始终是指向其内容的指针。在使用GetElementPtrInst指令时记住这一点很重要，因为必须首先取消引用此指针。例如，如果你有一个GlobalVariable（GlobalValue的子类），它是一个24 int的数组，键入[24 x i32]，那么GlobalVariable是指向该数组的指针。虽然此数组的第一个元素的地址和GlobalVariable的值相同，但它们具有不同的类型。 GlobalVariable的类型是[24 x i32]。第一个元素的类型是i32。因此，访问全局值需要先使用GetElementPtrInst取消引用指针，然后才能访问其元素。 “[LLVM语言参考手册](http://llvm.org/docs/LangRef.html#globalvars)”对此进行了解释。
+因为GlobalValues是内存对象，所以它们总是由它们的地址引用。因此，全局[Type](http://llvm.org/docs/ProgrammersManual.html#type)始终是指向其内容的指针。在使用GetElementPtrInst指令时记住这一点很重要，因为必须首先取消引用此指针。例如，如果你有一个GlobalVariable（GlobalValue的子类），它是一个24 int的数组，内存占用[24 x i32]，那么GlobalVariable是指向该数组的指针。虽然此数组的第一个元素的地址和GlobalVariable的值相同，但它们具有不同的类型(一个是数组指针,一个是数组元素类型指针)。 GlobalVariable的类型是[24 x i32]。第一个元素的类型是i32。因此，访问全局值需要先使用GetElementPtrInst取消引用指针，然后才能访问其元素。 “[LLVM语言参考手册](http://llvm.org/docs/LangRef.html#globalvars)”对此进行了解释。
 
 #### Important Public Members of the GlobalValue class
 
@@ -2319,7 +2321,7 @@ Global values（[GlobalVariables](http://llvm.org/docs/ProgrammersManual.html#gl
 
   `void setInternalLinkage(bool HasInternalLinkage)`
 
-  这些方法操纵GlobalValue的链接特征。
+  这些方法操作GlobalValue的链接性质。
 
 - `Module *getParent()`
 
@@ -2335,7 +2337,7 @@ doxygen info: [Function Class](http://llvm.org/doxygen/classllvm_1_1Function.htm
 
 Superclasses: [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue), [Constant](http://llvm.org/docs/ProgrammersManual.html#constant), [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
-Function类表示LLVM中的单个执行过程。 它实际上是LLVM层次结构中更复杂的类之一，因为它必须跟踪大量数据。 Function类跟踪[BasicBlocks](http://llvm.org/docs/ProgrammersManual.html#basicblock)列表，正式[Arguments](http://llvm.org/docs/ProgrammersManual.html#argument)列表和[SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable)。
+Function类表示LLVM中的单个执行过程。 它实际上是LLVM层次结构中更复杂的类之一，因为它必须跟踪大量数据。 **Function类跟踪[BasicBlocks](http://llvm.org/docs/ProgrammersManual.html#basicblock)列表，正式[Arguments](http://llvm.org/docs/ProgrammersManual.html#argument)列表和[SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable)**。
 
  [BasicBlock](http://llvm.org/docs/ProgrammersManual.html#basicblock)s列表是Function对象中最常用的部分。该列表强制函数中块的隐式排序，其表示代码将如何在后端布局。此外，第一个BasicBlock是函数的隐式入口节点。 LLVM中明确表示，分支作为此初始块是不合法的。没有隐式退出节点，实际上单个Function可能有多个退出节点。如果BasicBlock列表为空，则表示Function实际上是一个函数声明：函数的函数体尚未链接。
 
@@ -2343,45 +2345,45 @@ Function类表示LLVM中的单个执行过程。 它实际上是LLVM层次结构
 
  [SymbolTable](http://llvm.org/docs/ProgrammersManual.html#symboltable) 是一种非常少使用的LLVM功能，仅在您必须按名称查找值时使用。除此之外，SymbolTable在内部用于确保函数体中的Instructions，BasicBlocks或Arguments的名称之间没有冲突。
 
-请注意，Function可以是 [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)，可以是[Constant](http://llvm.org/docs/ProgrammersManual.html#constant).。函数的值是它的地址（链接后），保证是常量。
+请注意，Function可以是 [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)，可以是[Constant](http://llvm.org/docs/ProgrammersManual.html#constant).。函数的value是它链接后的地址,以保证是常量。
 
 #### Important Public Members of the Function
 
 - `Function(const FunctionType *Ty, LinkageTypes Linkage, const std::string &N = "", Module*Parent = 0)`
 
-  当您需要创建新函数以添加程序时使用的构造函数。 构造函数必须指定要创建的函数的类型以及函数应具有的链接类型。 FunctionType参数指定函数的形式参数和返回值。 相同的 [FunctionType](http://llvm.org/docs/ProgrammersManual.html#functiontype)值可用于创建多个函数。 Parent参数指定定义函数的Module。 如果提供了此参数，则该函数将自动插入到该模块的函数列表中。
+  当您需要创建新函数以添加程序时使用的构造函数。 构造函数必须指定要创建的函数的类型以及函数应具有的链接类型。 FunctionType参数指定函数的形式参数和返回值。 相同的 [FunctionType](http://llvm.org/docs/ProgrammersManual.html#functiontype)值可用于创建多个函数(因为FunctionType是一个常量)。 Parent参数指定定义函数的Module。 如果提供了此参数，则该函数将自动插入到该模块的函数列表中。
 
 - `bool isDeclaration()`
 
-  返回函数是否已定义主体。 如果函数是“外部引用(external)”，则它没有函数体，因此必须通过链接到另一个定义此函数的转换单元中来解析。
+  返回函数是否已定义函数体(body)。实际就是判断BasicBlock列表是否为空,为空返回true, 如果函数是“外部引用(external)”，则它没有函数体，因此必须通过链接到另一个定义此函数的转换单元中来解析。
 
-- `Function::iterator` - Typedef for basic block list iterator
+- `Function::iterator` - basicblock列表的迭代器
 
-  `Function::const_iterator` - Typedef for const_iterator.
+  `Function::const_iterator` - 常量迭代器
 
   `begin()`, `end()`, `size()`, `empty()`
 
-  这些转发方法可以轻松访问Function对象的 [BasicBlock](http://llvm.org/docs/ProgrammersManual.html#basicblock)列表的内容。 
+  以上这些方法可以轻松访问Function对象中 [BasicBlock](http://llvm.org/docs/ProgrammersManual.html#basicblock)列表的内容。 
 
 - `Function::BasicBlockListType &getBasicBlockList()`
 
-  返回BasicBlocks列表。 当您需要更新列表或执行没有转发方法的复杂操作时，必须使用此选项。
+  返回BasicBlocks列表。 当您需要更新列表或执行复杂操作时，必须使用此选项。
 
-- `Function::arg_iterator` - 参数列表迭代器的Typedef
+- `Function::arg_iterator` - 参数列表的迭代器
 
-  `Function::const_arg_iterator` - const_iterator的Typedef。
+  `Function::const_arg_iterator` - 常量迭代器
 
   `arg_begin()`, `arg_end()`, `arg_size()`, `arg_empty()`
 
-  这些转发方法可以轻松访问Function对象的[Argument](http://llvm.org/docs/ProgrammersManual.html#argument)列表的内容。
+  以上这些方法可以轻松访问Function对象的[Argument](http://llvm.org/docs/ProgrammersManual.html#argument)列表的内容。
 
 - `Function::ArgumentListType &getArgumentList()`
 
-  返回Argument列表。 当您需要更新列表或执行没有转发方法的复杂操作时，必须使用此选项。
+  返回Argument列表。 当您需要更新列表或执行复杂操作时，必须使用此选项。
 
 - `BasicBlock &getEntryBlock()`
 
-  返回函数的条目BasicBlock。 因为函数的入口块始终是第一个块，所以它返回Function的第一个块。
+  返回函数的入口块。 因为函数的入口块始终是第一个块，所以它返回Function的第一个块。
 
 - `Type *getReturnType()`
 
@@ -2403,7 +2405,7 @@ doxygen info: [GlobalVariable Class](http://llvm.org/doxygen/classllvm_1_1Global
 
 Superclasses: [GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue), [Constant](http://llvm.org/docs/ProgrammersManual.html#constant), [User](http://llvm.org/docs/ProgrammersManual.html#user), [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
-全局变量用（意外惊喜）GlobalVariable类表示。 与函数一样，GlobalVariables也是[GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)的子类，因此总是由它们的地址引用（全局值必须存在于内存中，因此它们的“名称”指的是它们的常量地址）。 有关详细信息，请参阅[GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)。 全局变量可能具有初始值（必须是 [Constant](http://llvm.org/docs/ProgrammersManual.html#constant)），如果它们具有初始化程序，则它们本身可以标记为“常量”（表示它们的内容在运行时永远不会更改）。
+全局变量用GlobalVariable类表示。 与函数一样，GlobalVariables也是[GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)的子类，因此总是由它们的地址引用（全局值必须存在于内存中，因此它们的“name”指的是它们的常量地址）。 有关详细信息，请参阅[GlobalValue](http://llvm.org/docs/ProgrammersManual.html#globalvalue)。 全局变量可能具有初始值（必须是 [Constant](http://llvm.org/docs/ProgrammersManual.html#constant)），如果它们具有初始化程序，则它们本身可以标记为“常量”（表示它们的内容在运行时永远不会更改）。
 
 #### Important Public Members of the GlobalVariable class
 
@@ -2433,9 +2435,9 @@ doxygen info: [BasicBlock Class](http://llvm.org/doxygen/classllvm_1_1BasicBlock
 
 Superclass: [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
- 此类表示代码的单个条目单个退出部分，通常称为编译器社区的基本块。 BasicBlock类维护一个 [Instruction](http://llvm.org/docs/ProgrammersManual.html#instruction)列表，它们构成块的主体。 匹配语言定义，这个指令列表的最后一个元素总是一个终结符指令（ [TerminatorInst](http://llvm.org/docs/ProgrammersManual.html#terminatorinst) 类的子类）。
+ 此类表示代码的单个入口单个退出部分，通常称为编译器社区的基本块。 BasicBlock类维护一个 [Instruction](http://llvm.org/docs/ProgrammersManual.html#instruction)列表，它们构成block的主体。 配合语言定义，这个指令列表的最后一个元素总是一个终结符指令（ [TerminatorInst](http://llvm.org/docs/ProgrammersManual.html#terminatorinst) 类的子类）。
 
-除了跟踪组成块的指令列表之外，BasicBlock类还跟踪它嵌入的 [Function](http://llvm.org/docs/ProgrammersManual.html#c-function)。
+**除了跟踪组成块的指令列表之外，BasicBlock类还跟踪它嵌入的 [Function](http://llvm.org/docs/ProgrammersManual.html#c-function)**。
 
 请注意，BasicBlocks本身就是 [Value](http://llvm.org/docs/ProgrammersManual.html#value)s，因为它们被分支等指令引用，并且可以进入切换表。 BasicBlocks有类型标签。
 
@@ -2443,15 +2445,15 @@ Superclass: [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
 - `BasicBlock(const std::string &Name = "", Function *Parent = 0)`
 
-  BasicBlock构造函数用于创建插入函数的新基本块。 构造函数可选地为新块命名，并使用[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)将其插入。 如果指定了Parent参数，则新的BasicBlock会自动插入到指定Function的末尾，如果未指定，则必须手动将BasicBlock插入到Function中。
+  BasicBlock构造函数用于创建插入函数的新基本块。 构造函数可选地为新块命名，并指定[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)将其插入。 如果指定了Parent参数，则新的BasicBlock会自动插入到指定Function的末尾，如果未指定，则必须手动将BasicBlock插入到Function中。
 
-- `BasicBlock::iterator` - Typedef用于指令列表迭代器
+- `BasicBlock::iterator` - 指令列表迭代器
 
-  `BasicBlock::const_iterator` - Typedef for const_iterator.
+  `BasicBlock::const_iterator` -  常量迭代器.
 
-  `begin()`, `end()`, `front()`, `back()`, `size()`, `empty()` STL-用于访问指令列表的样式函数。
+  `begin()`, `end()`, `front()`, `back()`, `size()`, `empty()` STL-用于访问指令列表的形式函数。
 
-  这些方法和typedef是转发函数，它们具有与相同名称的标准库方法相同的语义。 这些方法以易于操作的方式公开基本块的基础指令列表。 要获得完整的容器操作（包括更新列表的操作），必须使用getInstList（）方法。
+  上面这些函数，它们具有与相同名称的标准库方法相同的语义。 这些方法以易于操作的方式暴露基本块的基础指令列表。 要获得完整的容器操作（包括更新列表的操作），必须使用getInstList（）方法。
 
 - `BasicBlock::InstListType &getInstList()`
 
@@ -2459,7 +2461,7 @@ Superclass: [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
 - `Function *getParent()`
 
-  返回指向嵌入块的函数的指针，如果无家可归，则返回空指针。
+  返回指向嵌入块的函数的指针，如果无处可依(homeless)，则返回空指针。
 
 - `TerminatorInst *getTerminator()`
 
@@ -2467,4 +2469,4 @@ Superclass: [Value](http://llvm.org/docs/ProgrammersManual.html#value)
 
 ### The Argument class
 
-Value的这个子类定义了函数的传入形式参数的接口。 函数维护其正式参数的列表。 参数具有指向父函数的指针。
+Value的这个子类定义了函数的传入形式参数的接口。 函数维护其正式参数的列表。 参数有一个指针指向父(parent)函数。
