@@ -792,7 +792,7 @@ Value *LogErrorV(const char *Str) {
 
 静态变量将在代码生成期间使用。 `TheContext`是一个不透明的对象，拥有许多核心的LLVM数据结构，例如类型和常量值表。我们不需要详细了解它，我们只需要一个实例就可以传递到需要它的API中。
 
-`Builder`对象是一个辅助对象，可以轻松生成LLVM指令。 `IRBuilder`类模板的实例跟踪插入指令的当前位置，并具有创建新指令的方法。
+`Builder`对象是一个辅助对象，可以轻松生成LLVM指令。 `IRBuilder`类模板的实例 会跟踪插入指令的当前位置，并具有创建新指令的方法。
 
 `TheModule`是一个包含函数和全局变量的LLVM结构。在许多方面，它是LLVM IR用于包含代码的顶层结构。它将存储我们生成的所有IR，这就是`codegen`方法返回原始值*而不是`unique_ptr <Value>`的原因。
 

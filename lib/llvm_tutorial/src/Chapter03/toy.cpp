@@ -157,6 +157,8 @@ namespace {
         Value *codegen() override;
     };
 
+    //表达式解析可能返回以上四种类型的解析节点,所以这四类节点都会在codegen阶段返回value
+
 /// PrototypeAST - This class represents the "prototype" for a function,
 /// which captures its name, and its argument names (thus implicitly the number
 /// of arguments the function takes).
@@ -469,7 +471,7 @@ Value *CallExprAST::codegen() {
         if (!ArgsV.back())
             return nullptr;
     }
-
+    //创建一个调用指令.疑惑:所有指令结果都是一个value?
     return Builder.CreateCall(CalleeF, ArgsV, "calltmp");
 }
 
@@ -508,6 +510,7 @@ Function *FunctionAST::codegen() {
 
     // Create a new basic block to start insertion into.
     BasicBlock *BB = BasicBlock::Create(TheContext, "entry", TheFunction);
+    //后面生成的指令插入到当前BB块中
     Builder.SetInsertPoint(BB);
 
     // Record the function arguments in the NamedValues map.
