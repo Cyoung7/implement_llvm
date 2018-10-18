@@ -18,10 +18,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/doc/Kaleidoscope Tutorial.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/Kaleidoscope Tutorial.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp" afterDir="false" />
-    </list>
+    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -57,8 +54,8 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="308">
-              <caret line="159" column="53" selection-start-line="159" selection-start-column="53" selection-end-line="159" selection-end-column="53" />
+            <state relative-caret-position="254">
+              <caret line="513" column="26" selection-start-line="513" selection-start-column="12" selection-end-line="513" selection-end-column="26" />
               <folding>
                 <element signature="e#40#69#0" expanded="true" />
               </folding>
@@ -358,12 +355,12 @@
       <workItem from="1538102358409" duration="20008000" />
       <workItem from="1538277160835" duration="3593000" />
       <workItem from="1539059894010" duration="25113000" />
-      <workItem from="1539245461234" duration="16083000" />
+      <workItem from="1539245461234" duration="16804000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="187987000" />
+    <option name="totallyTimeSpent" value="188708000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="458" y="24" width="1400" height="999" extended-state="0" />
@@ -832,8 +829,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="308">
-          <caret line="159" column="53" selection-start-line="159" selection-start-column="53" selection-end-line="159" selection-end-column="53" />
+        <state relative-caret-position="254">
+          <caret line="513" column="26" selection-start-line="513" selection-start-column="12" selection-end-line="513" selection-end-column="26" />
           <folding>
             <element signature="e#40#69#0" expanded="true" />
           </folding>

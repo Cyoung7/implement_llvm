@@ -1428,19 +1428,21 @@ source /path/to/llvm/src/utils/gdb-scripts/prettyprinters.py
 
 ## Helpful Hints for Common Operations
 
-本节介绍如何执行一些非常简单的LLVM代码转换。 这是为了给出使用的常用习语的示例，显示LLVM转换的实际操作方面。
+本节介绍如何执行一些非常简单的LLVM代码转换(transformations)。 这是为了给出使用的常用习语的示例，显示LLVM转换的实际操作。
 
-因为这是一个“操作方法”部分，所以您还应该阅读将要使用的主要类。 [核心LLVM类层次结构参考手册](http://llvm.org/docs/ProgrammersManual.html#coreclasses)包含您应了解的主要类的详细信息和说明。
+因为这是一个“操作方法”部分，所以您还应该阅读将要使用的主要类。  [Core LLVM Class Hierarchy Reference](http://llvm.org/docs/ProgrammersManual.html#coreclasses)包含您应了解的主要类的详细信息和说明。
 
 ### Basic Inspection and Traversal Routines
 
-LLVM编译器基础结构具有许多可以遍历(traversed)的不同数据结构。 遵循C ++标准模板库的示例，用于遍历这些各种数据结构的技术基本相同。 对于可枚举的值序列，`XXXbegin（）`函数（或方法）返回一个迭代器指向序列的开头，`XXXend（）`函数返回一个迭代器，指向一个超过序列的最后一个有效元素的迭代器，并且有一些 两种操作之间通用的`XXXiterator`数据类型。
+*基本检查和遍历事务*
+
+LLVM编译器基础结构具有许多可以遍历(traversed)的不同数据结构。 遵循C++标准模板库的示例，用于遍历这些各种数据结构的技术基本相同。 对于可枚举的值序列，`XXXbegin()`函数（或方法）返回一个迭代器指向序列的开头，`XXXend（）`函数返回一个迭代器，指向一个超过序列的最后一个有效元素的迭代器，并且有一些 两种操作之间通用的`XXXiterator`数据类型。
 
 因为迭代模式在程序表示的许多不同方面是通用的，所以可以在它们之上使用标准模板库算法，并且更容易记住如何迭代。 首先，我们展示了一些需要遍历的数据结构的常见示例。 其他数据结构以非常类似的方式遍历。
 
 #### Iterating over the BasicBlock in a Function
 
-通长你拥有一个`Function`实例，你想通过某些方式来转换他们; 特别是，你想操纵它的BasicBlocks。 为此，您需要迭代构成函数的所有BasicBlock。 以下是打印BasicBlock名称及其包含的说明数的示例：
+通常拥有一个`Function`实例，你想通过某些方式来转换他们; 特别是，你想操纵它的BasicBlocks。 为此，您需要迭代构成函数的所有BasicBlock。 以下是打印BasicBlock名称及其包含的说明数的示例：
 
 ```c++
 Function &Func = ...
@@ -1467,7 +1469,7 @@ for (Instruction &I : BB)
 
 #### Iterating over the Instruction in a Function
 
-迭代函数中的指令如果你发现通常先迭代`Function`的`BasicBlocks`然后是迭代`BasicBlock`的`InstIterator`，那么应该使用`InstIterator`。 您需要包含`llvm / IR / InstIterator.h`（[doxygen](http://llvm.org/doxygen/InstIterator_8h.html)），然后在代码中显式实例化`InstIterators`。 这是一个小例子，展示了如何将函数中的所有指令转储到标准错误流：
+迭代函数中的指令如果你发现通常先迭代`Function`的`BasicBlocks`然后是迭代`BasicBlock`的`InstIterator`，那么应该使用`InstIterator`。 您需要包含`llvm/IR/InstIterator.h`（[doxygen](http://llvm.org/doxygen/InstIterator_8h.html)），然后在代码中显式实例化`InstIterators`。 这是一个小例子，展示了如何将函数中的所有指令转储到标准错误流：
 
 ```c++
 #include "llvm/IR/InstIterator.h"
@@ -1487,7 +1489,7 @@ for (inst_iterator I = inst_begin(F), E = inst_end(F); I != E; ++I)
   worklist.insert(&*I);
 ```
 
-STL集工作列表现在将包含F指向的函数中的所有指令。
+STL set 工作列表现在将包含F指向的函数中的所有指令。
 
 #### Turning an iterator into a class pointer (and vice-versa)
 
@@ -1499,7 +1501,7 @@ Instruction* pinst = &*i; // Grab pointer to instruction reference
 const Instruction& inst = *j;
 ```
 
-但是，您将在LLVM框架中使用的迭代器是特殊的：它们将在需要时自动转换为ptr-to-instance类型。 您可以简单地将迭代器分配给正确的指针类型，而不是取消引用迭代器然后获取结果的地址，并且在分配后得到取消引用和地址操作（在幕后，这是一个结果 超载铸造机制）。 因此，最后一个例子的第二行，
+但是，您将在LLVM框架中使用的迭代器是特殊的：它们将在需要时自动转换为ptr-to-instance类型。 您可以简单地将迭代器分配给正确的指针类型，而不是取消引用迭代器然后获取结果的地址，并且在分配后得到取消引用和地址操作（在幕后，这是一个负载转换机制(overloading casting mechanisms)的结果）。 因此，最后一个例子的第二行，
 
 ```c++
 Instruction *pinst = &*i;
@@ -1511,7 +1513,7 @@ Instruction *pinst = &*i;
 Instruction *pinst = i;
 ```
 
-也可以将类指针转换为相应的迭代器，这是一个恒定时间操作（非常有效）。 以下代码段说明了LLVM迭代器提供的转换构造函数的使用。 通过使用这些，您可以显式地获取某些东西的迭代器，而无需通过某种结构的迭代实际获取它：
+也可以将类指针转换为相应的迭代器，这是一个恒定时间操作（非常有效）。 以下代码段说明了LLVM迭代器提供转换构造函数的使用。 通过使用这些，您可以显式地获取某些东西的迭代器，而无需通过某种结构的迭代实际获取它：
 
 ```c++
 void printNextInstruction(Instruction* inst) {
@@ -1521,17 +1523,17 @@ void printNextInstruction(Instruction* inst) {
 }
 ```
 
-不幸的是，这些隐含的转换需要付出代价; 它们可以防止这些迭代器符合标准迭代器约定，从而可以与标准算法和容器一起使用。 例如，它们阻止以下代码（其中B是BasicBlock）来编译：
+不幸的是，这些隐含的转换需要付出代价; 它们可以免除迭代器必须符合标准迭代器约定，从而可以与标准算法和容器一起使用。 例如，它们允许以下代码（其中B是BasicBlock）来编译：
 
 ```c++
 llvm::SmallVector<llvm::Instruction *, 16>(B->begin(), B->end());
 ```
 
-因此，有些日子可能会删除这些隐式转换，并且operator *已更改为返回指针而不是引用。
+因此，有些时候可能会删除这些隐式转换，并且operator*已更改为返回指针而不是引用。
 
 #### Finding call sites: a slightly more complex example
 
-查找调用站点：稍微复杂一点的例子，你正在编写一个FunctionPass，并希望计算整个模块中的所有位置（即，跨越每个函数），其中某个函数（即某些函数*）已经在 范围。 正如您稍后将要了解的那样，您可能希望使用InstVisitor以更直接的方式完成此任务，但是此示例将允许我们探索如果您没有InstVisitor，您将如何执行此操作。 在伪代码中，这是我们想要做的：
+你正在编写一个FunctionPass，并希望计算整个module中的所有位置（即，跨越每个函数），其中某个函数（即某些Function*）已经在范围内。 正如您稍后将要了解的那样，您可能希望使用InstVisitor以更直接的方式完成此任务，但是此示例将允许我们探索如果您没有InstVisitor，您将如何执行此操作。 在伪代码中，这是我们想要做的：
 
 ```
 initialize callCounter to zero
@@ -1572,7 +1574,7 @@ class OurFunctionPass : public FunctionPass {
 
 #### Treating calls and invokes the same way
 
-您可能已经注意到前面的示例有点过于简单，因为它没有处理“调用”指令生成的调用站点。 在这种情况下，在其他情况下，您可能会发现要以相同的方式处理CallInsts和InvokeInsts，即使它们最具体的公共基类是Instruction，其中包含许多不太密切相关的事物。 对于这些情况，LLVM提供了一个名为CallSite（doxygen）的方便的包装类。它本质上是一个包含指令指针的包装器，其中一些方法提供了CallInsts和InvokeInsts的通用功能。
+您可能已经注意到前面的示例有点过于简单，因为它没有处理“调用”指令生成的调用站点(sites)。 在这种情况下和其他情况下，您可能会发现要以相同的方式处理CallInsts和InvokeInsts，即使它们最具体的公共基类是Instruction，其中包含许多不太密切相关的事物。 对于这些情况，LLVM提供了一个名为CallSite（[doxygen](http://llvm.org/doxygen/classllvm_1_1CallSite.html)）的方便的包装类。它本质上是一个包含指令指针的包装器，其中一些方法提供了CallInsts和InvokeInsts的通用功能。
 
 此类具有“值语义”：它应该通过值传递，而不是通过引用传递，并且不应使用operator new或operator delete动态分配或取消分配。 它具有高效的可复制性，可分配性和可构造性，其成本与裸指针的成本相当。 如果你看它的定义，它只有一个指针成员。
 
