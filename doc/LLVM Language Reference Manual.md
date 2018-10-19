@@ -1117,24 +1117,583 @@ R返回由它读取的一系列字节组成的值。这意味着值中的某些�
 `monotonic`:除了无序保证之外，每个地址的单调操作还有一个单一的总修改顺序。所有修改订单必须与之前发生的订单兼容。无法保证修改订单可以合并为整个程序的全局总订单（这通常是不可能的）。读取原子读取 - 修改 - 写入操作（[cmpxchg](http://llvm.org/docs/LangRef.html#i-cmpxchg) 和 [atomicrmw](http://llvm.org/docs/LangRef.html#i-atomicrmw)）会在写入值之前立即读取修改顺序中的值。如果在同一地址的另一个原子读取之前发生一次原子读取，则后一次读取必须在地址的修改顺序中看到相同的值或更晚的值。这不允许对同一地址上的单调（或更强）操作进行重新排序。如果地址是由一个线程单调编写的，而其他线程单调地反复读取该地址，则其他线程最终必须看到写入。这对应于C++0x/C1x memory_order_relaxed。
 `acquire`:除了单调的保证之外，可以通过释放操作形成与边缘同步的边缘。这是为了模拟C++的memory_order_acquire。
 `release`:除了单调的保证之外，如果此操作写入随后由获取操作读取的值，则它与该操作同步。 （这不是完整的描述;请参阅发布序列的C++ 0x定义。）这对应于C++0x/C1x memory_order_release。
-`acq_rel`（获得+发布）:在其地址上充当获取和释放操作。这对应于C ++ 0x / C1x memory_order_acq_rel。
-`seq_cst`（顺序一致）
-除了acq_rel的保证（获取只读取的操作，仅针对仅写入的操作的释放），所有地址上的所有顺序一致操作都有一个全局总命令，这与之前发生的部分一致订单以及所有受影响地址的修改订单。每个顺序一致的读取都会看到此全局顺序中最后一次写入同一地址。这对应于C ++ 0x / C1x memory_order_seq_cst和Java volatile。
+`acq_rel`:（获得+发布）在其地址上充当获取和释放操作。这对应于C ++ 0x / C1x memory_order_acq_rel。
+`seq_cst`:（顺序一致）:除了acq_rel的保证（获取只读取的操作，仅针对仅写入的操作的释放），所有地址上的所有顺序一致操作都有一个全局总命令，这与之前发生的部分一致订单以及所有受影响地址的修改订单。每个顺序一致的读取都会看到此全局顺序中最后一次写入同一地址。这对应于C++0x/C1x memory_order_seq_cst和Java volatile。
+
 如果原子操作标记为syncscope（“singlethread”），则它仅与同一线程中运行的其他操作（例如，信号处理程序）中的seq_cst总排序同步并且仅参与其中。
 
-如果原子操作被标记为syncscope（“<target-scope>”），其中<target-scope>是目标特定的同步范围，那么它与目标相关，如果它与其他操作的seq_cst总排序同步并参与其中。
+如果原子操作被标记为syncscope（`“<target-scope>”`），其中`<target-scope>`是目标特定的同步范围，那么它与目标相关，如果它与其他操作的seq_cst总排序同步并参与其中。
 
-否则，未标记为syncscope（“singlethread”）或syncscope（“<target-scope>”）的原子操作与未标记为syncscope（“singlethread”）或syncscope的其他操作的seq_cst总排序同步并参与其中（ “<目标范围>”）。
+否则，未标记为syncscope（“singlethread”）或syncscope（`“<target-scope>”`）的原子操作与未标记为syncscope（“singlethread”）或syncscope的其他操作的seq_cst总排序同步并参与其中（ “<目标范围>”）。
 
+### Floating-Point Environment
 
+默认的LLVM浮点环境假定浮点指令没有副作用。 结果假设为舍入到最接近的舍入模式。 在此环境中不保留浮点异常状态。 因此，不会尝试创建或保留无效操作（SNaN）或除零异常。
 
+这种无异常假设的好处是可以自由地推测浮点运算，而不需要对浮点模型进行任何其他快速数学松弛。
 
+需要与此不同的行为的代码应使用[Constrained Floating-Point Intrinsics](http://llvm.org/docs/LangRef.html#constrainedfp).。
+
+### Fast-Math Flags
+
+LLVM IR浮点运算（fadd，fsub，fmul，fdiv，frem，fcmp）和调用可以使用以下标志来启用其他不安全的浮点转换。
+
+`nnan`:无NaN - 允许优化假设参数和结果不是NaN。如果参数是nan，或者结果是nan，则会产生毒性值。
+`ninf`:No Infs - 允许优化假设参数和结果不是+/- Inf。如果参数为+/- Inf，或者结果为+/- Inf，则会产生毒性值。
+`nsz`:No Signed Zeros - 允许优化将零参数或结果的符号视为无关紧要。
+`arcp`:允许Reciprocal - 允许优化使用参数的倒数而不是执行除法。
+`contract`:允许浮点收缩（例如融合乘法，然后加入融合乘法和加法）。
+`afn`:近似函数 - 允许替换函数的近似计算（sin，log，sqrt等）。请参阅适用于LLVM的内部数学函数的位置的浮点内部定义。
+`reassoc`:允许浮点指令的重新关联转换。这可能会显着改变浮点数的结果。
+`fast`:这个标志暗示了所有其他标志。
+
+### Use-list Order Directives
+
+Use-list指令对每个use-list的内存顺序进行编码，允许重新创建订单。 <order-indexes>是以逗号分隔的索引列表，这些索引分配给引用值的用途。 引用值的use-list会立即按这些索引排序。
+
+Use-list指令可能出现在函数作用域或全局作用域中。 它们不是指令，对IR的语义没有影响。 当它们处于功能范围时，它们必须出现在最终基本块的终结符之后。
+
+如果基本块的地址是通过blockaddress（）表达式获取的，则uselistorder_bb可用于从其函数范围之外对其使用列表重新排序。
+
+句法：
+
+```
+uselistorder <ty> <value>, { <order-indexes> }
+uselistorder_bb @function, %block { <order-indexes> }
+```
+
+举例:
+
+```
+define void @foo(i32 %arg1, i32 %arg2) {
+entry:
+  ; ... instructions ...
+bb:
+  ; ... instructions ...
+
+  ; At function scope.
+  uselistorder i32 %arg1, { 1, 0, 2 }
+  uselistorder label %bb, { 1, 0 }
+}
+
+; At global scope.
+uselistorder i32* @global, { 1, 2, 0 }
+uselistorder i32 7, { 1, 0 }
+uselistorder i32 (i32) @bar, { 1, 0 }
+uselistorder_bb @foo, %bb, { 5, 1, 3, 2, 0, 4 }
+```
+
+### Source Filename
+
+源文件名字符串设置为原始模块标识符，例如，当从源代码通过clang前端编译时，它将是已编译源文件的名称。 然后通过IR和bitcode保存。
+
+这对于为概要文件数据中使用的本地函数生成一致的唯一全局标识符是必要的，该标识符将源文件名添加到本地函数名。
+
+源文件名的语法很简单：
+
+```
+source_filename = "/path/to/source.c"
+```
 
 ## Type System
 
+LLVM类型系统是中间表示的最重要特征之一。 通过键入可以直接对中间表示执行多个优化，而无需在转换之前对侧进行额外的分析。 强类型系统使得更容易读取生成的代码并实现在正常的三个地址代码表示上不可行的新分析和转换。
+
+### Void Type
+
+概述：void类型不代表任何值，也没有大小。
+
+句法：
+
+```
+void
+```
+
+### Function Type
+
+概述：
+
+他的函数类型可以被认为是函数签名。 它由返回类型和形式参数类型列表组成。 函数类型的返回类型是void类型或第一类类型 -  [label](http://llvm.org/docs/LangRef.html#t-label) 和 [metadata](http://llvm.org/docs/LangRef.html#t-metadata)类型除外。
+
+句法：
+
+```
+<returntype> (<parameter list>)
+```
+
+...其中`'<parameter list>'`是以逗号分隔的类型说明符列表。 可选地，参数列表可以包括类型...，其指示该函数采用可变数量的自变量。 可变参数函数可以使用处理内部函数的可变参数( [variable argument handling intrinsic](http://llvm.org/docs/LangRef.html#int-varargs) )来访问它们的参数。 `'<returntype>'`是除 [label](http://llvm.org/docs/LangRef.html#t-label) 和 [metadata](http://llvm.org/docs/LangRef.html#t-metadata)之外的任何类型。
+
+| Examples:             |                                                              |
+| --------------------- | ------------------------------------------------------------ |
+| `i32 (i32)`           | 函数输入 `i32`, 返回 `i32`                                   |
+| `float (i16, i32*) *` | 输入为 `i16` 和  `i32`的指针[pointer](http://llvm.org/docs/LangRef.html#t-pointer), 返回 `float`的函数指针[Pointer](http://llvm.org/docs/LangRef.html#t-pointer). |
+| `i32 (i8*, ...)`      | 可变参数函数, 至少有一个输入为`i8`的指针 [pointer](http://llvm.org/docs/LangRef.html#t-pointer)  (char in C), 返回一个整数, 这在LLVM里是一个显式的 `printf` . |
+| `{i32, i32}(i32)`     | 函数输入 `i32`, 返回一个结构 [structure](http://llvm.org/docs/LangRef.html#t-struct) 包含两个 `i32` values |
+
+### First Class Types
+
+[first class](http://llvm.org/docs/LangRef.html#t-firstclass) 类型可能是最重要的类型。 这些类型的值是唯一可以通过指令生成的值。
+
+#### Single Value Types
+
+从CodeGen的角度来看，这些是在寄存器中有效的类型。
+
+##### Integer Type
+
+概述：
+整数类型是一种非常简单的类型，它只是为所需的整数类型指定任意位宽。 可以指定从1位到2的23次方-1（大约8百万）的任何位宽。
+
+句法：
+
+```
+iN
+```
+
+整数占用的位数由N值指定。
+
+Examples:
+
+| `i1`       | a single-bit integer.                        |
+| ---------- | -------------------------------------------- |
+| `i32`      | a 32-bit integer.                            |
+| `i1942652` | a really big integer of over 1 million bits. |
+
+##### Floating-Point Types
+
+| Type        | Description                                     |
+| ----------- | ----------------------------------------------- |
+| `half`      | 16-bit floating-point value                     |
+| `float`     | 32-bit floating-point value                     |
+| `double`    | 64-bit floating-point value                     |
+| `fp128`     | 128-bit floating-point value (112-bit mantissa) |
+| `x86_fp80`  | 80-bit floating-point value (X87)               |
+| `ppc_fp128` | 128-bit floating-point value (two 64-bits)      |
+
+##### X86_mmx Type
+
+概述：
+x86_mmx类型表示x86计算机上MMX寄存器中保存的值。 允许的操作非常有限：参数和返回值，加载和存储以及bitcast。 用户指定的MMX指令表示为带有参数和/或此类结果的内部或asm调用。 没有这种类型的数组，向量或常量。
+
+句法：
+
+```
+x86_mmx
+```
+
+##### Pointer Type
+
+概述：
+指针类型用于指定内存位置。 指针通常用于引用内存中的对象。
+
+指针类型可以具有可选的地址空间属性，该属性定义指向对象所在的编号地址空间。 默认地址空间为数字零。 非零地址空间的语义是特定于目标的。
+
+请注意，LLVM不允许指向void（void *）的指针，也不允许指向标签的指针（label *）。 请改用i8 *。
+
+句法：
+
+```
+<type> *
+```
+
+| Examples: |      |
+| --------- | ---- |
+| `[4 x i32]*`        | A [pointer](http://llvm.org/docs/LangRef.html#t-pointer) to [array](http://llvm.org/docs/LangRef.html#t-array) of four `i32` values. |
+| `i32 (i32*) *`      | A [pointer](http://llvm.org/docs/LangRef.html#t-pointer) to a [function](http://llvm.org/docs/LangRef.html#t-function) that takes an `i32*`, returning an `i32`. |
+| `i32 addrspace(5)*` | A [pointer](http://llvm.org/docs/LangRef.html#t-pointer) to an `i32` value that resides in address space #5. |
+
+##### Vector Type
+
+概述：
+向量类型是表示元素向量的简单派生类型。 当使用单个指令（SIMD）并行操作多个基元数据时，使用矢量类型。 向量类型需要大小（元素数量）和基础原始数据类型。 矢量类型被认为是[first class](http://llvm.org/docs/LangRef.html#t-firstclass)。
+
+句法：
+
+```
+< <# elements> x <elementtype> >
+```
+
+元素数是一个大于0的常数整数值; elementtype可以是任何整数，浮点或指针类型。 不允许使用大小为零的向量。
+
+| Examples: |      |
+| --------- | ---- |
+| `<4 x i32>`   | Vector of 4 32-bit integer values.             |
+| `<8 x float>` | Vector of 8 32-bit floating-point values.      |
+| `<2 x i64>`   | Vector of 2 64-bit integer values.             |
+| `<4 x i64*>`  | Vector of 4 pointers to 64-bit integer values. |
+
+#### Label Type
+
+概述：
+标签类型代表代码标签。
+
+句法：
+
+```
+label
+```
+
+#### Token Type
+
+概述：
+当值与指令相关联时使用令牌类型，但是值的所有使用都不得试图内省或模糊它。 因此，具有 [phi](http://llvm.org/docs/LangRef.html#i-phi) 或 [select](http://llvm.org/docs/LangRef.html#i-select)类型令牌是不合适的。
+
+句法：
+
+```
+token
+```
+
+#### Metadata Type
+
+概述：
+元数据类型表示嵌入的元数据。 除了函数参数之外，不能从元数据创建派生类型。
+
+句法：
+
+```
+metadata
+```
+
+#### Aggregate Types
+
+聚合类型是可包含多个成员类型的派生类型的子集。  [Arrays](http://llvm.org/docs/LangRef.html#t-array) and [structs](http://llvm.org/docs/LangRef.html#t-struct)是聚合类型。 [Vectors](http://llvm.org/docs/LangRef.html#t-vector)不被视为聚合类型。
+
+##### Array Type
+
+概述：
+数组类型是一种非常简单的派生类型，它在内存中按顺序排列元素。 数组类型需要大小（元素数）和基础数据类型。
+
+句法：
+
+```
+[<# elements> x <elementtype>]
+```
+
+元素的数量是一个常数整数值; elementtype可以是任何具有大小的类型。
+
+| Examples: |      |
+| --------- | ---- |
+| `[40 x i32]` | Array of 40 32-bit integer values. |
+| `[41 x i32]` | Array of 41 32-bit integer values. |
+| `[4 x i8]`   | Array of 4 8-bit integer values.   |
+
+以下是多维数组的一些示例： 
+
+| `[3 x [4 x i32]]`       | 3x4 array of 32-bit integer values.                    |
+| ----------------------- | ------------------------------------------------------ |
+| `[12 x [10 x float]]`   | 12x10 array of single precision floating-point values. |
+| `[2 x [3 x [4 x i16]]]` | 2x3x4 array of 16-bit integer values.                  |
+
+对静态类型隐含的数组末尾之外的索引没有限制（尽管在某些情况下索引超出了已分配对象的范围）。 这意味着可以在具有零长度数组类型的LLVM中实现单维“可变大小的数组”寻址。 例如，LLVM中“pascal样式数组”的实现可以使用类型“{i32，[0 x float]}”。
+
+##### Structure Type
+
+概述：
+结构类型用于在内存中一起表示数据成员的集合。结构的元素可以是具有大小的任何类型。
+
+通过使用'getelementptr'指令获取指向字段的指针，使用'load'和'store'访问内存中的结构。使用'extractvalue'和'insertvalue'指令访问寄存器中的结构。
+
+结构可以可选地是“打包”结构，其指示结构的对齐是一个字节，并且元素之间没有填充。在非打包的结构中，字段类型之间的填充是按模块中的DataLayout字符串的定义插入的，这需要与底层代码生成器期望的内容相匹配。
+
+结构可以是“文字”或“识别”。文本结构与其他类型（例如{i32，i32} *）内联定义，而识别的类型总是在顶层定义名称。文字类型的内容是唯一的，因为无法编写文字类型，所以它们永远不会是递归的或不透明的。已识别的类型可以是递归的，可以是不透明的，并且从不是唯一的。
+
+句法：
+
+```
+%T1 = type { <type list> }     ; Identified normal struct type
+%T2 = type <{ <type list> }>   ; Identified packed struct type
+```
+
+| Examples: |      |
+| --------- | ---- |
+| `{ i32, i32,i32 }`      | A triple of three `i32` values                               |
+| `{ float, i32(i32) * }` | A pair, where the first element is a `float` and the second element is a [pointer](http://llvm.org/docs/LangRef.html#t-pointer) to a [function](http://llvm.org/docs/LangRef.html#t-function) that takes an `i32`, returning an `i32`. |
+| `<{ i8, i32}>`          | A packed struct known to be 5 bytes in size.                 |
+
+##### Opaque Structure Types
+
+概述：
+不透明结构类型用于表示未指定主体的命名结构类型。 这对应于（例如）前向声明结构的C概念。
+
+句法：
+
+```
+%X = type opaque
+%52 = type opaque
+```
+
+| Examples: |      |
+| --------- | ---- |
+| `opaque` | An opaque type. |
+
 ## Constants
 
-## Other Values
+LLVM有几种不同的基本类型的常量。 本节将介绍它们及其语法。
+
+### Simple Constants
+
+**Boolean constants** :两个字符串'true'和'false'都是i1类型的有效常量。
+**Integer constants**: 标准整数（例如'4'）是整数( [integer](http://llvm.org/docs/LangRef.html#t-integer))类型的常量。 负数可以与整数类型一起使用。
+**Floating-point constants** : 浮点常数使用标准十进制表示法（例如123.421），指数表示法（例如1.23421e + 2）或更精确的十六进制表示法（见下文）。 汇编程序需要浮点常量的精确十进制值。 例如，汇编程序接受1.25但拒绝1.3，因为1.3是二进制的重复小数。 浮点常量必须具有浮点([floating-point](http://llvm.org/docs/LangRef.html#t-floating))类型。
+**Null pointer constants** : 标识符“null”被识别为空指针常量，并且必须是指针([pointer type](http://llvm.org/docs/LangRef.html#t-pointer))类型。
+**Token constants** : 标识符“none”被识别为空令牌常量，并且必须是令牌([token type](http://llvm.org/docs/LangRef.html#t-token))类型。
+
+常量的一个非直观表示法是浮点常量的十六进制形式。例如，形式'double 0x432ff973cafa8000'相当于（但更难以阅读）'double 4.5e + 15'。唯一需要十六进制浮点常数的时间（以及它们由反汇编程序生成的唯一时间）是必须发出浮点常量但是它不能表示为合理数量的十进制浮点数数字。例如，NaN，无穷大和其他特殊值以IEEE十六进制格式表示，因此汇编和反汇编不会导致常量中的任何位发生变化。
+
+当使用十六进制形式时，half，float和double类型的常量使用上面显示的16位数字表示（匹配IEEE754表示为double）;但是，half和float值必须分别精确地表示为IEEE 754半精度和单精度。十六进制格式总是用于long double，并且有三种形式的long double。 x86使用的80位格式表示为0xK，后跟20个十六进制数字。 PowerPC使用的128位格式（两个相邻的双精度数）由0xM后跟32个十六进制数字表示。 IEEE 128位格式由0xL后跟32个十六进制数字表示。长双打仅在与目标上的长双精度格式匹配时才有效。 IEEE 16位格式（半精度）由0xH表示，后跟4个十六进制数字。所有十六进制格式都是big-endian（左边的符号位）。
+
+没有类型x86_mmx的常量。
+
+### Complex Constants
+
+复数常量是简单常量和较小复数常量的（可能是递归的）组合。
+
+**Structure constants** : 结构常量用类似于结构类型定义的表示法表示（以逗号分隔的元素列表，用大括号（{}）包围）。 例如：“{i32 4，float 17.0，i32 * @G}”，其中“@G”被声明为“@G =外部全局i32”。 结构常量必须具有结构类型( [structure type](http://llvm.org/docs/LangRef.html#t-struct))，并且元素的数量和类型必须与该类型指定的元素匹配。
+
+**Array constants** : 数组常量用符号表示，类似于数组类型定义（以逗号分隔的元素列表，用方括号（[]）括起来）。 例如：“[i32 42，i32 11，i32 74]”。 数组常量必须具有数组类型([array type](http://llvm.org/docs/LangRef.html#t-array))，并且元素的数量和类型必须与该类型指定的元素相匹配。 作为一种特殊情况，字符数组常量也可以使用c前缀表示为双引号字符串。 例如：“c”Hello World\0A\00“”。
+
+**Vector constants** : 向量常量用符号表示，类似于向量类型定义（以逗号分隔的元素列表，由小于/大于（<>）包围）。 例如：“<i32 42，i32 11，i32 74，i32 100>”。 向量常量必须具有向量类型( [vector type](http://llvm.org/docs/LangRef.html#t-vector))，并且元素的数量和类型必须与该类型指定的元素匹配。
+
+**Zero initialization** : 字符串'zeroinitializer'可用于将任何类型的值初始化为零，包括标量和聚合类型。 这通常用于避免必须打印大的零初始化器（例如，对于大型阵列），并且总是完全等同于使用显式零初始化器。
+
+**Metadata node** : 元数据节点是没有类型的常量元组。 例如：“！{！0，！{！2，！0}，！”test“}”。 元数据可以引用常量值，例如：“！{！0，i32 0，i8 * @global，i64（i64）* @function，！”str“}”。 与其他类型的常量不同，这些常量被解释为指令流的一部分，元数据是附加其他信息（如调试信息）的地方。
+
+### Global Variable and Function Addresses
+
+ [global variables](http://llvm.org/docs/LangRef.html#globalvars) and [functions](http://llvm.org/docs/LangRef.html#functionstructure)的地址始终是隐式有效的（链接时）常量。 当使用全局标识符( [identifier for the global](http://llvm.org/docs/LangRef.html#identifiers))并且始终具有指针( [pointer](http://llvm.org/docs/LangRef.html#t-pointer))类型时，将显式引用这些常量。 例如，以下是合法的LLVM文件：
+
+```
+@X = global i32 17
+@Y = global i32 42
+@Z = global [2 x i32*] [ i32* @X, i32* @Y ]
+```
+
+### Undefined Values
+
+字符串'undef'可以在期望常量的任何地方使用，并指示值的用户可能会收到未指定的位模式。 未定义的值可以是任何类型（除'label'或'void'之外），并且可以在允许常量的任何地方使用。
+
+未定义的值很有用，因为它们向编译器指示无论使用什么值，程序都已定义良好。 这为编译器提供了更多的优化自由。 以下是一些有效的（可能令人惊讶的）转换示例（在伪IR中）：
+
+```
+  %A = add %X, undef
+  %B = sub %X, undef
+  %C = xor %X, undef
+Safe:
+  %A = undef
+  %B = undef
+  %C = undef
+```
+
+这是安全的，因为所有输出位都受undef位的影响。 根据输入位，任何输出位都可以为零或一。
+
+```
+  %A = or %X, undef
+  %B = and %X, undef
+Safe:
+  %A = -1
+  %B = 0
+Safe:
+  %A = %X  ;; By choosing undef as 0
+  %B = %X  ;; By choosing undef as -1
+Unsafe:
+  %A = undef
+  %B = undef
+```
+
+这些逻辑运算具有不总是受输入影响的位。 例如，如果％X具有零位，则无论“undef”的相应位是什么，“和”操作的输出对于该位始终为零。 因此，优化或假设'和'的结果是'undef'是不安全的。 但是，可以安全地假设'undef'的所有位都可以为0，并将'和'优化为0.同样，可以安全地假设'undef'操作数的所有位都为'或' 可以设置，允许'或'折叠为-1。
+
+```
+  %A = select undef, %X, %Y
+  %B = select undef, 42, %Y
+  %C = select %X, %Y, undef
+Safe:
+  %A = %X     (or %Y)
+  %B = 42     (or %Y)
+  %C = %Y
+Unsafe:
+  %A = undef
+  %B = undef
+  %C = undef
+```
+
+这组示例显示未定义的'select'（和条件分支）条件可以采用任何一种方式，但它们必须来自两个操作数之一。 在％A示例中，如果已知％X和％Y都具有清零的低位，则％A必须具有清零的低位。 但是，在％C示例中，允许优化器假设'undef'操作数可以与％Y相同，从而允许消除整个'select'。
+
+```
+  %A = xor undef, undef
+
+  %B = undef
+  %C = xor %B, %B
+
+  %D = undef
+  %E = icmp slt %D, 4
+  %F = icmp gte %D, 4
+
+Safe:
+  %A = undef
+  %B = undef
+  %C = undef
+  %D = undef
+  %E = undef
+  %F = undef
+```
+
+这个例子指出两个'undef'操作数不一定相同。 这对于人们来说是令人惊讶的（并且也与C语义相匹配），他们认为“X ^ X”总是为零，即使X未定义。 出于多种原因，情况并非如此，但简短的回答是'undef'“变量”可以在其“有效范围”内任意改变其值。 这是真的，因为变量实际上没有实时范围。 相反，该值在逻辑上从任意寄存器中读取，这些寄存器恰好在需要时发生，因此该值不一定随时间变化。 事实上，％A和％C需要具有相同的语义，或者核心LLVM“替换所有用途”概念不会成立。
+
+```
+  %A = sdiv undef, %X
+  %B = sdiv %X, undef
+Safe:
+  %A = 0
+b: unreachable
+```
+
+这些示例显示了未定义值和未定义行为之间的关键差异。 未定义的值（如'undef'）允许具有任意位模式。 这意味着％A操作可以恒定折叠为'0'，因为'undef'可以为零，零除以任何值为零。 但是，在第二个例子中，我们可以做出更积极的假设：因为允许undef是一个任意值，我们可以假设它可以为零。 由于除以零具有未定义的行为，因此我们可以假设操作根本不执行。 这允许我们删除除以及之后的所有代码。 因为未定义的操作“不可能发生”，优化器可以假设它发生在死代码中。
+
+```
+a:  store undef -> %X
+b:  store %X -> undef
+Safe:
+a: <deleted>
+b: unreachable
+```
+
+可以假定未定义值的存储没有任何影响; 我们可以假设该值被恰好与已经存在的位匹配的位覆盖。 但是，存储到未定义的位置可能会破坏任意内存，因此，它具有未定义的行为。
+
+### Poison Values
+
+毒性值与undef值( [undef values](http://llvm.org/docs/LangRef.html#undefvalues))类似，但它们也表示不能引起副作用的指令或常量表达式仍然检测到导致未定义行为的条件。
+
+目前无法在IR中表示毒性值;它们仅在通过 [add](http://llvm.org/docs/LangRef.html#i-add) nsw标志等操作生成时才存在。
+
+毒性价值行为是根据价值依赖来定义的：
+
+-  [phi](http://llvm.org/docs/LangRef.html#i-phi) 节点以外的值取决于它们的操作数。
+-  [phi](http://llvm.org/docs/LangRef.html#i-phi)节点依赖于与其动态前驱基本块相对应的操作数。
+- 函数参数取决于其函数的动态调用者中的相应实际参数值。
+- [Call](http://llvm.org/docs/LangRef.html#i-call)指令取决于动态将控制权传回给它们的ret指令。
+- 调用指令取决于动态将控制权返回给它们的[ret](http://llvm.org/docs/LangRef.html#i-ret) ，[resume](http://llvm.org/docs/LangRef.html#i-resume)或异常抛出调用指令。
+- 非易失性加载和存储依赖于所有引用的内存地址的最新存储，遵循IR中的顺序（包括内在函数隐含的加载和存储，例如[@llvm.memcpy](http://llvm.org/docs/LangRef.html#int-memcpy)。）
+- 具有外部可见副作用的指令取决于具有外部可见副作用的最近的前一指令，遵循IR中的顺序。 （这包括 [volatile operations](http://llvm.org/docs/LangRef.html#volatile)）
+- 如果终结符指令具有多个后继指令，则指令控制依赖于 [terminator instruction](http://llvm.org/docs/LangRef.html#terminators)，并且当控制转移到其中一个后继指令时总是执行指令，并且当控制转移到另一个后续指令时可能不执行指令。
+- 另外，如果终止符已将控制转移到不同的后继者，则指令还控制 - 取决于终结符指令，否则它依赖的指令集将是不同的。
+- 依赖是可传递的。
+
+毒性值与 [undef values](http://llvm.org/docs/LangRef.html#undefvalues)具有相同的行为，附加效果是任何依赖于毒性值的指令都具有未定义的行为。
+
+这里有些例子：
+
+```
+entry:
+  %poison = sub nuw i32 0, 1           ; Results in a poison value.
+  %still_poison = and i32 %poison, 0   ; 0, but also poison.
+  %poison_yet_again = getelementptr i32, i32* @h, i32 %still_poison
+  store i32 0, i32* %poison_yet_again  ; memory at @h[0] is poisoned
+
+  store i32 %poison, i32* @g           ; Poison value stored to memory.
+  %poison2 = load i32, i32* @g         ; Poison value loaded back from memory.
+
+  store volatile i32 %poison, i32* @g  ; External observation; undefined behavior.
+
+  %narrowaddr = bitcast i32* @g to i16*
+  %wideaddr = bitcast i32* @g to i64*
+  %poison3 = load i16, i16* %narrowaddr ; Returns a poison value.
+  %poison4 = load i64, i64* %wideaddr  ; Returns a poison value.
+
+  %cmp = icmp slt i32 %poison, 0       ; Returns a poison value.
+  br i1 %cmp, label %true, label %end  ; Branch to either destination.
+
+true:
+  store volatile i32 0, i32* @g        ; This is control-dependent on %cmp, so
+                                       ; it has undefined behavior.
+  br label %end
+
+end:
+  %p = phi i32 [ 0, %entry ], [ 1, %true ]
+                                       ; Both edges into this PHI are
+                                       ; control-dependent on %cmp, so this
+                                       ; always results in a poison value.
+
+  store volatile i32 0, i32* @g        ; This would depend on the store in %true
+                                       ; if %cmp is true, or the store in %entry
+                                       ; otherwise, so this is undefined behavior.
+
+  br i1 %cmp, label %second_true, label %second_end
+                                       ; The same branch again, but this time the
+                                       ; true block doesn't have side effects.
+
+second_true:
+  ; No side effects!
+  ret void
+
+second_end:
+  store volatile i32 0, i32* @g        ; This time, the instruction always depends
+                                       ; on the store in %end. Also, it is
+                                       ; control-equivalent to %end, so this is
+                                       ; well-defined (ignoring earlier undefined
+                                       ; behavior in this example).
+```
+
+### Addresses of Basic Blocks
+
+blockaddress（@function，％block）
+
+'blockaddress'常量计算指定函数中指定基本块的地址，并始终具有i8 *类型。 取入块的地址是非法的。
+
+当用作 ‘[indirectbr](http://llvm.org/docs/LangRef.html#i-indirectbr)’指令的操作数或用于与null进行比较时，此值仅具有已定义的行为。 标签之间的指针相等性测试会导致未定义的行为 - 但是，再次，与null的比较是可以的，并且没有标签等于空指针。 只要不检查位，这可以作为不透明指针大小的值传递。 这允许对这些值执行ptrtoint和算术，只要在indirectbr指令之前重构原始值即可。
+
+最后，当使用值作为内联汇编的操作数时，某些目标可能会提供定义的语义，但这是特定于目标的。
+
+### Constant Expressions
+
+常量表达式用于允许将涉及其他常量的表达式用作常量。 常量表达式可以是任何 [first class](http://llvm.org/docs/LangRef.html#t-firstclass) 类型，并且可以涉及没有副作用的任何LLVM操作（例如，不支持加载和调用）。 以下是常量表达式的语法：
+
+`trunc (CST to TYPE)` : 对常量执行 [trunc operation](http://llvm.org/docs/LangRef.html#i-trunc)。
+
+`zext (CST to TYPE)` : 对常量执行[zext operation](http://llvm.org/docs/LangRef.html#i-zext)。
+
+`sext (CST to TYPE)` : 对常量执行[sext operation](http://llvm.org/docs/LangRef.html#i-sext)
+
+`fptrunc (CST to TYPE) `: 将浮点常量截断为另一个浮点类型。 CST的大小必须大于TYPE的大小。 两种类型都必须是浮点数。
+
+`fpext (CST to TYPE)` : 浮点将常量扩展为另一种类型。 CST的大小必须小于或等于TYPE的大小。 两种类型都必须是浮点数。
+
+`fptoui (CST to TYPE)` : 将浮点常量转换为相应的无符号整数常量。 TYPE必须是标量或矢量整数类型。 CST必须是标量或矢量浮点类型。 CST和TYPE都必须是标量或具有相同数量元素的向量。 如果该值不适合整数类型，则结果为 [poison value](http://llvm.org/docs/LangRef.html#poisonvalues)。
+
+`fptosi (CST to TYPE)` : 将浮点常量转换为相应的有符号整数常量。 TYPE必须是标量或矢量整数类型。 CST必须是标量或矢量浮点类型。 CST和TYPE都必须是标量或具有相同数量元素的向量。 如果该值不适合整数类型，则结果为 [poison value](http://llvm.org/docs/LangRef.html#poisonvalues)。
+
+`uitofp (CST to TYPE)` : 将无符号整数常量转换为相应的浮点常量。 TYPE必须是标量或向量浮点类型。 CST必须是标量或矢量整数类型。 CST和TYPE都必须是标量或具有相同数量元素的向量。
+
+`sitofp (CST to TYPE)` : 将有符号整数常量转换为相应的浮点常量。 TYPE必须是标量或向量浮点类型。 CST必须是标量或矢量整数类型。 CST和TYPE都必须是标量或具有相同数量元素的向量。
+
+`ptrtoint (CST to TYPE)` : 对常量执行 [ptrtoint operation](http://llvm.org/docs/LangRef.html#i-ptrtoint)。
+
+`inttoptr (CST to TYPE)` : 对常量执行[inttoptr operation](http://llvm.org/docs/LangRef.html#i-inttoptr)。 这个真的很危险！
+
+`bitcast (CST to TYPE)` : 将常量CST转换为另一个TYPE。 操作数的约束与[bitcast instruction](http://llvm.org/docs/LangRef.html#i-bitcast)的约束相同。
+
+`addrspacecast (CST to TYPE)` : 将指针的常量指针或常量向量CST转换为不同地址空间中的另一个TYPE。 操作数的约束与 [addrspacecast instruction](http://llvm.org/docs/LangRef.html#i-addrspacecast)的约束相同。
+
+`getelementptr (TY, CSTPTR, IDX0, IDX1, ...)`, `getelementptr inbounds (TY, CSTPTR, IDX0, IDX1, ...)` : 对常量执行 [getelementptr operation](http://llvm.org/docs/LangRef.html#i-getelementptr)。 与 [getelementptr](http://llvm.org/docs/LangRef.html#i-getelementptr)指令一样，索引列表可以具有一个或多个索引，这些索引需要对“指向TY的指针”的类型有意义。
+
+`select (COND, VAL1, VAL2)` : 对常量执行 [select operation](http://llvm.org/docs/LangRef.html#i-select)。
+
+`icmp COND (VAL1, VAL2)` : 对常量执行 [icmp operation](http://llvm.org/docs/LangRef.html#i-icmp) 。
+
+`fcmp COND (VAL1, VAL2)` : 对常量执行[fcmp operation](http://llvm.org/docs/LangRef.html#i-fcmp)。
+
+`extractelement (VAL, IDX)` : 对常量执行 [extractelement operation](http://llvm.org/docs/LangRef.html#i-extractelement) 。
+
+`insertelement (VAL, ELT, IDX)` : 对常量执行 [insertelement operation](http://llvm.org/docs/LangRef.html#i-insertelement)。
+
+`shufflevector (VEC1, VEC2, IDXMASK)` : 对常量执行 [shufflevector operation](http://llvm.org/docs/LangRef.html#i-shufflevector) 。
+
+`extractvalue (VAL, IDX0, IDX1, ...)` : 对常量执行 [extractvalue operation](http://llvm.org/docs/LangRef.html#i-extractvalue) 。 索引列表的解释方式与‘[getelementptr](http://llvm.org/docs/LangRef.html#i-getelementptr)’ 操作中的索引类似。 必须至少指定一个索引值。
+
+`insertvalue (VAL, ELT, IDX0, IDX1, ...)` : 对常量执行[insertvalue operation](http://llvm.org/docs/LangRef.html#i-insertvalue)。 索引列表的解释方式与‘[getelementptr](http://llvm.org/docs/LangRef.html#i-getelementptr)’操作中的索引类似。 必须至少指定一个索引值。
+
+`OPCODE (LHS, RHS)` : 执行LHS和RHS常量的指定操作。 OPCODE可以是[binary](http://llvm.org/docs/LangRef.html#binaryops) 或 [bitwise binary](http://llvm.org/docs/LangRef.html#bitwiseops)操作中的任何一种。 对操作数的约束与对应指令的约束相同（例如，不允许对浮点值进行逐位运算）。
+
+## Other Values(NULL)
 
 ## Metadata
 
