@@ -18,9 +18,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -190,7 +188,7 @@
     <packageJsonPaths />
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds" extendedState="1">
+  <component name="ProjectFrameBounds">
     <option name="x" value="458" />
     <option name="y" value="24" />
     <option name="width" value="1399" />
@@ -357,15 +355,15 @@
       <workItem from="1538102358409" duration="20008000" />
       <workItem from="1538277160835" duration="3593000" />
       <workItem from="1539059894010" duration="25113000" />
-      <workItem from="1539245461234" duration="19723000" />
+      <workItem from="1539245461234" duration="19724000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="191627000" />
+    <option name="totallyTimeSpent" value="191628000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="458" y="24" width="1399" height="999" extended-state="1" />
+    <frame x="458" y="24" width="1399" height="999" extended-state="0" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.80608976" visible="true" weight="0.22496371" />
       <window_info anchor="bottom" id="TODO" order="6" />
