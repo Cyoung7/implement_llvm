@@ -18,10 +18,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/doc/LLVM Language Reference Manual.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/LLVM Language Reference Manual.md" afterDir="false" />
-    </list>
+    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -57,7 +54,7 @@
       <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="452">
+            <state relative-caret-position="722">
               <caret line="524" column="65" lean-forward="true" selection-start-line="524" selection-start-column="65" selection-end-line="524" selection-end-column="65" />
               <folding>
                 <element signature="e#40#69#0" expanded="true" />
@@ -191,7 +188,7 @@
     <packageJsonPaths />
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds" extendedState="1">
+  <component name="ProjectFrameBounds">
     <option name="x" value="458" />
     <option name="y" value="24" />
     <option name="width" value="1399" />
@@ -366,7 +363,7 @@
     <option name="totallyTimeSpent" value="191023000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="458" y="24" width="1399" height="999" extended-state="1" />
+    <frame x="458" y="24" width="1399" height="999" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.80608976" visible="true" weight="0.22496371" />
@@ -832,7 +829,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="452">
+        <state relative-caret-position="722">
           <caret line="524" column="65" lean-forward="true" selection-start-line="524" selection-start-column="65" selection-end-line="524" selection-end-column="65" />
           <folding>
             <element signature="e#40#69#0" expanded="true" />

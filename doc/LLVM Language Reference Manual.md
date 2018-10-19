@@ -1097,7 +1097,7 @@ LLVM IR没有定义任何启动并行执行线程或注册信号处理程序的�
 
 鉴于该定义，Rbyte定义如下：
 
-- 如果R是易失性的，则结果与目标有关。 （Volatile应该提供可以在C / C ++中支持sig_atomic_t的保证，并且可以用于访问不像普通内存那样的地址。它通常不提供跨线程同步。）
+- 如果R是易失性的，则结果与目标有关。 （Volatile应该提供可以在C/C++中支持sig_atomic_t的保证，并且可以用于访问不像普通内存那样的地址。它通常不提供跨线程同步。）
 - 否则，如果没有写入在Rbyte之前发生的相同字节，则Rbyte将返回该字节的undef。
 - 否则，如果Rbyte可能只看到一次写入，则Rbyte返回该写入所写的值。
 - 否则，如果R是原子的，并且Rbyte可能看到的所有写入都是原子的，则它会选择其中一个写入的值。有关如何进行选择的其他限制，请参阅“原子存储器排序约束( [Atomic Memory Ordering Constraints](http://llvm.org/docs/LangRef.html#ordering))”部分。
@@ -1108,6 +1108,25 @@ R返回由它读取的一系列字节组成的值。这意味着值中的某些�
 请注意，在没有使用任何原子内在函数的情况下，此模型在单线程执行所需的基础上仅对IR转换设置了一个限制：将存储引入到可能无法存储的字节中是不允许的一般。 （具体来说，在另一个线程可能写入和读取地址的情况下，引入存储可以更改一个负载，该负载可能只看到一个写入可能看到多次写入的负载。）
 
 ### Atomic Memory Ordering Constraints
+
+原子指令（[cmpxchg](http://llvm.org/docs/LangRef.html#i-cmpxchg), [atomicrmw](http://llvm.org/docs/LangRef.html#i-atomicrmw), [fence](http://llvm.org/docs/LangRef.html#i-fence), [atomic load](http://llvm.org/docs/LangRef.html#i-load), 和 [atomic store](http://llvm.org/docs/LangRef.html#i-store)）采用排序参数来确定与它们同步的同一地址上的哪些其他原子指令。 这些语义是从Java和C ++ 0x借用的，但更加口语化。 如果这些描述不够精确，请检查这些规格（请参阅原子指南中的规范参考）。 围栏指令对这些排序的处理方式略有不同，因为它们没有地址。 有关详细信息，请参阅该说明的文档。
+
+有关排序约束的简单介绍，请参阅 [LLVM Atomic Instructions and Concurrency Guide](http://llvm.org/docs/Atomics.html)。
+
+`unordered`:可以读取的值集由发生在前的部分顺序控制。除非某些操作写入，否则无法读取值。这旨在提供足够强大的保证来模拟Java的非易失性共享变量。无法为读 - 修改 - 写操作指定此排序;它不够强大，不能以任何有趣的方式使它们成为原子。
+`monotonic`:除了无序保证之外，每个地址的单调操作还有一个单一的总修改顺序。所有修改订单必须与之前发生的订单兼容。无法保证修改订单可以合并为整个程序的全局总订单（这通常是不可能的）。读取原子读取 - 修改 - 写入操作（[cmpxchg](http://llvm.org/docs/LangRef.html#i-cmpxchg) 和 [atomicrmw](http://llvm.org/docs/LangRef.html#i-atomicrmw)）会在写入值之前立即读取修改顺序中的值。如果在同一地址的另一个原子读取之前发生一次原子读取，则后一次读取必须在地址的修改顺序中看到相同的值或更晚的值。这不允许对同一地址上的单调（或更强）操作进行重新排序。如果地址是由一个线程单调编写的，而其他线程单调地反复读取该地址，则其他线程最终必须看到写入。这对应于C++0x/C1x memory_order_relaxed。
+`acquire`:除了单调的保证之外，可以通过释放操作形成与边缘同步的边缘。这是为了模拟C++的memory_order_acquire。
+`release`:除了单调的保证之外，如果此操作写入随后由获取操作读取的值，则它与该操作同步。 （这不是完整的描述;请参阅发布序列的C++ 0x定义。）这对应于C++0x/C1x memory_order_release。
+`acq_rel`（获得+发布）:在其地址上充当获取和释放操作。这对应于C ++ 0x / C1x memory_order_acq_rel。
+`seq_cst`（顺序一致）
+除了acq_rel的保证（获取只读取的操作，仅针对仅写入的操作的释放），所有地址上的所有顺序一致操作都有一个全局总命令，这与之前发生的部分一致订单以及所有受影响地址的修改订单。每个顺序一致的读取都会看到此全局顺序中最后一次写入同一地址。这对应于C ++ 0x / C1x memory_order_seq_cst和Java volatile。
+如果原子操作标记为syncscope（“singlethread”），则它仅与同一线程中运行的其他操作（例如，信号处理程序）中的seq_cst总排序同步并且仅参与其中。
+
+如果原子操作被标记为syncscope（“<target-scope>”），其中<target-scope>是目标特定的同步范围，那么它与目标相关，如果它与其他操作的seq_cst总排序同步并参与其中。
+
+否则，未标记为syncscope（“singlethread”）或syncscope（“<target-scope>”）的原子操作与未标记为syncscope（“singlethread”）或syncscope的其他操作的seq_cst总排序同步并参与其中（ “<目标范围>”）。
+
+
 
 
 
