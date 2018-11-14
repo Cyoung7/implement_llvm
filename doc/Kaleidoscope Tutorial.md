@@ -2776,7 +2776,7 @@ cond_next:
 }
 ```
 
-mem2reg传递实现了用于构造SSA形式的标准“迭代优势边界”算法，并且具有许多加速（非常常见）简并情况的优化。 mem2reg优化传递是处理可变变量的答案，我们强烈建议您依赖它。请注意，mem2reg仅适用于某些情况下的变量：
+mem2reg传递实现了用于构造SSA形式的标准“迭代优势边界”算法，并且具有许多加速（非常常见）简并情况的优化。 mem2reg优化Pass是处理可变变量的答案，我们强烈建议您依赖它。请注意，mem2reg仅适用于某些情况下的变量：
 
 - mem2reg是alloca驱动的：它查找allocas，如果它可以处理它们，它会提升它们。它不适用于全局变量或堆分配。
 - mem2reg只在函数的入口块中查找alloca指令。在入口块中保证alloca只执行一次，这使得分析更简单。
@@ -2793,7 +2793,7 @@ mem2reg传递实现了用于构造SSA形式的标准“迭代优势边界”算�
 
 ### 7.4. Mutable Variables in Kaleidoscope
 
-现在我们知道了我们想要解决的问题，让我们看看在我们的小万花筒语言的背景下它的样子。 我们将添加两个功能：
+现在我们知道了我们想要解决的问题，让我们看看在我们的Kaleidoscope语言背景下它的样子。 我们将添加两个功能：
 
 - 使用'='运算符变换变量的能力。
 - 定义新变量的能力。
@@ -2829,11 +2829,11 @@ fibi(10);
 
 ### 7.5. Adjusting Existing Variables for Mutation
 
-Kaleidoscope中的符号表在代码生成时由“NamedValues”映射进行管理。此映射当前跟踪LLVM“Value *”，其中包含指定变量的double值。为了支持变异，我们需要稍微改变一下，以便NamedValues保存有问题的变量的内存位置。请注意，此更改是重构：它更改了代码的结构，但不（通过自身）更改编译器的行为。所有这些更改都在Kaleidoscope代码生成器中隔离。
+Kaleidoscope中的符号表在代码生成时由“NamedValues”映射进行管理。此映射当前跟踪LLVM“Value *”，其中包含指定变量的double值。为了支持变量，我们需要稍微改变一下，以便NamedValues保存有问题的变量的内存位置。请注意，此更改是重构：它更改了代码的结构，但不（通过自身）更改编译器的行为。所有这些更改都在Kaleidoscope代码生成器中隔离。
 
 在Kaleidoscope的开发中，它只支持两个变量：函数的传入参数和'for'循环的归纳变量。为了保持一致性，除了其他用户定义的变量外，我们还允许对这些变量进行变异。这意味着这些都需要内存位置。
 
-要开始我们的Kaleidoscope转换，我们将更改NamedValues映射，使其映射到AllocaInst *而不是Value *。一旦我们这样做，C ++编译器将告诉我们需要更新的代码部分：
+要开始我们的Kaleidoscope转换，我们将更改NamedValues映射，使其映射到AllocaInst *而不是Value *。一旦我们这样做，C++编译器将告诉我们需要更新的代码部分：
 
 ```c++
 static std::map<std::string, AllocaInst*> NamedValues;

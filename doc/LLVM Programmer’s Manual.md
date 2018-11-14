@@ -1820,7 +1820,7 @@ ManagedStatic是LLVM中的实用程序类，用于实现静态资源的静态初
 
 LLVMContext是LLVM API中的一个不透明类，客户端可以使用它在同一地址空间内同时操作多个独立的LLVM实例。例如，在假设的编译服务器中，单个翻译单元的编译在概念上独立于所有其他翻译单元，并且希望能够在独立的服务器线程上同时编译传入的翻译单元。幸运的是，存在LLVMContext以实现这种情况！
 
-从概念上讲，LLVMContext提供隔离。 LLVM的内存中IR中的每个LLVM实体（`Module`s，`Value`s，`Type`s，`Constant`s等）都属于LLVMContext。不同上下文中的实体不能相互交互：不同上下文中的模块不能链接在一起，函数不能添加到不同上下文中的模块等。这意味着可以安全地在多个线程上同时编译，只要没有两个线程在同一上下文中的实体上运行。
+从概念上讲，LLVMContext提供隔离。 每个LLVM实体（`Module`s，`Value`s，`Type`s，`Constant`s等）在LLVM的内存IR中的都属于LLVMContext。不同上下文中的实体不能相互交互：不同上下文中的模块不能链接在一起，函数不能添加到不同上下文中的模块等。这意味着可以安全地在多个线程上同时编译，只要没有两个线程在同一上下文中的实体上运行。
 
 实际上，API中很少有地方需要明确指定LLVMContext，而不是Type创建/查找API。因为每个Type都带有对其拥有的上下文的引用，所以大多数其他实体可以通过查看它们自己的Type来确定它们属于哪个上下文。如果要向LLVM IR添加新实体，请尝试维护此接口设计。
 
@@ -2101,7 +2101,7 @@ doxygen info: [Module Class](http://llvm.org/doxygen/classllvm_1_1Module.html)
 
   前面这些方法可以轻松访问Module对象的[Function](http://llvm.org/docs/ProgrammersManual.html#c-function) list的内容。
 
-- Module::FunctionListType &getFunctionList()
+- `Module::FunctionListType &getFunctionList()`
 
   返回[Function](http://llvm.org/docs/ProgrammersManual.html#c-function)列表。 当您需要更新列表或执行前面没有的复杂操作时，必须使用这个方法
 
@@ -2163,7 +2163,7 @@ Value类是LLVM源代码库中最重要的类。 它表示一个已有类型的�
 
 该指令的名称是“foo”。 请注意，任何值的命名都可能缺失（空字符串），因此名称应仅用于调试（使源代码更易于阅读，调试打印输出），不应使用它们来跟踪值或在他们之间做映射。 为此，请使用指向Value本身的std :: map指针。
 
-**LLVM的一个重要方面是SSA变量与产生它(SSA变量)的操作之间没有区别**。 因此，对指令生成的值的任何引用（或者可用作传入参数的值）都表示为指向表示此值的类的实例的直接指针。 虽然这可能需要一些时间来习惯，但它简化了表示并使其更容易操作。
+**LLVM的一个重要方面是SSA变量与产生它(SSA变量)的操作之间没有区别**。 因此，对指令生成的值的任何引用（或者可用作传入参数的值）都表示为指向此值的类的实例的直接指针。 虽然这可能需要一些时间来习惯，但它简化了表示并使其更容易操作。
 
 #### Important Public Members of the Value class
 

@@ -695,6 +695,7 @@ Value *VariableExprAST::codegen() {
 
 // 一元运算符也是参数个数为1的函数:函数名:"unary" +Opcode
 Value *UnaryExprAST::codegen() {
+    //计算一元表达式参数值
     Value *OperandV = Operand->codegen();
     if (!OperandV)
         return nullptr;
@@ -702,7 +703,7 @@ Value *UnaryExprAST::codegen() {
     Function *F = getFunction(std::string("unary") + Opcode);
     if (!F)
         return LogErrorV("Unknown unary operator");
-
+    //调用一元表达式，计算一元表达式的值
     return Builder.CreateCall(F, OperandV, "unop");
 }
 
@@ -746,14 +747,14 @@ Value *CallExprAST::codegen() {
     // If argument mismatch error.
     if (CalleeF->arg_size() != Args.size())
         return LogErrorV("Incorrect # arguments passed");
-
+    //计算函数所有参数的值
     std::vector<Value *> ArgsV;
     for (unsigned i = 0, e = Args.size(); i != e; ++i) {
         ArgsV.push_back(Args[i]->codegen());
         if (!ArgsV.back())
             return nullptr;
     }
-
+    //调用函数，计算值
     return Builder.CreateCall(CalleeF, ArgsV, "calltmp");
 }
 
