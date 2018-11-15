@@ -20,27 +20,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/doc/Kaleidoscope Tutorial.md" beforeDir="false" afterPath="$PROJECT_DIR$/doc/Kaleidoscope Tutorial.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/include/KaleidoscopeJIT.h" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/include/KaleidoscopeJIT.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/BuildingAJIT/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/Chapter01/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/BuildingAJIT/Chapter01/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/Chapter01/KaleidoscopeJIT.h" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/BuildingAJIT/Chapter01/KaleidoscopeJIT.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/BuildingAJIT/Chapter01/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/BuildingAJIT/Chapter01/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter02/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter02/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter02/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter03/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter03/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter03/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter04/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter04/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter04/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter05/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter05/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter05/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter06/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter06/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter06/toy.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter07/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter07/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter07/toy.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter07/toy.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -68,8 +48,8 @@
       <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="342">
-              <caret line="18" column="34" selection-start-line="18" selection-start-column="18" selection-end-line="18" selection-end-column="34" />
+            <state relative-caret-position="418">
+              <caret line="22" column="21" lean-forward="true" selection-start-line="22" selection-start-column="21" selection-end-line="22" selection-end-column="21" />
             </state>
           </provider>
         </entry>
@@ -218,7 +198,7 @@
     <packageJsonPaths />
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds" extendedState="1">
+  <component name="ProjectFrameBounds">
     <option name="x" value="460" />
     <option name="y" value="82" />
     <option name="width" value="1399" />
@@ -351,15 +331,15 @@
       <workItem from="1539245461234" duration="19724000" />
       <workItem from="1541257268565" duration="700000" />
       <workItem from="1541841950985" duration="612000" />
-      <workItem from="1542077563596" duration="21067000" />
+      <workItem from="1542077563596" duration="21891000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="214007000" />
+    <option name="totallyTimeSpent" value="214831000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="460" y="82" width="1399" height="999" extended-state="1" />
+    <frame x="460" y="82" width="1399" height="999" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.79930794" visible="true" weight="0.17924528" />
@@ -737,8 +717,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="18" column="34" selection-start-line="18" selection-start-column="18" selection-end-line="18" selection-end-column="34" />
+        <state relative-caret-position="418">
+          <caret line="22" column="21" lean-forward="true" selection-start-line="22" selection-start-column="21" selection-end-line="22" selection-end-column="21" />
         </state>
       </provider>
     </entry>
