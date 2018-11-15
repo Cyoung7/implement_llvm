@@ -128,7 +128,15 @@ find_package(LLVM REQUIRED CONFIG)
 
 踩坑到此为止,后面利用此项目来学习llvm.欢迎交流.
 
+## 4.[llvm tutotial](https://llvm.org/docs/tutorial/index.html#kaleidoscope-implementing-a-language-with-llvm)
 
+利用google翻译的[中文文档](https://github.com/Cyoung7/implement_llvm/blob/master/doc/Kaleidoscope%20Tutorial.md)(待校对)
 
+## 5.[LLVM Programmer’s Manual](https://llvm.org/docs/ProgrammersManual.html)
 
+llvm编程手册，利用google翻译的[中文文档](https://github.com/Cyoung7/implement_llvm/blob/master/doc/LLVM%20Programmer%E2%80%99s%20Manual.md)(待校对)
+
+## [6.LLVM Language Reference Manual](https://llvm.org/docs/LangRef.html)
+
+llvm IR手册，利用google翻译的[中文文档](https://github.com/Cyoung7/implement_llvm/blob/master/doc/LLVM%20Language%20Reference%20Manual.md)(待校对)
 
