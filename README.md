@@ -136,7 +136,7 @@ find_package(LLVM REQUIRED CONFIG)
 
 llvm编程手册，利用google翻译的[中文文档](https://github.com/Cyoung7/implement_llvm/blob/master/doc/LLVM%20Programmer%E2%80%99s%20Manual.md)(待校对)
 
-## [6.LLVM Language Reference Manual](https://llvm.org/docs/LangRef.html)
+## 6.[LLVM Language Reference Manual](https://llvm.org/docs/LangRef.html)
 
 llvm IR手册，利用google翻译的[中文文档](https://github.com/Cyoung7/implement_llvm/blob/master/doc/LLVM%20Language%20Reference%20Manual.md)(待校对)
 
