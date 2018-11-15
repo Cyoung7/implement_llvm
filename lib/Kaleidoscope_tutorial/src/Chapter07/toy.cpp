@@ -1026,6 +1026,7 @@ Value *VarExprAST::codegen() {
         OldBindings.push_back(NamedValues[VarName]);
 
         // Remember this binding.
+        //新建变量可供body使用
         NamedValues[VarName] = Alloca;
     }
 
@@ -1035,6 +1036,7 @@ Value *VarExprAST::codegen() {
         return nullptr;
 
     // Pop all our variables from scope.
+    //body使用完毕恢复原变量信息
     for (unsigned i = 0, e = VarNames.size(); i != e; ++i)
         NamedValues[VarNames[i].first] = OldBindings[i];
 

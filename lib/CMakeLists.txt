@@ -1,1 +1,1 @@
-add_subdirectory(llvm_tutorial)
+add_subdirectory(Kaleidoscope_tutorial)

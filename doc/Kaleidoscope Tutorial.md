@@ -8,66 +8,6 @@
 
 [TOC]
 
-   * [Kaleidoscope Tutorial](#kaleidoscope-tutorial)
-      * [1.Tutorial Introduction and the Lexer](#1tutorial-introduction-and-the-lexer)
-         * [1.1 Tutorial Introduction](#11-tutorial-introduction)
-         * [1.2 基础语言](#12-基础语言)
-         * [1.3  词法分析器](#13--词法分析器)
-      * [2. Implementing a Parser and AST](#2-implementing-a-parser-and-ast)
-         * [2.1 第二章简介](#21-第二章简介)
-         * [2.3 The Abstract Syntax Tree (AST,抽象语法树)](#23-the-abstract-syntax-tree-ast抽象语法树)
-         * [2.3 基础解析(Parser Basics)](#23-基础解析parser-basics)
-         * [2.4 基础表达式解析(Basic Expression Parsing)](#24-基础表达式解析basic-expression-parsing)
-         * [2.5 二元表达式解析(Binary Expression Parsing)](#25-二元表达式解析binary-expression-parsing)
-         * [2.6 解析其余部分(Parsing the Rest)](#26-解析其余部分parsing-the-rest)
-         * [2.7 驱动(The Driver)](#27-驱动the-driver)
-         * [2.8 小结](#28-小结)
-         * [2.9 Full Code Listing](#29-full-code-listing)
-      * [3.  Code generation to LLVM IR](#3--code-generation-to-llvm-ir)
-         * [3.1 第三章介绍](#31-第三章介绍)
-         * [3.2 代码生成设置](#32-代码生成设置)
-         * [3.3 中间表示代码生成](#33-中间表示代码生成)
-         * [3.4 函数代码生成](#34-函数代码生成)
-         * [3.5. 驱动更改及结束思考](#35-驱动更改及结束思考)
-         * [3.6. Full Code Listing](#36-full-code-listing)
-      * [4. Kaleidoscope: Adding JIT and Optimizer Support](#4-kaleidoscope-adding-jit-and-optimizer-support)
-         * [4.1 第4章介绍](#41-第4章介绍)
-         * [4.2 细小常数折叠](#42-细小常数折叠)
-         * [4.3 LLVM Optimization Passes](#43-llvm-optimization-passes)
-         * [4.4 Adding a JIT Compiler](#44-adding-a-jit-compiler)
-         * [4.5 Full Code Listing](#45-full-code-listing)
-      * [5.Kaleidoscope: Extending the Language: Control Flow](#5kaleidoscope-extending-the-language-control-flow)
-         * [5.1 第5章介绍](#51-第5章介绍)
-         * [5.2 If/Then/Else](#52-ifthenelse)
-            * [5.2.1. Lexer Extensions for If/Then/Else](#521-lexer-extensions-for-ifthenelse)
-            * [5.2.2. AST Extensions for If/Then/Else](#522-ast-extensions-for-ifthenelse)
-            * [5.2.3. Parser Extensions for If/Then/Else](#523-parser-extensions-for-ifthenelse)
-            * [5.2.4. LLVM IR for If/Then/Else](#524-llvm-ir-for-ifthenelse)
-            * [5.2.5. Code Generation for If/Then/Else](#525-code-generation-for-ifthenelse)
-         * [5.3. ‘for’ Loop Expression](#53-for-loop-expression)
-            * [5.3.1. Lexer Extensions for the ‘for’ Loop](#531-lexer-extensions-for-the-for-loop)
-            * [5.3.2. AST Extensions for the ‘for’ Loop](#532-ast-extensions-for-the-for-loop)
-            * [5.3.3. Parser Extensions for the ‘for’ Loop](#533-parser-extensions-for-the-for-loop)
-            * [5.3.4. LLVM IR for the ‘for’ Loop](#534-llvm-ir-for-the-for-loop)
-            * [5.3.5. Code Generation for the ‘for’ Loop](#535-code-generation-for-the-for-loop)
-         * [5.4. Full Code Listing](#54-full-code-listing)
-      * [6. Kaleidoscope: Extending the Language: User-defined Operators](#6-kaleidoscope-extending-the-language-user-defined-operators)
-         * [6.1. Chapter 6 Introduction](#61-chapter-6-introduction)
-         * [6.2. User-defined Operators: the Idea](#62-user-defined-operators-the-idea)
-         * [6.3. User-defined Binary Operators](#63-user-defined-binary-operators)
-         * [6.4. User-defined Unary Operators](#64-user-defined-unary-operators)
-         * [6.5. Kicking the Tires](#65-kicking-the-tires)
-         * [6.6. Full Code Listing](#66-full-code-listing)
-      * [7. Kaleidoscope: Extending the Language: Mutable Variables](#7-kaleidoscope-extending-the-language-mutable-variables)
-         * [7.1. Chapter 7 Introduction](#71-chapter-7-introduction)
-         * [7.2. Why is this a hard problem?](#72-why-is-this-a-hard-problem)
-         * [7.3. Memory in LLVM](#73-memory-in-llvm)
-         * [7.4. Mutable Variables in Kaleidoscope](#74-mutable-variables-in-kaleidoscope)
-         * [7.5. Adjusting Existing Variables for Mutation](#75-adjusting-existing-variables-for-mutation)
-         * [7.6. New Assignment Operator](#76-new-assignment-operator)
-         * [7.7. User-defined Local Variables](#77-user-defined-local-variables)
-         * [7.8. Full Code Listing](#78-full-code-listing)
-
 ## 1.Tutorial Introduction and the Lexer
 
 ### 1.1 Tutorial Introduction
@@ -3312,3 +3252,596 @@ clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core m
 ```
 
 [Here is the code](https://github.com/llvm-mirror/llvm/blob/master/examples/Kaleidoscope/Chapter7/toy.cpp)
+
+## 8. Kaleidoscope: Compiling to Object Code
+
+### 8.1. Chapter 8 Introduction
+
+欢迎阅读“使用LLVM实现语言”教程的第8章。 本章介绍如何将语言编译为目标文件。
+
+## 8.2. Choosing a target
+
+LLVM本身支持交叉编译。 您可以编译到当前计算机的体系结构，也可以轻松编译其他体系结构。 在本教程中，我们将以当前计算机为目标。
+
+要指定要定位的体系结构，我们使用称为“目标三元组”的字符串。 其形式为`<arch> <sub> - <vendor> - <sys> - <abi>`（参见 [cross compilation docs](http://clang.llvm.org/docs/CrossCompilation.html#target-triple)）。
+
+举个例子，我们可以看到clang认为我们当前的目标三元组：
+
+```shell
+$ clang --version | grep Target
+Target: x86_64-unknown-linux-gnu
+```
+
+运行此命令可能会在您的计算机上显示不同的内容，因为您可能正在使用不同的体系结构或操作系统。
+
+幸运的是，我们不需要硬编码目标三元组来定位当前机器。 LLVM提供`sys :: getDefaultTargetTriple`，它返回当前计算机的目标三元组。
+
+```c++
+auto TargetTriple = sys::getDefaultTargetTriple();
+```
+
+LLVM不要求我们链接所有目标功能。 例如，如果我们只是使用JIT，我们不需要组装打印机。 同样，如果我们仅针对某些体系结构，我们只能链接这些体系结构的功能。
+
+对于此示例，我们将初始化发出目标代码的所有目标。
+
+```c++
+InitializeAllTargetInfos();
+InitializeAllTargets();
+InitializeAllTargetMCs();
+InitializeAllAsmParsers();
+InitializeAllAsmPrinters();
+```
+
+我们现在可以使用目标三元组来获得目标：
+
+```c++
+std::string Error;
+auto Target = TargetRegistry::lookupTarget(TargetTriple, Error);
+
+// Print an error and exit if we couldn't find the requested target.
+// This generally occurs if we've forgotten to initialise the
+// TargetRegistry or we have a bogus target triple.
+if (!Target) {
+  errs() << Error;
+  return 1;
+}
+```
+
+### 8.3. Target Machine
+
+我们还需要一个TargetMachine。 此类提供了我们所针对的机器的完整机器描述。 如果我们想要定位特定功能（例如SSE）或特定CPU（例如Intel的Sandylake），我们现在就这样做。
+
+要查看LLVM知道哪些功能和CPU，我们可以使用llc。 例如，让我们看一下x86：
+
+```桑俄来
+$ llvm-as < /dev/null | llc -march=x86 -mattr=help
+Available CPUs for this target:
+
+  amdfam10      - Select the amdfam10 processor.
+  athlon        - Select the athlon processor.
+  athlon-4      - Select the athlon-4 processor.
+  ...
+
+Available features for this target:
+
+  16bit-mode            - 16-bit mode (i8086).
+  32bit-mode            - 32-bit mode (80386).
+  3dnow                 - Enable 3DNow! instructions.
+  3dnowa                - Enable 3DNow! Athlon instructions.
+  ...
+```
+
+对于我们的示例，我们将使用通用CPU，而无需任何其他功能，选项或重定位模型。
+
+```c++
+auto CPU = "generic";
+auto Features = "";
+
+TargetOptions opt;
+auto RM = Optional<Reloc::Model>();
+auto TargetMachine = Target->createTargetMachine(TargetTriple, CPU, Features, opt, RM);
+```
+
+### 8.4. Configuring the Module
+
+我们现在准备配置我们的模块，以指定目标和数据布局。 这不是绝对必要的，但 [frontend performance guide](https://llvm.org/docs/Frontend/PerformanceTips.html)建议这样做。 通过了解目标和数据布局，优化得益。
+
+```c++
+TheModule->setDataLayout(TargetMachine->createDataLayout());
+TheModule->setTargetTriple(TargetTriple);
+```
+
+### 8.5. Emit Object Code
+
+我们准备发出目标代码了！ 让我们定义我们要将文件写入的位置：
+
+```c++
+auto Filename = "output.o";
+std::error_code EC;
+raw_fd_ostream dest(Filename, EC, sys::fs::F_None);
+
+if (EC) {
+  errs() << "Could not open file: " << EC.message();
+  return 1;
+}
+```
+
+最后，我们定义了一个发出目标代码的传递，然后我们运行该传递：
+
+```c++
+legacy::PassManager pass;
+auto FileType = TargetMachine::CGFT_ObjectFile;
+
+if (TargetMachine->addPassesToEmitFile(pass, dest, FileType)) {
+  errs() << "TargetMachine can't emit a file of this type";
+  return 1;
+}
+
+pass.run(*TheModule);
+dest.flush();
+```
+
+### 8.6. Putting It All Together
+
+它有用吗？ 试一试吧。 我们需要编译代码，但请注意llvm-config的参数与前面的章节不同。
+
+```shell
+$ clang++ -g -O3 toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs all` -o toy
+```
+
+让我们运行它，并定义一个简单的平均函数。 完成后按Ctrl-D。
+
+```
+$ ./toy
+ready> def average(x y) (x + y) * 0.5;
+^D
+Wrote output.o
+```
+
+我们有一个目标文件！ 为了测试它，让我们编写一个简单的程序并将其与我们的输出链接。 这是源代码：
+
+```c++
+#include <iostream>
+
+extern "C" {
+    double average(double, double);
+}
+
+int main() {
+    std::cout << "average of 3.0 and 4.0: " << average(3.0, 4.0) << std::endl;
+}
+```
+
+我们将程序链接到output.o并检查结果是否符合我们的预期：
+
+```shell
+$ clang++ main.cpp output.o -o main
+$ ./main
+average of 3.0 and 4.0: 3.5
+```
+
+### 8.7. Full Code Listing
+
+[Here is the code](https://github.com/llvm-mirror/llvm/blob/master/examples/Kaleidoscope/Chapter8/toy.cpp)
+
+## 9. Kaleidoscope: Adding Debug Information
+
+### 9.1. Chapter 9 Introduction
+
+欢迎阅读“使用LLVM实现语言”教程的第9章。在第1章到第8章中，我们构建了一个包含函数和变量的小型编程语言。如果出现问题会发生什么，你如何调试你的程序？
+
+源级调试使用格式化数据，帮助调试器从二进制文件和机器状态转换回程序员编写的源。在LLVM中，我们通常使用称为 [DWARF](http://dwarfstd.org/)的格式。 DWARF是一种紧凑的编码，表示类型，源位置和变量位置。
+
+本章的简短摘要是，我们将介绍您必须添加到编程语言中以支持调试信息的各种内容，以及如何将其转换为DWARF。
+
+警告：现在我们无法通过JIT进行调试，因此我们需要将程序编译成小而独立的程序。作为其中的一部分，我们将对语言的运行以及程序的编译方式进行一些修改。这意味着我们将拥有一个源文件，其中包含用Kaleidoscope编写的简单程序，而不是交互式JIT。它确实涉及一个限制，我们一次只能有一个“顶级”命令来减少必要的更改次数。
+
+这是我们将要编译的示例程序：
+
+```
+def fib(x)
+  if x < 3 then
+    1
+  else
+    fib(x-1)+fib(x-2);
+
+fib(10)
+```
+
+### 9.2. Why is this a hard problem?
+
+出于几个不同的原因，调试信息是一个难题 - 主要集中在优化代码上。 首先，优化使得源位置更加困难。 在LLVM IR中，我们保留指令上每个IR级指令的原始源位置。 优化过程应保留新创建的指令的源位置，但合并的指令只能保留一个位置 - 这可能导致在逐步优化的程序时跳转。 其次，优化可以以优化的方式移动变量，在内存中与其他变量共享或难以跟踪。 出于本教程的目的，我们将避免优化（正如您将看到的下一组补丁之一）。
+
+### 9.3. Ahead-of-Time Compilation Mode
+
+为了突出显示将调试信息添加到源语言的方面，而不必担心JIT调试的复杂性，我们将对Kaleidoscope进行一些更改，以支持将前端发出的IR编译成一个简单的独立程序， 您可以执行，调试和查看结果。
+
+首先，我们将包含顶级语句的匿名函数作为我们的“main”：
+
+```
+-    auto Proto = llvm::make_unique<PrototypeAST>("", std::vector<std::string>());
++    auto Proto = llvm::make_unique<PrototypeAST>("main", std::vector<std::string>());
+```
+
+只需简单地改变它的名字即可。
+
+然后我们将删除命令行代码，只要它存在：
+
+```
+@@ -1129,7 +1129,6 @@ static void HandleTopLevelExpression() {
+ /// top ::= definition | external | expression | ';'
+ static void MainLoop() {
+   while (1) {
+-    fprintf(stderr, "ready> ");
+     switch (CurTok) {
+     case tok_eof:
+       return;
+@@ -1184,7 +1183,6 @@ int main() {
+   BinopPrecedence['*'] = 40; // highest.
+
+   // Prime the first token.
+-  fprintf(stderr, "ready> ");
+   getNextToken();
+```
+
+最后，我们将禁用所有优化传递和JIT，以便在我们完成解析和生成代码之后发生的唯一事情是LLVM IR转到标准错误：
+
+```
+@@ -1108,17 +1108,8 @@ static void HandleExtern() {
+ static void HandleTopLevelExpression() {
+   // Evaluate a top-level expression into an anonymous function.
+   if (auto FnAST = ParseTopLevelExpr()) {
+-    if (auto *FnIR = FnAST->codegen()) {
+-      // We're just doing this to make sure it executes.
+-      TheExecutionEngine->finalizeObject();
+-      // JIT the function, returning a function pointer.
+-      void *FPtr = TheExecutionEngine->getPointerToFunction(FnIR);
+-
+-      // Cast it to the right type (takes no arguments, returns a double) so we
+-      // can call it as a native function.
+-      double (*FP)() = (double (*)())(intptr_t)FPtr;
+-      // Ignore the return value for this.
+-      (void)FP;
++    if (!F->codegen()) {
++      fprintf(stderr, "Error generating code for top level expr");
+     }
+   } else {
+     // Skip token for error recovery.
+@@ -1439,11 +1459,11 @@ int main() {
+   // target lays out data structures.
+   TheModule->setDataLayout(TheExecutionEngine->getDataLayout());
+   OurFPM.add(new DataLayoutPass());
++#if 0
+   OurFPM.add(createBasicAliasAnalysisPass());
+   // Promote allocas to registers.
+   OurFPM.add(createPromoteMemoryToRegisterPass());
+@@ -1218,7 +1210,7 @@ int main() {
+   OurFPM.add(createGVNPass());
+   // Simplify the control flow graph (deleting unreachable blocks, etc).
+   OurFPM.add(createCFGSimplificationPass());
+-
++  #endif
+   OurFPM.doInitialization();
+
+   // Set the global so the code gen can use this.
+```
+
+这一相对较小的更改使我们能够通过此命令行将我们的Kaleidoscope语言编译为可执行程序：
+
+```
+Kaleidoscope-Ch9 < fib.ks | & clang -x ir -
+```
+
+它在当前工作目录中提供了a.out / a.exe。
+
+### 9.4. Compile Unit
+
+DWARF中一段代码的顶级容器是一个编译单元。 它包含单个翻译单元的类型和功能数据（读取：源代码的一个文件）。 所以我们需要做的第一件事是为fib.ks文件构造一个。
+
+### 9.5. DWARF Emission Setup
+
+与IRBuilder类相似，我们有一个[DIBuilder](http://llvm.org/doxygen/classllvm_1_1DIBuilder.html) 类，可以帮助构建LLVM IR文件的调试元数据。 它与IRBuilder和LLVM IR类似地对应1：1，但具有更好的名称。 使用它确实需要您比使用IRBuilder和指令名称更熟悉DWARF术语，但如果您阅读有关 [Metadata Format](http://llvm.org/docs/SourceLevelDebugging.html)格式的一般文档，则应该更加清楚。 我们将使用此类来构建所有IR级别描述。 它的构造需要一个模块，所以我们需要在构建模块后不久构建它。 我们把它作为一个全局静态变量，使它更容易使用。
+
+接下来我们将创建一个小容器来缓存我们的一些频繁数据。 第一个是我们的编译单元，但是我们也会为我们的一个类型编写一些代码，因为我们不必担心多个类型表达式：
+
+```c++
+static DIBuilder *DBuilder;
+
+struct DebugInfo {
+  DICompileUnit *TheCU;
+  DIType *DblTy;
+
+  DIType *getDoubleTy();
+} KSDbgInfo;
+
+DIType *DebugInfo::getDoubleTy() {
+  if (DblTy)
+    return DblTy;
+
+  DblTy = DBuilder->createBasicType("double", 64, dwarf::DW_ATE_float);
+  return DblTy;
+}
+```
+
+然后在我们构建模块时的main中：
+
+```
+DBuilder = new DIBuilder(*TheModule);
+
+KSDbgInfo.TheCU = DBuilder->createCompileUnit(
+    dwarf::DW_LANG_C, DBuilder->createFile("fib.ks", "."),
+    "Kaleidoscope Compiler", 0, "", 0);
+```
+
+这里有几点需要注意。 首先，当我们为一个名为Kaleidoscope的语言生成一个编译单元时，我们使用C语言常量。这是因为调试器不一定理解它不能识别的语言的调用约定或默认ABI，我们遵循 我们的LLVM代码生成中的C ABI因此它是最接近准确的。 这确保了我们可以实际调用调试器中的函数并让它们执行。 其次，您将在createCompileUnit调用中看到“fib.ks”。 这是默认的硬编码值，因为我们使用shell重定向将我们的源代码放入Kaleidoscope编译器中。 在通常的前端，你有一个输入文件名，它会去那里。
+
+作为通过DIBuilder发出调试信息的一部分，最后一件事是我们需要“完成”调试信息。 原因是DIBuilder底层API的一部分，但请确保在main结束时执行此操作：
+
+```
+DBuilder->finalize();
+```
+
+在转储模块之前。
+
+### 9.6. Functions
+
+现在我们有了编译单元和源位置，我们可以在调试信息中添加函数定义。 所以在`PrototypeAST :: codegen（）`中我们添加几行代码来描述子程序的上下文，在本例中是“File”，以及函数本身的实际定义。
+
+所以上下文：
+
+```c++
+DIFile *Unit = DBuilder->createFile(KSDbgInfo.TheCU.getFilename(),
+                                    KSDbgInfo.TheCU.getDirectory());
+```
+
+给我们一个DIFile并向我们上面创建的编译单元询问我们当前所在的目录和文件名。 然后，现在，我们使用0的一些源位置（因为我们的AST当前没有源位置信息）并构造我们的函数定义：
+
+```c++
+DIScope *FContext = Unit;
+unsigned LineNo = 0;
+unsigned ScopeLine = 0;
+DISubprogram *SP = DBuilder->createFunction(
+    FContext, P.getName(), StringRef(), Unit, LineNo,
+    CreateFunctionType(TheFunction->arg_size(), Unit),
+    false /* internal linkage */, true /* definition */, ScopeLine,
+    DINode::FlagPrototyped, false);
+TheFunction->setSubprogram(SP);
+```
+
+我们现在有一个DISubprogram，其中包含对该函数的所有元数据的引用。
+
+### 9.7. Source Locations
+
+调试信息最重要的是准确的源位置 - 这使得可以将源代码映射回来。 我们遇到了一个问题，Kaleidoscope在词法分析器或解析器中确实没有任何源位置信息，所以我们需要添加它。
+
+```c++
+struct SourceLocation {
+  int Line;
+  int Col;
+};
+static SourceLocation CurLoc;
+static SourceLocation LexLoc = {1, 0};
+
+static int advance() {
+  int LastChar = getchar();
+
+  if (LastChar == '\n' || LastChar == '\r') {
+    LexLoc.Line++;
+    LexLoc.Col = 0;
+  } else
+    LexLoc.Col++;
+  return LastChar;
+}
+```
+
+在这组代码中，我们添加了一些关于如何跟踪“源文件”的行和列的功能。 当我们使用每个令牌时，我们将当前当前的“词汇位置”设置为令牌开头的各种行和列。 我们通过使用新的advance（）覆盖所有先前对getchar（）的调用来跟踪信息，然后我们将所有AST类添加到源位置：
+
+```c++
+class ExprAST {
+  SourceLocation Loc;
+
+  public:
+    ExprAST(SourceLocation Loc = CurLoc) : Loc(Loc) {}
+    virtual ~ExprAST() {}
+    virtual Value* codegen() = 0;
+    int getLine() const { return Loc.Line; }
+    int getCol() const { return Loc.Col; }
+    virtual raw_ostream &dump(raw_ostream &out, int ind) {
+      return out << ':' << getLine() << ':' << getCol() << '\n';
+    }
+```
+
+当我们创建一个新表达式时，我们传递下去：
+
+```c++
+LHS = llvm::make_unique<BinaryExprAST>(BinLoc, BinOp, std::move(LHS),
+                                       std::move(RHS));
+```
+
+为我们提供每个表达式和变量的位置。
+
+为了确保每条指令都获得正确的源位置信息，我们必须在我们处于新的源位置时告诉Builder。 我们使用一个小辅助函数：
+
+```c++
+void DebugInfo::emitLocation(ExprAST *AST) {
+  DIScope *Scope;
+  if (LexicalBlocks.empty())
+    Scope = TheCU;
+  else
+    Scope = LexicalBlocks.back();
+  Builder.SetCurrentDebugLocation(
+      DebugLoc::get(AST->getLine(), AST->getCol(), Scope));
+}
+```
+
+这既告诉主要的IRBuilder我们在哪里，也告诉我们的范围。范围可以是编译单元级别，也可以是最近的封闭词汇块，就像当前函数一样。 为了表示这一点，我们创建了一堆范围：
+
+```c++
+std::vector<DIScope *> LexicalBlocks;
+```
+
+当我们开始为每个函数生成代码时，将范围（函数）推送到堆栈的顶部：
+
+```c++
+KSDbgInfo.LexicalBlocks.push_back(SP);
+```
+
+此外，我们可能不会忘记在函数代码生成结束时从作用域堆栈中弹出作用域：
+
+```c++
+// Pop off the lexical block for the function since we added it
+// unconditionally.
+KSDbgInfo.LexicalBlocks.pop_back();
+```
+
+然后我们确保每次开始为新的AST对象生成代码时发出位置：
+
+```c++
+KSDbgInfo.emitLocation(this);
+```
+
+### 9.8. Variables
+
+现在我们有了函数，我们需要能够打印出范围内的变量。 让我们设置我们的函数参数，这样我们就可以获得不错的回溯，看看我们的函数是如何被调用的。 它不是很多代码，我们通常在我们在`FunctionAST :: codegen`中创建参数allocas时处理它。
+
+```c++
+// Record the function arguments in the NamedValues map.
+NamedValues.clear();
+unsigned ArgIdx = 0;
+for (auto &Arg : TheFunction->args()) {
+  // Create an alloca for this variable.
+  AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
+
+  // Create a debug descriptor for the variable.
+  DILocalVariable *D = DBuilder->createParameterVariable(
+      SP, Arg.getName(), ++ArgIdx, Unit, LineNo, KSDbgInfo.getDoubleTy(),
+      true);
+
+  DBuilder->insertDeclare(Alloca, D, DBuilder->createExpression(),
+                          DebugLoc::get(LineNo, 0, SP),
+                          Builder.GetInsertBlock());
+
+  // Store the initial value into the alloca.
+  Builder.CreateStore(&Arg, Alloca);
+
+  // Add arguments to variable symbol table.
+  NamedValues[Arg.getName()] = Alloca;
+}
+```
+
+这里我们首先创建变量，给它范围（SP），名称，源位置，类型，因为它是一个参数，参数索引。 接下来，我们创建一个lvm.dbg.declare调用，在IR级别指示我们在alloca中有一个变量（它给出了变量的起始位置），并为范围的开头设置了一个源位置 在声明。
+
+此时需要注意的一件有趣的事情是，各种调试器都会根据过去为它们生成代码和调试信息的方式进行假设。 在这种情况下，我们需要做一些hack以避免为函数序言生成行信息，以便调试器知道在设置断点时跳过这些指令。 所以在FunctionAST :: CodeGen中我们添加了更多的行：
+
+```c++
+// Unset the location for the prologue emission (leading instructions with no
+// location in a function are considered part of the prologue and the debugger
+// will run past them when breaking on a function)
+KSDbgInfo.emitLocation(nullptr);
+```
+
+然后在我们实际开始为函数体生成代码时发出一个新位置：
+
+```c++
+KSDbgInfo.emitLocation(Body.get());
+```
+
+有了这个，我们有足够的调试信息来设置函数中的断点，打印出参数变量和调用函数。 只需几行简单的代码就行了！
+
+###  9.9. Full Code Listing
+
+以下是我们的运行示例的完整代码清单，增强了调试信息。 要构建此示例，请使用：
+
+```
+# Compile
+clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core mcjit native` -O3 -o toy
+# Run
+./toy
+```
+
+[Here is the code](https://github.com/llvm-mirror/llvm/blob/master/examples/Kaleidoscope/Chapter9/toy.cpp)
+
+## 10. Kaleidoscope: Conclusion and other useful LLVM tidbits
+
+### 10.1. Tutorial Conclusion
+
+欢迎阅读“使用LLVM实现语言”教程的最后一章。在本教程中，我们将我们的小Kaleidoscope语言从无用的玩具发展成为一个半有趣（但可能仍然无用）的玩具。 :)
+
+有趣的是看到我们走了多远，以及它采取的代码有多少。我们构建了整个词法分析器，解析器，AST，代码生成器，交互式运行循环（带有JIT！），并在独立的可执行文件中发出调试信息 - 所有这些都在1000行（非注释/非空白）代码中。
+
+我们的小语言支持几个有趣的特性：它支持用户定义的二元和一元运算符，它使用JIT编译进行即时评估，并且它支持一些带SSA构造的控制流构造。
+
+本教程的部分想法是向您展示定义，构建和使用语言是多么容易和有趣。构建编译器不一定是一个可怕的或神秘的过程！既然您已经看过一些基础知识，我强烈建议您接受代码并进行破解。例如，尝试添加：
+
+- **global variables**  - 虽然全局变量在现代软件工程中具有问题价值，但在将诸如Kaleidoscope编译器本身之类的快速小工具组合在一起时，它们通常很有用。幸运的是，我们当前的设置使得添加全局变量变得非常容易：只需要进行值查找检查，以查看未解析的变量是否在拒绝它之前在全局变量符号表中。要创建新的全局变量，请创建LLVM GlobalVariable类的实例。
+- **typed variables** - Kaleidoscope目前仅支持double类型的变量。这使得语言非常优雅，因为只支持一种类型意味着您永远不必指定类型。不同的语言有不同的处理方式。最简单的方法是要求用户为每个变量定义指定类型，并在符号表中记录变量的类型及其Value *。
+- **arrays, structs, vectors, etc**  - 添加类型后，您可以开始以各种有趣的方式扩展类型系统。简单数组非常简单，对许多不同的应用程序非常有用。添加它们主要是学习LLVM  [getelementptr](https://llvm.org/docs/LangRef.html#getelementptr-instruction)指令如何工作的练习：它是如此漂亮/非常规，它有自己的FAQ！
+- **standard runtime**  - 我们当前的语言允许用户访问任意外部函数，我们将它用于“printd”和“putchard”之类的东西。当您扩展语言以添加更高级别的构造时，如果将这些构造降低到调用语言提供的运行时，这些构造通常最有意义。例如，如果将哈希表添加到语言中，则将例程添加到运行时可能是有意义的，而不是一直将它们内联。
+- **memory management**  - 目前我们只能访问Kaleidoscope中的堆栈。能够通过调用标准libc malloc / free接口或垃圾收集器来分配堆内存也很有用。如果您想使用垃圾收集，请注意LLVM完全支持[Accurate Garbage Collection](https://llvm.org/docs/GarbageCollection.html)，包括移动对象并需要扫描/更新堆栈的算法。
+- **exception handling support**  - LLVM支持生成 [zero cost exceptions](https://llvm.org/docs/ExceptionHandling.html) ，这些异常与其他语言编译的代码互操作。您还可以通过隐式使每个函数返回错误值并进行检查来生成代码。您还可以明确使用setjmp / longjmp。这里有很多不同的方式。
+- **object orientation, generics, database access, complex numbers, geometric programming, …** - 真的，你可以添加到语言中的疯狂功能没有尽头。
+- **unusual domains** - 我们一直在谈论将LLVM应用于许多人感兴趣的域：为特定语言构建编译器。但是，还有许多其他域可以使用通常不被考虑的编译器技术。例如，LLVM已被用于实现OpenGL图形加速，将C ++代码转换为ActionScript，以及许多其他可爱和聪明的东西。也许你会成为JIT第一个使用LLVM将正则表达式解释器编译成本机代码的人？
+
+玩得开心 - 尝试做一些疯狂和不寻常的事情。 像其他人一样建立一种语言，就像尝试一些有点疯狂的东西或看到它的结果并没有那么有趣。 如果您遇到困难或想要谈论它，请随时给 [llvm-dev mailing lis](http://lists.llvm.org/mailman/listinfo/llvm-dev)发送电子邮件：它有很多人对语言感兴趣并且经常愿意提供帮助。
+
+在我们结束本教程之前，我想谈谈生成LLVM IR的一些“技巧和窍门”。 这些是一些可能不明显的更微妙的东西，但如果你想利用LLVM的功能，它们非常有用。
+
+### 10.2. Properties of the LLVM IR
+
+我们在LLVM IR表格中有一些关于代码的常见问题 - 让我们现在就把这些问题解决掉，好吗？
+
+#### 10.2.1. Target Independence
+
+万花筒是“便携式语言”的一个例子：用Kaleidoscope编写的任何程序在运行它的任何目标上都会以相同的方式工作。许多其他语言具有此属性，例如lisp，java，haskell，javascript，python等（请注意，虽然这些语言是可移植的，但不是所有的库都是）。
+
+LLVM的一个不错的方面是它通常能够在IR中保持目标独立性：您可以将LLVM IR用于Kaleidoscope编译的程序，并在LLVM支持的任何目标上运行它，甚至可以在目标上发出C代码并对其进行编译LLVM本身不支持。您可以轻而易举地告诉Kaleidoscope编译器生成与目标无关的代码，因为它在生成代码时从不查询任何特定于目标的信息。
+
+LLVM为代码提供紧凑的，与目标无关的表示这一事实让很多人兴奋不已。不幸的是，这些人在询问有关语言可移植性的问题时，通常会考虑C语言或来自C家族的语言。我说“不幸的是”，因为除了传送源代码之外，实际上没有办法让（完全通用的）C代码可移植（当然，C源代码实际上也不是可移植的 - 所以端口真的很旧应用程序从32位到64位？）。
+
+C的问题（再次，完全普遍性）是它充满了目标特定的假设。作为一个简单的例子，预处理器在处理输入文本时经常破坏性地从代码中删除目标独立性：
+
+```
+#ifdef __i386__
+  int X = 1;
+#else
+  int X = 42;
+#endif
+```
+
+虽然可以为这样的问题设计越来越复杂的解决方案，但是它不能以比提供实际源代码更好的方式完全解决。
+
+也就是说，有一些有趣的C子集可以移植。 如果您愿意将原始类型修复为固定大小（例如int = 32位，long = 64位），请不要关心ABI与现有二进制文件的兼容性，并且愿意放弃其他一些小功能， 你可以有便携式代码。 这对于诸如内核语言之类的专用域是有意义的。
+
+#### 10.2.2. Safety Guarantees
+
+上面的许多语言也是“安全”语言：用Java编写的程序不可能破坏其地址空间并使进程崩溃（假设JVM没有错误）。 安全性是一个有趣的属性，需要结合语言设计，运行时支持和操作系统支持。
+
+当然可以在LLVM中实现安全语言，但LLVM IR本身并不能保证安全。 LLVM IR允许不安全的指针强制转换，在释放错误之后使用，缓冲区溢出以及各种其他问题。 安全性需要在LLVM之上作为一个层实现，并且方便地，几个小组已经对此进行了调查。 如果您对更多细节感兴趣，请在llvm-dev邮件列表上询问。
+
+#### 10.2.3. Language-Specific Optimizations
+
+LLVM关闭许多人的一件事是，它并没有在一个系统中解决所有世界的问题（抱歉'世界饥饿'，其他人将不得不在其他日子解决你）。一个具体的抱怨是人们认为LLVM无法执行高级语言特定优化：LLVM“丢失了太多信息”。
+
+不幸的是，这真的不是给你一个完整统一版本的“Chris Lattner的编译器设计理论”的地方。相反，我会做一些观察：
+
+首先，你是对的，LLVM确实会丢失信息。例如，在撰写本文时，无法在LLVM IR中区分SSA值是来自ILP32机器上的C“int”还是C“long”（调试信息除外）。两者都被编译成'i32'值，并且有关它的来源的信息丢失了。这里更普遍的问题是LLVM类型系统使用“结构等价”而不是“名称等价”。令人惊讶的另一个地方是，如果你有两种具有相同结构的高级语言类型（例如，两个不同的结构具有单个int字段）：这些类型将编译成单个LLVM类型，这将是不可能的告诉它是什么来的。
+
+其次，虽然LLVM确实丢失了信息，但LLVM并不是固定的目标：我们会以多种不同的方式继续增强和改进它。除了添加新功能（LLVM并不总是支持异常或调试信息）之外，我们还扩展IR以捕获用于优化的重要信息（例如，参数是符号还是零扩展，有关指针别名的信息等）。许多增强功能都是用户驱动的：人们希望LLVM包含一些特定的功能，因此他们继续并扩展它。
+
+第三，可以轻松添加特定于语言的优化，并且您可以选择多种方式进行优化。作为一个简单的例子，很容易添加特定于语言的优化过程，这些过程“了解”为语言编译的代码。在C系列的情况下，有一个“知道”标准C库函数的优化过程。如果在main（）中调用“exit（0）”，它知道将其优化为“return 0;”是安全的，因为C指定了“exit”函数的作用。
+
+除了简单的库知识外，还可以将各种其他语言特定信息嵌入到LLVM IR中。如果您有特殊需求并碰壁，请将主题放在llvm-dev列表中。在最糟糕的情况下，您可以始终将LLVM视为“哑代码生成器”，并在特定语言的AST上实现您在前端所需的高级优化。
+
+### 10.3. Tips and Tricks
+
+在使用LLVM后，您可以了解到各种有用的提示和技巧，这些提示和技巧乍一看并不明显。 本节不是让每个人重新发现它们，而是讨论其中的一些问题。
+
+#### 10.3.1. Implementing portable offsetof/sizeof
+
+如果您试图保持编译器生成的代码“目标独立”，那么有一件有趣的事情是，您经常需要知道某些LLVM类型的大小或llvm结构中某些字段的偏移量。 例如，您可能需要将类型的大小传递给分配内存的函数。
+
+不幸的是，这可以在不同的目标之间变化很大：例如，指针的宽度通常是针对特定目标的。 但是，有一种聪明的方法可以[clever way to use the getelementptr instruction](http://nondot.org/sabre/LLVMNotes/SizeOf-OffsetOf-VariableSizedStructs.txt)，允许您以可移植的方式计算它。
+
+#### 10.3.2. Garbage Collected Stack Frames
+
+有些语言希望显式管理它们的堆栈帧，通常是为了对它们进行垃圾收集或者允许轻松实现闭包。 实现这些功能通常比显式堆栈帧更好，[LLVM does support them](http://nondot.org/sabre/LLVMNotes/ExplicitlyManagedStackFrames.txt)，如果你愿意的话。 它需要您的前端将代码转换为 [Continuation Passing Style](http://en.wikipedia.org/wiki/Continuation-passing_style)和尾调用（the use of tail calls ，LLVM也支持）。
