@@ -19,7 +19,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="" />
+    <list default="true" id="40110858-9973-4779-ac4c-48f61bef729d" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -31,23 +34,14 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="false">
+      <file leaf-file-name="toy.cpp" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter03/toy.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <caret line="529" selection-start-line="529" selection-end-line="529" />
+            <state relative-caret-position="304">
+              <caret line="545" column="12" lean-forward="true" selection-start-line="545" selection-start-column="12" selection-end-line="545" selection-end-column="12" />
               <folding>
                 <element signature="e#40#69#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CMakeLists.txt" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="418">
-              <caret line="22" column="21" lean-forward="true" selection-start-line="22" selection-start-column="21" selection-end-line="22" selection-end-column="21" />
             </state>
           </provider>
         </entry>
@@ -104,7 +98,7 @@
         <entry file="file://$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter07/CMakeLists.txt">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="266">
-              <caret line="14" column="5" lean-forward="true" selection-start-line="14" selection-start-column="5" selection-end-line="14" selection-end-column="5" />
+              <caret line="14" column="5" selection-start-line="14" selection-start-column="5" selection-end-line="14" selection-end-column="5" />
             </state>
           </provider>
         </entry>
@@ -183,6 +177,7 @@
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter07/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/lib/llvm_tutorial/src/Chapter07/toy.cpp" />
+        <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
@@ -196,9 +191,9 @@
     <packageJsonPaths />
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds" extendedState="1">
-    <option name="x" value="436" />
-    <option name="y" value="95" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="326" />
+    <option name="y" value="42" />
     <option name="width" value="1399" />
     <option name="height" value="999" />
   </component>
@@ -256,7 +251,7 @@
   <component name="PropertiesComponent">
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///home/cyoung/llvm/build_install/include/llvm/Transforms/InstCombine/InstCombine.h" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../lllvm_debug/llvm" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
@@ -329,15 +324,15 @@
       <workItem from="1539245461234" duration="19724000" />
       <workItem from="1541257268565" duration="700000" />
       <workItem from="1541841950985" duration="612000" />
-      <workItem from="1542077563596" duration="22293000" />
+      <workItem from="1542077563596" duration="25223000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="215233000" />
+    <option name="totallyTimeSpent" value="218163000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="436" y="95" width="1399" height="999" extended-state="1" />
+    <frame x="326" y="42" width="1399" height="999" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.79930794" visible="true" weight="0.17924528" />
@@ -513,7 +508,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/IR/GlobalValue.h" />
     <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/IR/Argument.h" />
     <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/IR/LegacyPassManager.h" />
     <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/Transforms/InstCombine/InstCombine.h" />
@@ -603,16 +597,6 @@
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/llvm/build_install/include/llvm/IR/Module.h" />
-    <entry file="file://$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter03/toy.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret line="529" selection-start-line="529" selection-end-line="529" />
-          <folding>
-            <element signature="e#40#69#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/doc/LLVM Language Reference Manual.md">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="247">
@@ -702,7 +686,7 @@
     <entry file="file://$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter07/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="266">
-          <caret line="14" column="5" lean-forward="true" selection-start-line="14" selection-start-column="5" selection-end-line="14" selection-end-column="5" />
+          <caret line="14" column="5" selection-start-line="14" selection-start-column="5" selection-end-line="14" selection-end-column="5" />
         </state>
       </provider>
     </entry>
@@ -715,8 +699,25 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="22" column="21" lean-forward="true" selection-start-line="22" selection-start-column="21" selection-end-line="22" selection-end-column="21" />
+        <state relative-caret-position="58">
+          <caret line="11" lean-forward="true" selection-start-line="11" selection-end-line="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="399">
+          <caret line="21" column="51" selection-start-line="21" selection-start-column="51" selection-end-line="21" selection-end-column="51" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/Kaleidoscope_tutorial/src/Chapter03/toy.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="304">
+          <caret line="545" column="12" lean-forward="true" selection-start-line="545" selection-start-column="12" selection-end-line="545" selection-end-column="12" />
+          <folding>
+            <element signature="e#40#69#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
