@@ -17,9 +17,9 @@ git clone https://git.llvm.org/git/llvm.git/
 cd llvm/tools
 #clang源码,放在llvm/tools下
  git clone https://git.llvm.org/git/clang.git/
-git clone https://git.llvm.org/git/compiler-rt.git/
 cd ../projects
 #compiler-rt源码,放在llvm/projects下
+git clone https://git.llvm.org/git/compiler-rt.git/
 git clone https://git.llvm.org/git/openmp.git/
 ```
 
