@@ -20,6 +20,9 @@
 *.mod
 *.smod
 
+.idea/
+.vscode/
+build/
 # Compiled Static libraries
 *.lai
 *.la
